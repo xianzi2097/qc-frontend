@@ -1,0 +1,166 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  BookOpen, Rocket, Award, Home,
+} from 'lucide-react';
+import Notebook from './Notebook';
+import { StarsBackground } from '../ui/StarsBackground';
+import { FloatingDock } from '../ui/FloatingDock';
+import { MovingBorderButton } from '../ui/moving-border';
+import { SparklesCore } from '../ui/sparkles';
+import { BackgroundBeams } from '../ui/background-beams';
+
+interface PortalUser {
+  username: string;
+  role: string;
+  nickname: string;
+  avatar_path: string;
+}
+
+interface StudentDashboardProps {
+  portalUser: PortalUser | null;
+}
+
+const MODULE_GLOW: Record<string, string> = {
+  notebook: 'bg-[radial-gradient(#22d3ee_40%,transparent_60%)]',
+  projects: 'bg-[radial-gradient(#a78bfa_40%,transparent_60%)]',
+  badges: 'bg-[radial-gradient(#fb923c_40%,transparent_60%)]',
+};
+
+export default function StudentDashboard({ portalUser }: StudentDashboardProps) {
+  const [activeModule, setActiveModule] = useState('notebook');
+  const isDev = !portalUser;
+  const username = portalUser?.username || 's';
+  const nickname = portalUser?.nickname || '小极客';
+
+  return (
+    <div className="h-full flex flex-col relative overflow-hidden">
+      <StarsBackground />
+      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
+        <BackgroundBeams />
+      </div>
+
+      <div className="relative z-10 flex-1 flex flex-col min-h-0">
+
+        {/* ── 顶部欢迎区 ── */}
+        <div className="px-8 pt-8 pb-4 flex-shrink-0 relative">
+          <SparklesCore
+            className="absolute inset-0 -top-2"
+            background="transparent"
+            minSize={0.8}
+            maxSize={1.8}
+            particleDensity={80}
+            particleColor="#fb923c"
+            speed={1.5}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center justify-between relative z-10"
+          >
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand-orange to-purple-500 flex items-center justify-center text-white font-black text-2xl shadow-[0_0_30px_rgba(249,115,22,0.4)]">
+                  {nickname.charAt(0)}
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-geek-green border-[3px] border-cyber-bg shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-white tracking-wide">我的空间</h1>
+                <p className="text-sm text-slate-300 mt-0.5">
+                  {nickname}，欢迎回来 👋
+                  {isDev && (
+                    <span className="ml-2 text-xs bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded font-medium">DEV</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <a
+              href="/"
+              className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-white transition-colors px-3 py-2 rounded-xl hover:bg-white/10 border border-transparent hover:border-white/10"
+            >
+              <Home size={18} />
+              <span className="hidden sm:inline">返回首页</span>
+            </a>
+          </motion.div>
+        </div>
+
+        {/* ── 主体内容区 ── */}
+        <div className="flex-1 overflow-auto px-8 pb-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeModule}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              className="h-full flex flex-col gap-4"
+            >
+              {/* 模块标题 — 流动边框 */}
+              <MovingBorderButton
+                borderRadius="1rem"
+                duration={3500}
+                containerClassName="h-auto w-full flex-shrink-0"
+                className="flex items-center gap-4 px-5 py-4 text-left"
+                as="div"
+                borderClassName={MODULE_GLOW[activeModule] || MODULE_GLOW.notebook}
+              >
+                {activeModule === 'notebook' && <BookOpen size={28} className="text-cyan-400" />}
+                {activeModule === 'projects' && <Rocket size={28} className="text-purple-400" />}
+                {activeModule === 'badges' && <Award size={28} className="text-orange-400" />}
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {activeModule === 'notebook' && '📒 笔记本'}
+                    {activeModule === 'projects' && '🚀 作品仓'}
+                    {activeModule === 'badges' && '🏆 勋章墙'}
+                  </h2>
+                  <p className="text-sm text-slate-300 mt-0.5">
+                    {activeModule === 'notebook' && '知识笔记 & 灵感随记'}
+                    {activeModule === 'projects' && '你的 Scratch 作品集'}
+                    {activeModule === 'badges' && '成就与徽章收集'}
+                  </p>
+                </div>
+              </MovingBorderButton>
+
+              {/* 模块内容区 */}
+              <div className="flex-1 rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-sm overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.3)]">
+                {activeModule === 'notebook' && <Notebook username={username} />}
+                {activeModule === 'projects' && (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Rocket size={72} className="mx-auto mb-5 text-slate-500" />
+                      <p className="text-slate-300 text-lg mb-2 font-medium">作品仓 — 即将开放</p>
+                      <p className="text-slate-400 text-sm">在这里展示你的所有 Scratch 作品 🎮</p>
+                    </div>
+                  </div>
+                )}
+                {activeModule === 'badges' && (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Award size={72} className="mx-auto mb-5 text-slate-500" />
+                      <p className="text-slate-300 text-lg mb-2 font-medium">勋章墙 — 即将开放</p>
+                      <p className="text-slate-400 text-sm">收集成就徽章，展示你的编程里程碑 🏅</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* ── 底部 Dock ── */}
+        <div className="flex-shrink-0 flex justify-center pb-5 pt-2">
+          <FloatingDock
+            items={[
+              { title: '笔记本', icon: <BookOpen size={22} className={activeModule === 'notebook' ? 'text-white' : 'text-neutral-400'} />, onClick: () => setActiveModule('notebook') },
+              { title: '作品仓', icon: <Rocket size={22} className={activeModule === 'projects' ? 'text-white' : 'text-neutral-400'} />, onClick: () => setActiveModule('projects') },
+              { title: '勋章', icon: <Award size={22} className={activeModule === 'badges' ? 'text-white' : 'text-neutral-400'} />, onClick: () => setActiveModule('badges') },
+            ]}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
