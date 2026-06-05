@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  BookOpen, NotebookText, Rocket, Award, Home, Star, Shield, Box, Mail,
+  BookOpen, NotebookText, Rocket, Award, Home, Star, Shield, Box, Mail, Mailbox,
 } from 'lucide-react';
 import Notebook from './Notebook';
 import Messages from './messages/Messages';
@@ -162,7 +162,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
                 { title: '首页', icon: <Home size={36} className="text-neutral-400" />, onClick: () => { window.location.href = '/'; } },
                 { title: '文档', icon: <BookOpen size={36} className="text-neutral-400" />, onClick: () => { window.location.href = window.location.origin.replace(':5173', '') + '/docs/'; } },
                 { title: '笔记本', icon: <NotebookText size={36} style={activeModule === 'notebook' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'notebook' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('notebook'), isActive: activeModule === 'notebook', activeBg: 'bg-[var(--accent)]/10' },
-                { title: '消息', icon: <div className="relative"><Mail size={36} style={activeModule === 'messages' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'messages' ? '' : 'text-neutral-500'}`} />{unreadCount > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center shadow-[0_0_6px_rgba(244,63,94,0.6)]">{unreadCount > 9 ? '9+' : unreadCount}</span>}</div>, onClick: () => setActiveModule('messages'), isActive: activeModule === 'messages', activeBg: 'bg-[var(--accent)]/10' },
+                { title: '邮箱', icon: <div className="relative"><Mailbox size={36} style={activeModule === 'messages' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'messages' ? '' : 'text-neutral-500'}`} />{unreadCount > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center shadow-[0_0_6px_rgba(244,63,94,0.6)]">{unreadCount > 9 ? '9+' : unreadCount}</span>}</div>, onClick: () => setActiveModule('messages'), isActive: activeModule === 'messages', activeBg: 'bg-[var(--accent)]/10' },
                 { title: '作品仓', icon: <Rocket size={36} style={activeModule === 'projects' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'projects' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('projects'), isActive: activeModule === 'projects', activeBg: 'bg-[var(--accent)]/10' },
                 { title: '勋章', icon: <Award size={36} style={activeModule === 'badges' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'badges' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('badges'), isActive: activeModule === 'badges', activeBg: 'bg-[var(--accent)]/10' },
                 ]}

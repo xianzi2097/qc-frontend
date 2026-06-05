@@ -109,7 +109,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
       <div className="w-72 bg-slate-900/80 border-r border-slate-800 flex flex-col flex-shrink-0">
         <div className="h-12 border-b border-slate-800 flex items-center justify-between px-3">
           <span className="text-sm text-slate-300 font-mono tracking-wider flex items-center gap-1.5">
-            <Mail size={16} className="text-slate-400" /> 消息</span>
+            <Mail size={16} className="text-slate-400" /> 邮件</span>
           <button onClick={() => { setShowNewFolder(true); setNewFolderName(''); }}
             className="text-slate-400 hover:text-[var(--accent)] p-1 rounded hover:bg-slate-800" title="新建文件夹">
             <FolderPlus size={16} />
@@ -161,7 +161,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
                     ) : messages.length === 0 ? (
                       <div className="pl-8 pr-3 py-2 text-xs text-slate-500">暂无消息</div>
                     ) : (
-                      msgs.map(msg => (
+                      messages.map(msg => (
                         <div key={msg.id}
                           onClick={(e) => { e.stopPropagation(); openMessage(msg); }}
                           className={`group flex items-center justify-between pl-9 pr-3 py-1.5 cursor-pointer ${
@@ -189,7 +189,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
       </div>
 
       {/* 右侧：消息详情（侧边栏始终可见） */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
         {selectedMsg ? (
           <>
             <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 flex-shrink-0">
