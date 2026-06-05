@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   LayoutDashboard, Users, Cpu,
-  GraduationCap, ToggleLeft, LogOut,
+  GraduationCap, ToggleLeft, LogOut, Mail,
 } from 'lucide-react';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import StudentDashboard from './components/student/StudentDashboard';
@@ -97,6 +97,16 @@ export default function App() {
                 }`}
               >
                 <Users size={18} /> 班级学生管理
+              </button>
+              <button
+                onClick={() => setActiveTab('messages')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  activeTab === 'messages'
+                    ? 'bg-brand-orange text-black font-bold shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                }`}
+              >
+                <Mail size={18} /> 发送消息
               </button>
             </nav>
           ) : (

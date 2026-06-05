@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   FileText, Plus, Trash2, Save,
-  BookOpen, ChevronRight, ChevronDown, FolderPlus,
+  Book, ChevronRight, ChevronDown, FolderPlus,
 } from 'lucide-react';
 import hljs from 'highlight.js';
 import { marked } from 'marked';
@@ -115,11 +115,11 @@ export default function Notebook({ username }: NotebookProps) {
     <div className="flex h-full animate-fadeIn">
       {/* ── 左侧：笔记本列表 ── */}
       <div className="w-72 bg-slate-900/80 border-r border-slate-800 flex flex-col flex-shrink-0">
-        <div className="p-3 border-b border-slate-800 flex items-center justify-between">
+        <div className="h-12 border-b border-slate-800 flex items-center justify-between px-3">
           <span className="text-sm text-slate-300 font-mono tracking-wider flex items-center gap-1.5">
-            <BookOpen size={16} className="text-slate-400" /> 笔记本</span>
+            <Book size={16} className="text-slate-400" /> 笔记本</span>
           <button onClick={() => { setShowNewNb(true); setNewName(''); }}
-            className="text-slate-400 hover:text-geek-green p-1 rounded hover:bg-slate-800" title="新建笔记本">
+            className="text-slate-400 hover:text-[var(--accent)] p-1 rounded hover:bg-slate-800" title="新建笔记本">
             <FolderPlus size={16} />
           </button>
         </div>
@@ -128,9 +128,9 @@ export default function Notebook({ username }: NotebookProps) {
             <input autoFocus value={newName} onChange={e => setNewName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') createNotebook(newName); if (e.key === 'Escape') setShowNewNb(false); }}
               placeholder="笔记本名，如 Python学习"
-              className="flex-1 bg-slate-800 text-sm text-slate-200 px-2 py-1.5 rounded outline-none border border-slate-700 focus:border-geek-green" />
+              className="flex-1 bg-slate-800 text-sm text-slate-200 px-2 py-1.5 rounded outline-none border border-slate-700" style={{ borderColor: 'var(--accent)' }} />
             <button onClick={() => createNotebook(newName)}
-              className="text-sm bg-geek-green text-black px-2 py-1.5 rounded font-bold hover:bg-geek-green/80">确定</button>
+              className="text-sm text-black px-2 py-1.5 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>确定</button>
           </div>
         )}
         <div className="flex-1 overflow-y-auto py-1">
@@ -138,7 +138,7 @@ export default function Notebook({ username }: NotebookProps) {
             <div className="p-4 text-sm text-slate-300 text-center">
               还没有笔记本<br />
               <button onClick={() => { setShowNewNb(true); setNewName(''); }}
-                className="text-geek-green hover:underline mt-1">创建第一个</button>
+                className="text-[var(--accent)] hover:underline mt-1">创建第一个</button>
             </div>
           ) : (
             notebooks.map(nb => (
@@ -146,12 +146,12 @@ export default function Notebook({ username }: NotebookProps) {
                 <div onClick={() => { setActiveNotebook(nb.name); setActiveNote(''); loadNotes(nb.name); }}
                   className={`group flex items-center justify-between px-3 py-2 cursor-pointer ${
                     activeNotebook === nb.name
-                      ? 'bg-brand-orange/10 border-l-2 border-brand-orange text-white'
+                      ? 'bg-[var(--accent)]/10 border-l-2 border-[var(--accent)] text-white'
                       : 'border-l-2 border-transparent text-slate-400 hover:bg-slate-800/60'
                   }`}>
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm">{expandedNb === nb.name ? <ChevronDown size={15} /> : <ChevronRight size={15} />}</span>
-                    <BookOpen size={17} className="text-brand-orange/60 flex-shrink-0" />
+                    <Book size={17} className="text-[var(--accent)]/60 flex-shrink-0" />
                     <span className="text-sm truncate">{nb.name}</span>
                     <span className="text-xs text-slate-400">{nb.note_count}</span>
                   </div>
@@ -167,7 +167,7 @@ export default function Notebook({ username }: NotebookProps) {
                         onClick={(e) => { e.stopPropagation(); setActiveNote(n.filename); }}
                         className={`group flex items-center justify-between pl-9 pr-3 py-1.5 cursor-pointer ${
                           activeNote === n.filename
-                            ? 'bg-geek-green/10 border-l-2 border-geek-green text-white'
+                            ? 'bg-[var(--accent)]/10 border-l-2 border-[var(--accent)] text-white'
                             : 'border-l-2 border-transparent text-slate-500 hover:bg-slate-800/40 hover:text-slate-300'
                         }`}>
                         <div className="flex items-center gap-2 min-w-0">
@@ -188,13 +188,13 @@ export default function Notebook({ username }: NotebookProps) {
                         <input autoFocus value={newName} onChange={e => setNewName(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') createNote(newName); if (e.key === 'Escape') setShowNewNote(false); }}
                           placeholder="笔记名"
-                          className="flex-1 bg-slate-800 text-sm text-slate-200 px-2 py-1 rounded outline-none border border-slate-700 focus:border-geek-green" />
+                          className="flex-1 bg-slate-800 text-sm text-slate-200 px-2 py-1 rounded outline-none border border-slate-700" style={{ borderColor: 'var(--accent)' }} />
                         <button onClick={() => createNote(newName)}
-                          className="text-xs bg-geek-green text-black px-1.5 py-1 rounded font-bold">确定</button>
+                          className="text-xs text-black px-1.5 py-1 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>确定</button>
                       </div>
                     ) : (
                       <button onClick={(e) => { e.stopPropagation(); setShowNewNote(true); setNewName(''); }}
-                        className="w-full flex items-center gap-1 pl-9 pr-3 py-1.5 text-xs text-slate-400 hover:text-geek-green">
+                        className="w-full flex items-center gap-1 pl-9 pr-3 py-1.5 text-xs text-slate-400 hover:text-[var(--accent)]">
                         <Plus size={13} /> 新建笔记
                       </button>
                     )}
@@ -212,15 +212,15 @@ export default function Notebook({ username }: NotebookProps) {
           <>
             <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 flex-shrink-0">
               <div className="flex items-center gap-2 text-sm text-slate-300">
-                <BookOpen size={17} className="text-brand-orange/60" />
+                <Book size={17} className="text-[var(--accent)]/60" />
                 <span className="text-slate-400">{activeNotebook}</span>
                 <span className="text-slate-600">/</span>
-                <FileText size={17} className="text-geek-green" />
+                <FileText size={17} className="text-[var(--accent)]" />
                 <span className="text-slate-200 font-mono">{activeNote}</span>
                 {dirty && <span className="text-amber-400 text-xs font-medium">● 未保存</span>}
               </div>
               <button onClick={saveNote}
-                className="flex items-center gap-1.5 text-sm bg-geek-green text-black px-4 py-2 rounded-lg font-bold hover:bg-geek-green/80">
+                className="flex items-center gap-1.5 text-sm text-black px-4 py-2 rounded-lg font-bold hover:opacity-80" style={{ backgroundColor: 'var(--accent)' }}>
                 <Save size={16} /> 保存
               </button>
             </div>
@@ -241,10 +241,10 @@ export default function Notebook({ username }: NotebookProps) {
         ) : (
           <div className="flex-1 flex items-center justify-center text-slate-600">
             <div className="text-center">
-              <BookOpen size={48} className="mx-auto mb-3 opacity-30" />
+              <Book size={48} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">先创建笔记本，再在里面写笔记</p>
               <button onClick={() => { setShowNewNb(true); setNewName(''); }}
-                className="mt-3 text-xs text-geek-green hover:underline flex items-center gap-1 mx-auto">
+                className="mt-3 text-xs text-[var(--accent)] hover:underline flex items-center gap-1 mx-auto">
                 <FolderPlus size={14} /> 新建笔记本
               </button>
             </div>

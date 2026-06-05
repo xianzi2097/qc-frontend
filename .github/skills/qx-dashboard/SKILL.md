@@ -52,3 +52,11 @@ website/site/portal/          ← 门户首页 + 登录页
 - 不用 `import React from 'react'`（React 19 JSX transform）
 - 图标用 `lucide-react`
 - 全局主题色：`brand-orange`(#f97316)、`geek-green`(#10b981)、`cyber-bg`(#020617)
+
+## 架构设计
+
+⚠️ **重要**：修改或新增组件前，务必先阅读 `ARCHITECTURE.md`，理解：
+- 组件文件夹规范（每个功能模块一个文件夹）
+- `--accent` 主题色变量规范（禁止硬编码颜色）
+- 数据存储架构（DB vs 文件系统 vs JSON 扩展）
+- 侧边栏模式设计
