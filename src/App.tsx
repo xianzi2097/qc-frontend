@@ -30,7 +30,7 @@ export default function App() {
   // 优先从门户登录态读取，没有则给调试默认值
   const portalUser = useMemo(() => readPortalUser(), []);
   const [userRole, setUserRole] = useState<'teacher' | 'student'>(
-    portalUser?.role === 'student' ? 'student' : 'teacher',
+    !portalUser ? 'student' : (portalUser.role === 'student' ? 'student' : 'teacher'),
   );
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 

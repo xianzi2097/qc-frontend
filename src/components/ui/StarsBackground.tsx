@@ -108,8 +108,16 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
     if (!ctx) return;
 
     let animationFrameId: number;
+    let lastFrame = 0;
+    const FPS = 30;
+    const frameInterval = 1000 / FPS;
 
-    const render = () => {
+    const render = (timestamp: number) => {
+      if (timestamp - lastFrame < frameInterval) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+      lastFrame = timestamp;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       stars.forEach((star) => {
         ctx.beginPath();
@@ -127,7 +135,7 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render();
+    render(0);
 
     return () => {
       cancelAnimationFrame(animationFrameId);

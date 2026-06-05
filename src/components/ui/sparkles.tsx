@@ -40,6 +40,9 @@ export const SparklesCore = ({
     if (!ctx) return;
 
     let animId: number;
+    let lastFrame = 0;
+    const FPS = 30;
+    const frameInterval = 1000 / FPS;
     const particles: Sparkle[] = [];
     const spawnRate = particleDensity / 60;
 
@@ -65,7 +68,12 @@ export const SparklesCore = ({
       }
     }
 
-    function draw() {
+    function draw(timestamp: number) {
+      if (timestamp - lastFrame < frameInterval) {
+        animId = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrame = timestamp;
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
       spawn();
 
@@ -92,7 +100,7 @@ export const SparklesCore = ({
 
     resize();
     window.addEventListener("resize", resize);
-    draw();
+    draw(0);
 
     return () => {
       cancelAnimationFrame(animId);
