@@ -9,6 +9,11 @@ export default defineConfig({
     outDir: resolve(__dirname, '../../website/site/dashboard'),
     emptyOutDir: true,
   },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8000',
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

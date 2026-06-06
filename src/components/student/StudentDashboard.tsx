@@ -4,7 +4,7 @@ import {
   BookOpen, NotebookText, Rocket, Award, Home, Star, Shield, Box, Mail, Mailbox,
 } from 'lucide-react';
 import Notebook from './Notebook';
-import Messages from './messages/Messages';
+import Messages from './Messages';
 import { StarsBackground } from '../ui/StarsBackground';
 import { FloatingDock } from '../ui/FloatingDock';
 import { SparklesCore } from '../ui/sparkles';
