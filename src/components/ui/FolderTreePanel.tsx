@@ -57,7 +57,7 @@ export interface FolderTreePanelProps<TFolder extends TreeFolder, TItem extends 
   activeFolder: string;
   activeItem: string;
   expandedFolders: Set<string>;
-  loading?: boolean;
+  loadingFolders?: Set<string>;
   isEmpty?: (folders: TFolder[]) => boolean;
 
   /** 条目列表底部区域（Notebook 的"新建笔记"按钮放这） */
@@ -77,7 +77,7 @@ export default function FolderTreePanel<
   activeFolder,
   activeItem,
   expandedFolders,
-  loading = false,
+  loadingFolders,
   isEmpty,
   renderItemsFooter,
 }: FolderTreePanelProps<TFolder, TItem>) {
@@ -103,8 +103,10 @@ export default function FolderTreePanel<
     await callbacks.onDeleteFolder(name);
   };
 
-  const handleDeleteItem = async (itemId: string) => {
-    if (!confirm(`确定删除「${config.renderItemLabel(items.find(i => i.id === itemId)!)}」？`)) return;
+  const handleDeleteItem = async (itemId: string, folderName: string) => {
+    const folderItems = itemsByFolder.get(folderName) ?? [];
+    const item = folderItems.find(i => i.id === itemId);
+    if (!item || !confirm(`确定删除「${config.renderItemLabel(item)}」？`)) return;
     await callbacks.onDeleteItem(itemId);
   };
 
@@ -257,7 +259,7 @@ export default function FolderTreePanel<
                   const folderItems = itemsByFolder.get(f.name) ?? [];
                   return (
                 <div className="bg-slate-950/50">
-                  {loading ? (
+                  {loadingFolders?.has(f.name) ? (
                     <div className="pl-8 pr-3 py-2 text-xs text-slate-500 animate-pulse">
                       加载中...
                     </div>
@@ -316,7 +318,7 @@ export default function FolderTreePanel<
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteItem(item.id);
+                              handleDeleteItem(item.id, f.name);
                             }}
                             className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-400"
                           >

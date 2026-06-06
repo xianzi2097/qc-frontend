@@ -73,7 +73,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
   const [activeFolder, setActiveFolder] = useState('');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedMsg, setSelectedMsg] = useState<Message | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingFolders, setLoadingFolders] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
 
   // ── 数据加载 ──
@@ -85,11 +85,12 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
   useEffect(() => { loadFolders(); }, [loadFolders]);
 
   const loadMessages = (folder: string) => {
-    setLoading(true);
+    if (messagesMap.has(folder)) return; // 已有数据，不重复加载
+    setLoadingFolders(prev => new Set(prev).add(folder));
     fetch(`/api/messages/inbox?username=${username}&folder=${encodeURIComponent(folder)}`)
       .then(r => r.json())
       .then(d => { if (d.status === 'success') setMessagesMap(prev => new Map(prev).set(folder, d.messages)); })
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingFolders(prev => { const n = new Set(prev); n.delete(folder); return n; }));
   };
 
   // ── 标记已读 ──
@@ -137,9 +138,10 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
       setExpandedFolders(prev => {
         const next = new Set(prev);
         if (next.has(name)) { next.delete(name); }
-        else { next.add(name); loadMessages(name); }
+        else { next.add(name); }
         return next;
       });
+      if (!expandedFolders.has(name)) loadMessages(name);
     },
     onSelectItem: (id, folderName) => {
       const msgs = messagesMap.get(folderName);
@@ -208,7 +210,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
         activeFolder={activeFolder}
         activeItem={selectedMsg?.id ?? ''}
         expandedFolders={expandedFolders}
-        loading={loading}
+        loadingFolders={loadingFolders}
         isEmpty={isEmptyMsg}
       />
 
