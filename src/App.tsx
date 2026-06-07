@@ -1,42 +1,22 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   LayoutDashboard, Users, Cpu,
-  GraduationCap, ToggleLeft, LogOut, Mail,
+  GraduationCap, ToggleLeft, LogOut, Mail, Calendar,
 } from 'lucide-react';
+import { useAuth } from './lib/useAuth';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import StudentDashboard from './components/student/StudentDashboard';
 
-interface PortalUser {
-  username: string;
-  role: 'teacher' | 'student' | 'admin';
-  nickname: string;
-  avatar_path: string;
-}
-
-/** 从 localStorage 读取门户登录的用户信息 */
-function readPortalUser(): PortalUser | null {
-  try {
-    const raw = localStorage.getItem('user');
-    if (!raw) return null;
-    const user = JSON.parse(raw);
-    if (user && user.username && user.role) return user;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 export default function App() {
-  // 优先从门户登录态读取，没有则给调试默认值
-  const portalUser = useMemo(() => readPortalUser(), []);
+  const { user: portalUser, role: authRole, nickname, isLoggedIn } = useAuth();
   const [userRole, setUserRole] = useState<'teacher' | 'student'>(
-    !portalUser ? 'student' : (portalUser.role === 'student' ? 'student' : 'teacher'),
+    authRole === 'student' ? 'student' : 'teacher',
   );
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
-  const isDevMode = !portalUser; // 没有门户登录态 = 本地开发调试
+  const isDevMode = !isLoggedIn; // 没有门户登录态 = 本地开发调试
 
-  const displayName = portalUser?.nickname || portalUser?.username || (userRole === 'teacher' ? 'Arin 老师' : '超级小极客');
+  const displayName = nickname || (userRole === 'teacher' ? 'Arin 老师' : '超级小极客');
 
   return (
     <div className="flex h-screen bg-cyber-bg text-slate-100 font-sans selection:bg-geek-green selection:text-black">
@@ -107,6 +87,16 @@ export default function App() {
                 }`}
               >
                 <Mail size={18} /> 发送消息
+              </button>
+              <button
+                onClick={() => setActiveTab('attendance')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  activeTab === 'attendance'
+                    ? 'bg-cyan-500 text-black font-bold shadow-[0_0_20px_rgba(6,182,212,0.3)]'
+                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                }`}
+              >
+                <Calendar size={18} /> 点名考勤
               </button>
             </nav>
           ) : (
