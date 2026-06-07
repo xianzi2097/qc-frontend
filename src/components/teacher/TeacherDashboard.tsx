@@ -3,9 +3,9 @@ import { Users, Award, Terminal, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../lib/useAuth';
 import { useTeacherData } from '../../lib/useTeacherData';
 import ErrorBoundary from '../ui/ErrorBoundary';
-import AttendancePanel from './attendance/AttendancePanel';
-import SendMessagePanel from './messages/SendMessagePanel';
-import StudentListPanel from './students/StudentListPanel';
+import AttendancePanel from './AttendancePanel';
+import SendMessagePanel from './SendMessagePanel';
+import StudentListPanel from './StudentListPanel';
 
 interface TeacherDashboardProps {
   activeTab: string;
