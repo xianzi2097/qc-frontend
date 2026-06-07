@@ -1,28 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FileText, Save, Book, Plus } from 'lucide-react';
-import hljs from 'highlight.js';
-import { marked } from 'marked';
-import { markedHighlight } from 'marked-highlight';
-import 'highlight.js/styles/github-dark.css';
+import { simpleMarkdown } from '../../lib/markdown';
 import FolderTreePanel, {
   type FolderTreeConfig,
   type FolderTreeCallbacks,
   type TreeFolder,
   type TreeItem,
 } from '../ui/FolderTreePanel';
-
-marked.use(markedHighlight({
-  langPrefix: 'hljs language-',
-  highlight(code: string, lang: string) {
-    if (lang && hljs.getLanguage(lang)) {
-      return hljs.highlight(code, { language: lang }).value;
-    }
-    return hljs.highlightAuto(code).value;
-  },
-}));
-marked.use({ breaks: true, gfm: true });
-
-// ─── 数据适配层 ───
 
 interface NotebookItem extends TreeFolder { name: string; note_count: number; count: number; }
 interface NoteItem extends TreeItem { id: string; filename: string; size: number; modified: number; }
@@ -259,6 +243,3 @@ export default function Notebook({ username }: NotebookProps) {
   );
 }
 
-function simpleMarkdown(md: string): string {
-  return marked.parse(md) as string;
-}
