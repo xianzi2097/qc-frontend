@@ -232,7 +232,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
               <span className="text-xs text-slate-600 ml-auto">{selectedMsg.created_at}</span>
               <select
                 onChange={e => { if (e.target.value) moveToFolder(selectedMsg.id, e.target.value); e.target.value = ''; }}
-                className="text-[10px] bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-300 outline-none ml-2"
+                className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-300 outline-none ml-2"
                 defaultValue=""
               >
                 <option value="" disabled>移动到...</option>
@@ -241,8 +241,8 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
                 ))}
               </select>
               <button onClick={() => copySource(selectedMsg.body)}
-                className="flex items-center gap-1 text-xs text-slate-500 hover:text-white transition-colors ml-1"
-                title="复制 Markdown 源码">
+                className="flex items-center gap-1 text-xs text-slate-500 hover:text-white transition-colors ml-4"
+                title="复制 Markdown 源码 -1">
                 {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
               </button>
             </div>

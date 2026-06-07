@@ -222,11 +222,15 @@ export default function Notebook({ username }: NotebookProps) {
                 <span className="text-slate-200 font-mono">{activeNote}</span>
                 {dirty && <span className="text-amber-400 text-xs font-medium">● 未保存</span>}
               </div>
-              <button onClick={saveNote}
-                className="flex items-center gap-1.5 text-sm text-black px-4 py-2 rounded-lg font-bold hover:opacity-80"
-                style={{ backgroundColor: 'var(--accent)' }}>
-                <Save size={16} /> 保存
-              </button>
+            <button 
+              onClick={saveNote}
+              /* 1. 去掉了缩放，改用精确的 px-2(横向) 和 py-1(纵向) 来控制大小 */
+              /* 2. 加上 ml-auto 保持右对齐 */
+              className="flex items-center gap-1 text-xs text-black px-2 py-1 rounded-md font-bold hover:opacity-803"
+              style={{ backgroundColor: 'var(--accent)' }} // 💡 只保留背景色
+            >
+              <Save size={14} /> 保存 {/* 💡 图标也等比例缩小一点到 14 */}
+            </button>
             </div>
             <div className="flex-1 flex overflow-hidden">
               <div className="flex-1 border-r border-slate-800">
