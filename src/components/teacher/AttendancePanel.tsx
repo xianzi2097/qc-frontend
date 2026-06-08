@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Users, Check, X, Clock, DollarSign, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Users, Check, X, Plus, Trash2 } from 'lucide-react';
 
 interface Student {
   id: string;
@@ -32,7 +32,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   const [monthlySummary, setMonthlySummary] = useState<any[]>([]);
   const [showAddClass, setShowAddClass] = useState(false);
   const [newClassName, setNewClassName] = useState('');
-  const [newSchedule, setNewSchedule] = useState(['周六 14:00']);
+  const [newSchedule] = useState(['周六 14:00']);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newBillingRate, setNewBillingRate] = useState(0);
@@ -56,7 +56,6 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
   const loadAttendance = async () => {
     if (!selectedClass) return;
-    const month = selectedDate.substring(0, 7);
     const res = await fetch(`/api/attendance/${selectedClass.name}?username=${username}&date=${selectedDate}`);
     const data = await res.json();
     if (data.status === 'success') {
@@ -107,10 +106,14 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     setNewStudentName('');
     setNewBillingRate(0);
     setShowAddStudent(false);
-    loadClasses();
-    // 重新选中班级以刷新数据
-    const updated = classes.find(c => c.name === selectedClass.name);
-    if (updated) setSelectedClass(updated);
+    // 重新加载班级列表，然后刷新选中的班级
+    await loadClasses();
+    const res = await fetch(`/api/classes?username=${username}`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
+      if (updated) setSelectedClass(updated);
+    }
   };
 
   // 删除学生
@@ -139,17 +142,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     ));
   };
 
-  // 获取本月所有日期（用于快速选择）
-  const getMonthDates = () => {
-    const year = parseInt(selectedDate.substring(0, 4));
-    const month = parseInt(selectedDate.substring(5, 7));
-    const dates = [];
-    const daysInMonth = new Date(year, month, 0).getDate();
-    for (let d = 1; d <= daysInMonth; d++) {
-      dates.push(`${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
-    }
-    return dates;
-  };
+
 
   return (
     <div className="flex h-full animate-fadeIn">

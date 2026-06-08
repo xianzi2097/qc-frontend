@@ -36,7 +36,7 @@ export interface FolderTreeConfig<TFolder extends TreeFolder, TItem extends Tree
 
 // ─── 回调 ───
 
-export interface FolderTreeCallbacks<TFolder extends TreeFolder> {
+export interface FolderTreeCallbacks<_TFolder extends TreeFolder> {
   onSelectFolder: (folderName: string) => void;
   onSelectItem: (itemId: string, folderName: string) => void;
   onCreateFolder: (name: string) => Promise<void>;

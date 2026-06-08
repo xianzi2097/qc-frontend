@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  BookOpen, NotebookText, Rocket, Award, Home, Star, Shield, Box, Mail, Mailbox,
+  BookOpen, NotebookText, Rocket, Award, Home, Star, Shield, Box, Mailbox,
 } from 'lucide-react';
 import Notebook from './Notebook';
 import Messages from './Messages';

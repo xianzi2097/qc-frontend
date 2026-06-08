@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Send, CheckCircle, GraduationCap } from 'lucide-react';
-import type { ApiClass } from '../types';
+import type { ApiClass } from './types';
 
 interface Props {
   username: string;
