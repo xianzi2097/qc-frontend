@@ -41,8 +41,8 @@ return (
       speed={1.0}
     />
 
-    {/* 卡片区 */}
-    <div className="relative z-10 w-full max-w-[850px] mx-auto flex-1 flex flex-col justify-center">
+    {/* 卡片区 — flex 比例 + aspect-square，和后台一样自动适配屏幕 */}
+    <div className="relative z-10 w-full max-w-[880px] mx-auto flex-1 flex flex-col justify-center">
 
       {/* Header（不动内容） */}
       <div className="flex items-center gap-4 mb-8">
@@ -62,11 +62,11 @@ return (
       </div>
 
       {/* ================= ROW 1 ================= */}
-      <div className="flex gap-4 mb-4">
+      <div className="flex gap-5 mb-5">
 
         {/* Scratch 课堂 */}
-        <div className="flex-[2] bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3 h-[220px]">
-          <GraduationCap size={38} className="text-green-400 shrink-0" />
+        <div className="flex-[2] bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3">
+          <GraduationCap size={42} className="text-green-400 shrink-0" />
           <h2 className="text-white font-bold text-xl shrink-0">Scratch 课堂</h2>
           <p className="text-slate-500 text-sm shrink-0">进入课堂，获取素材与案例</p>
           <div className="flex gap-2 justify-center shrink-0">
@@ -75,9 +75,9 @@ return (
           </div>
         </div>
 
-        {/* 个人中心 — 固定 220×220 正方 */}
-        <div className="w-[220px] h-[220px] shrink-0 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3">
-          <Award size={38} className="text-orange-400 shrink-0" />
+        {/* 个人中心 — flex比例 + aspect-square，自动正方形 */}
+        <div className="flex-[0.8] bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3 aspect-square">
+          <Award size={42} className="text-orange-400 shrink-0" />
           <h2 className="text-white font-bold text-xl shrink-0">个人中心</h2>
           <p className="text-slate-500 text-sm shrink-0">记录你的成长路线</p>
           <button
@@ -91,11 +91,11 @@ return (
       </div>
 
       {/* ================= ROW 2 ================= */}
-      <div className="flex gap-4">
+      <div className="flex gap-5">
 
         {/* 学习文档 */}
-        <div className="flex-[2] bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3 h-[220px]">
-          <BookOpen size={38} className="text-purple-400 shrink-0" />
+        <div className="flex-[2] bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3">
+          <BookOpen size={42} className="text-purple-400 shrink-0" />
           <h2 className="text-white font-bold text-xl shrink-0">学习文档</h2>
           <p className="text-slate-500 text-sm shrink-0">Python / C++ / Scratch</p>
           <div className="flex gap-2 justify-center flex-wrap shrink-0">
@@ -105,12 +105,12 @@ return (
           </div>
         </div>
 
-        {/* 自由创作 — 固定 220×220 正方 */}
+        {/* 自由创作 — flex比例 + aspect-square，自动正方形 */}
         <a
           href="/Scratch/index.html"
-          className="w-[220px] h-[220px] shrink-0 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3 no-underline group"
+          className="flex-[0.8] bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3 aspect-square no-underline group"
         >
-          <Puzzle size={38} className="text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
+          <Puzzle size={42} className="text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
           <h2 className="text-white font-bold text-xl shrink-0">自由创作</h2>
           <p className="text-slate-500 text-sm shrink-0">Scratch 4.0 引擎</p>
           <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full shrink-0">纯净模式</span>
