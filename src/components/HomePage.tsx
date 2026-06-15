@@ -32,7 +32,7 @@ export default function HomePage({ onLogin }: Props) {
       <StarsBackground />
       <SparklesCore className="absolute inset-0" background="transparent" minSize={0.6} maxSize={1.4} particleDensity={30} particleColor="#f97316" speed={1.0} />
 
-      <div className="relative z-10 w-full max-w-3xl mx-auto" style={{ zoom: 1.1 }}>
+      <div className="relative z-10 w-full max-w-[90%] md:max-w-[65%] lg:max-w-[45%] mx-auto" style={{ zoom: 1.1 }}>
         {/* ── Header ── */}
         <div className="flex items-center gap-4 mb-10 animate-fadeIn">
           <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-orange via-purple-500 to-cyan-400 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.3)]">
