@@ -159,7 +159,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
               <FloatingDock
               dividerAfter={1}
               items={[
-                { title: '首页', icon: <Home size={36} className="text-neutral-400" />, onClick: () => { window.location.href = '/'; } },
+                { title: '首页', icon: <Home size={36} className="text-neutral-400" />, onClick: () => { localStorage.removeItem('user'); window.location.reload(); } },
                 { title: '文档', icon: <BookOpen size={36} className="text-neutral-400" />, onClick: () => { window.location.href = window.location.origin.replace(':5173', '') + '/docs/'; } },
                 { title: '笔记本', icon: <NotebookText size={36} style={activeModule === 'notebook' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'notebook' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('notebook'), isActive: activeModule === 'notebook', activeBg: 'bg-[var(--accent)]/10' },
                 { title: '邮箱', icon: <div className="relative"><Mailbox size={36} style={activeModule === 'messages' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'messages' ? '' : 'text-neutral-500'}`} />{unreadCount > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center shadow-[0_0_6px_rgba(244,63,94,0.6)]">{unreadCount > 9 ? '9+' : unreadCount}</span>}</div>, onClick: () => setActiveModule('messages'), isActive: activeModule === 'messages', activeBg: 'bg-[var(--accent)]/10' },
@@ -175,7 +175,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
         </div>
 
         {/* 内容区 */}
-        <div className="flex-1 overflow-auto px-8 pb-6">
+        <div className="flex-1 overflow-auto px-8 pb-6 accent-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeModule}

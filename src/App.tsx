@@ -18,7 +18,11 @@ export default function App() {
 
   // ── 学生 → 学生看板（全屏） ──
   if (role === 'student') {
-    return <StudentDashboard portalUser={user} />;
+    return (
+      <div className="h-screen flex flex-col overflow-hidden bg-cyber-bg">
+        <StudentDashboard portalUser={user} />
+      </div>
+    );
   }
 
   // ── 老师 → 老师看板 ──

@@ -133,7 +133,8 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
       if (msg) {
         setActiveFolder(folderName);
         setSelectedMsg(msg);
-        if (!msg.is_read) markRead(msg.id, msg.folder);
+        // 用 folderName 而不是 msg.folder（消息JSON里没有folder字段）
+        if (!msg.is_read) markRead(msg.id, folderName);
       }
     },
 

@@ -82,6 +82,8 @@ export default function Notebook({ username }: NotebookProps) {
   const callbacks: FolderTreeCallbacks<NotebookItem> = {
     onSelectFolder: (name) => {
       setActiveNotebook(name); setActiveNote('');
+      // 切换笔记本时关闭新建笔记输入框，防止笔记跑到错误的笔记本
+      if (activeNotebookRef.current !== name) setShowNewNote(false);
       const wasExpanded = expandedNbsRef.current.has(name);
       setExpandedNbs(prev => {
         const next = new Set(prev);
@@ -219,8 +221,8 @@ export default function Notebook({ username }: NotebookProps) {
         renderItemsFooter={renderItemsFooter}
       />
 
-      {/* ── 右侧：分屏编辑 + 实时预览 ── */}
-      <div className="flex-1 flex flex-col bg-slate-950">
+      {/* ── 右侧：分屏编辑 + 实时预览（固定高度，flex布局撑满） ── */}
+      <div className="flex-1 min-h-0 flex flex-col bg-slate-950">
         {activeNote && activeNotebook ? (
           <>
             <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 flex-shrink-0">

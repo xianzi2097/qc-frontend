@@ -57,17 +57,20 @@ export default function SendMessagePanel({ username, classes }: Props) {
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">收件人</label>
-            <select
+            <label className="text-xs text-slate-500 mb-1 block">收件人（学生账号）</label>
+            <input
+              type="text"
               value={recipient}
               onChange={e => setRecipient(e.target.value)}
+              placeholder="输入学生账号，如 s1, s2, s3"
+              list="student-list"
               className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-brand-orange transition-colors"
-            >
-              <option value="">选择学生...</option>
-              {allStudents.map(s => (
-                <option key={s.id} value={s.username}>{s.nickname} ({s.username})</option>
+            />
+            <datalist id="student-list">
+              {allStudents.filter(s => s.username).map(s => (
+                <option key={s.id} value={s.username}>{s.nickname}</option>
               ))}
-            </select>
+            </datalist>
           </div>
           <div>
             <label className="text-xs text-slate-500 mb-1 block">主题</label>

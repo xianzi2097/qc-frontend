@@ -35,6 +35,17 @@ body {
   animation: glowLine 3s ease-in-out infinite;
 }
 
+/* ── 滚动条：全局灰色基础，.accent-scrollbar 跟随模块强调色 ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+* { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+
+.accent-scrollbar::-webkit-scrollbar-thumb { background: var(--accent); }
+.accent-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); opacity: 0.8; }
+.accent-scrollbar { scrollbar-color: var(--accent) transparent; }
+
 /* ── Markdown 渲染样式（marked 输出）── */
 .marked-body {
   color: #e2e8f0;
