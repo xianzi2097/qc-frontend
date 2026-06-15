@@ -34,7 +34,6 @@ export default function StudentListPanel({ classes, loading, error, attrKeys }: 
             <thead>
               <tr className="bg-slate-950/50 text-slate-400 text-xs tracking-wider border-b border-slate-800">
                 <th className="p-4">姓名</th>
-                <th className="p-4">账号</th>
                 {attrKeys.map(k => (
                   <th key={k} className="p-4">{k}</th>
                 ))}
@@ -44,7 +43,6 @@ export default function StudentListPanel({ classes, loading, error, attrKeys }: 
               {cls.students.map(stu => (
                 <tr key={stu.id} className="hover:bg-slate-800/40 transition-colors">
                   <td className="p-4 font-bold text-white">{stu.nickname}</td>
-                  <td className="p-4 font-mono text-slate-400">{stu.username}</td>
                   {attrKeys.map(k => (
                     <td key={k} className="p-4 text-slate-300">
                       {String(stu.descriptors?.[k] ?? '—')}

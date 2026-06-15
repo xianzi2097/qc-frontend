@@ -329,8 +329,8 @@ export default function FolderTreePanel<
                     ))
                   )}
 
-                  {/* 尾部扩展区（Notebook 的"新建笔记"） */}
-                  {renderItemsFooter?.()}
+                  {/* 尾部扩展区 — 只在激活的文件夹里渲染 */}
+                  {activeFolder === f.name && renderItemsFooter?.()}
                 </div>
                   );
                 })()

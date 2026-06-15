@@ -16,11 +16,22 @@ export function useTeacherData(username: string): TeacherData {
 
   const fetchData = useCallback(() => {
     setLoading(true);
-    fetch(`/api/students?username=${username}`)
+    fetch(`/api/classes?username=${username}`)
       .then(res => res.json())
       .then(data => {
         if (data.status === 'success') {
-          setClasses(data.classes);
+          // 转换 classes.json 格式 → ApiClass 格式
+          const transformed: ApiClass[] = (data.classes || []).map((c: any) => ({
+            class_name: c.name,
+            students: (c.students || []).map((s: any) => ({
+              id: s.id,
+              username: '',
+              nickname: s.name,
+              avatar_path: '',
+              descriptors: {} as Record<string, unknown>,
+            })),
+          }));
+          setClasses(transformed);
           setError('');
         } else {
           setError(data.detail || '加载失败');

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FileText, Save, Book, Plus } from 'lucide-react';
 import { simpleMarkdown } from '../../lib/markdown';
 import FolderTreePanel, {
@@ -41,74 +41,97 @@ export default function Notebook({ username }: NotebookProps) {
   const [dirty, setDirty] = useState(false);
   const [showNewNote, setShowNewNote] = useState(false);
   const [newNoteName, setNewNoteName] = useState('');
+  const [loadingFolders, setLoadingFolders] = useState<Set<string>>(new Set());
 
   // ── 数据加载 ──
 
   const loadNotebooks = useCallback(() => {
     fetch(`/api/notebooks?username=${username}`)
-      .then(r => r.json()).then(d => { if (d.status === 'success') setNotebooks(d.notebooks.map((nb: any) => ({ ...nb, count: nb.note_count ?? nb.count }))); });
+      .then(r => r.json()).then(d => { if (d.status === 'success') setNotebooks(d.notebooks.map((nb: any) => ({ ...nb, count: nb.note_count ?? nb.count }))); })
+      .catch(e => console.error('加载笔记本失败', e));
   }, [username]);
   useEffect(() => { loadNotebooks(); }, [loadNotebooks]);
 
-  const loadNotes = (nb: string) => {
+  const loadNotes = useCallback((nb: string) => {
+    setLoadingFolders(prev => new Set(prev).add(nb));
     fetch(`/api/notes?username=${username}&notebook=${encodeURIComponent(nb)}`)
       .then(r => r.json()).then(d => {
         if (d.status === 'success') setNotesMap(prev => new Map(prev).set(nb, d.notes.map((n: any) => ({ ...n, id: n.filename }))));
-      });
-  };
+      })
+      .catch(e => console.error('加载笔记列表失败', e))
+      .finally(() => setLoadingFolders(prev => { const next = new Set(prev); next.delete(nb); return next; }));
+  }, [username]);
 
   useEffect(() => {
     if (!activeNote || !activeNotebook) { setContent(''); return; }
     fetch(`/api/notes/${encodeURIComponent(activeNotebook)}/${encodeURIComponent(activeNote)}?username=${username}`)
-      .then(r => r.json()).then(d => { if (d.status === 'success') { setContent(d.content); setDirty(false); } });
+      .then(r => r.json()).then(d => { if (d.status === 'success') { setContent(d.content); setDirty(false); } })
+      .catch(e => console.error('加载笔记内容失败', e));
   }, [activeNote, activeNotebook, username]);
+
+  // 用 ref 保存最新值，避免 callbacks 闭包过期
+  const activeNotebookRef = useRef(activeNotebook);
+  activeNotebookRef.current = activeNotebook;
+  const activeNoteRef = useRef(activeNote);
+  activeNoteRef.current = activeNote;
+  const expandedNbsRef = useRef(expandedNbs);
+  expandedNbsRef.current = expandedNbs;
 
   // ── 文件夹 + 条目回调（给基件用） ──
 
   const callbacks: FolderTreeCallbacks<NotebookItem> = {
     onSelectFolder: (name) => {
       setActiveNotebook(name); setActiveNote('');
+      const wasExpanded = expandedNbsRef.current.has(name);
       setExpandedNbs(prev => {
         const next = new Set(prev);
         if (next.has(name)) { next.delete(name); }
-        else { next.add(name); loadNotes(name); }
+        else { next.add(name); }
         return next;
       });
+      // 展开时才加载（loadNotes 调用移到 setState 外面）
+      if (!wasExpanded) loadNotes(name);
     },
     onSelectItem: (id, folderName) => { setActiveNote(id); setActiveNotebook(folderName); },
 
     onCreateFolder: async (name) => {
       await fetch(`/api/notebooks?username=${username}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }),
-      }).then(r => r.json());
+      }).then(r => r.json()).catch(e => console.error('创建笔记本失败', e));
       loadNotebooks();
     },
 
     onDeleteFolder: async (name) => {
-      await fetch(`/api/notebooks/${encodeURIComponent(name)}?username=${username}`, { method: 'DELETE' }).then(r => r.json());
-      if (activeNotebook === name) { setActiveNotebook(''); setActiveNote(''); }
+      await fetch(`/api/notebooks/${encodeURIComponent(name)}?username=${username}`, { method: 'DELETE' })
+        .then(r => r.json()).catch(e => console.error('删除笔记本失败', e));
+      if (activeNotebookRef.current === name) { setActiveNotebook(''); setActiveNote(''); }
       setExpandedNbs(prev => { const n = new Set(prev); n.delete(name); return n; });
       loadNotebooks();
     },
 
     onDeleteItem: async (filename) => {
-      await fetch(`/api/notes/${encodeURIComponent(activeNotebook)}/${encodeURIComponent(filename)}?username=${username}`, { method: 'DELETE' }).then(r => r.json());
-      if (activeNote === filename) { setActiveNote(''); setContent(''); }
-      loadNotes(activeNotebook);
+      const nb = activeNotebookRef.current;
+      await fetch(`/api/notes/${encodeURIComponent(nb)}/${encodeURIComponent(filename)}?username=${username}`, { method: 'DELETE' })
+        .then(r => r.json()).catch(e => console.error('删除笔记失败', e));
+      if (activeNoteRef.current === filename) { setActiveNote(''); setContent(''); }
+      loadNotes(nb);
     },
 
     onRenameFolder: async (oldName, newName) => {
-      await fetch(`/api/notebooks/${encodeURIComponent(oldName)}?username=${username}&new_name=${encodeURIComponent(newName)}`, { method: 'PUT' }).then(r => r.json());
-      if (activeNotebook === oldName) setActiveNotebook(newName);
+      await fetch(`/api/notebooks/${encodeURIComponent(oldName)}?username=${username}&new_name=${encodeURIComponent(newName)}`, { method: 'PUT' })
+        .then(r => r.json()).catch(e => console.error('重命名笔记本失败', e));
+      if (activeNotebookRef.current === oldName) setActiveNotebook(newName);
       setExpandedNbs(prev => { const n = new Set(prev); n.delete(oldName); n.add(newName); return n; });
       loadNotebooks();
     },
 
     onRenameItem: async (oldFilename, newName) => {
       const newFilename = newName.endsWith('.md') ? newName : newName + '.md';
-      await fetch(`/api/notes/${encodeURIComponent(activeNotebook)}/${encodeURIComponent(oldFilename)}?username=${username}&new_name=${encodeURIComponent(newFilename)}`, { method: 'PUT' }).then(r => r.json());
-      if (activeNote === oldFilename) { setActiveNote(newFilename); }
-      loadNotes(activeNotebook);
+      const nb = activeNotebookRef.current;
+      await fetch(`/api/notes/${encodeURIComponent(nb)}/${encodeURIComponent(oldFilename)}?username=${username}&new_name=${encodeURIComponent(newFilename)}`, { method: 'PUT' })
+        .then(r => r.json()).catch(e => console.error('重命名笔记失败', e));
+      if (activeNoteRef.current === oldFilename) { setActiveNote(newFilename); }
+      loadNotes(nb);
     },
   };
 
@@ -121,7 +144,7 @@ export default function Notebook({ username }: NotebookProps) {
     await fetch(`/api/notes?username=${username}&notebook=${encodeURIComponent(activeNotebook)}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filename, content: `# ${n}\n\n` }),
-    }).then(r => r.json());
+    }).then(r => r.json()).catch(e => console.error('创建笔记失败', e));
     setActiveNote(filename);
     setContent(`# ${n}\n\n`);
     setDirty(false);
@@ -130,21 +153,23 @@ export default function Notebook({ username }: NotebookProps) {
     loadNotes(activeNotebook);
   };
 
-  const saveNote = () => {
+  const saveNote = useCallback(() => {
     if (!activeNote || !activeNotebook) return;
     fetch(`/api/notes?username=${username}&notebook=${encodeURIComponent(activeNotebook)}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filename: activeNote, content }),
-    }).then(r => r.json()).then(() => { setDirty(false); loadNotes(activeNotebook); });
-  };
+    }).then(r => r.json()).then(() => { setDirty(false); loadNotes(activeNotebook); })
+      .catch(e => console.error('保存笔记失败', e));
+  }, [activeNote, activeNotebook, content, username, loadNotes]);
 
+  // Ctrl+S 快捷键（saveNote 用 useCallback 包裹，加入依赖）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); if (dirty) saveNote(); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dirty, content, activeNotebook, activeNote]);
+  }, [dirty, saveNote]);
 
   // ── 数据转换（NoteItem 已含 id，直接存入 Map） ──
 
@@ -190,6 +215,7 @@ export default function Notebook({ username }: NotebookProps) {
         activeFolder={activeNotebook}
         activeItem={activeNote}
         expandedFolders={expandedNbs}
+        loadingFolders={loadingFolders}
         renderItemsFooter={renderItemsFooter}
       />
 
@@ -210,7 +236,7 @@ export default function Notebook({ username }: NotebookProps) {
               onClick={saveNote}
               /* 1. 去掉了缩放，改用精确的 px-2(横向) 和 py-1(纵向) 来控制大小 */
               /* 2. 加上 ml-auto 保持右对齐 */
-              className="flex items-center gap-1 text-xs text-black px-2 py-1 rounded-md font-bold hover:opacity-803"
+              className="flex items-center gap-1 text-xs text-black px-2 py-1 rounded-md font-bold hover:opacity-80"
               style={{ backgroundColor: 'var(--accent)' }} // 💡 只保留背景色
             >
               <Save size={14} /> 保存 {/* 💡 图标也等比例缩小一点到 14 */}

@@ -84,7 +84,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
   const [profile, setProfile] = useState<ProfileData>({ points: 0, badges: 0, projects: 0, level: 1 });
   const [unreadCount, setUnreadCount] = useState(0);
   const isDev = !portalUser;
-  const username = portalUser?.username || 's';
+  const username = portalUser?.username || 's1';
   const nickname = portalUser?.nickname || '小极客';
 
   const refreshUnread = () => {
