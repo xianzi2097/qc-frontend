@@ -100,3 +100,5 @@ body {
   & img { max-width: 100%; border-radius: 0.5rem; margin: 0.75rem 0; }
   & hr { border: none; border-top: 1px solid #334155; margin: 1.5rem 0; }
 }
+
+/* ── 4K zoom 已移至 HomePage.tsx 组件内，只缩放卡片区 ── */
