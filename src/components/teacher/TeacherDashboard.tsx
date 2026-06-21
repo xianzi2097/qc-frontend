@@ -6,6 +6,7 @@ import ErrorBoundary from '../ui/ErrorBoundary';
 import AttendancePanel from './AttendancePanel';
 import SendMessagePanel from './SendMessagePanel';
 import StudentListPanel from './StudentListPanel';
+import CourseManager from './CourseManager';
 
 interface TeacherDashboardProps {
   activeTab: string;
@@ -27,6 +28,17 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
       <div className="h-full flex flex-col">
         <ErrorBoundary label="点名考勤">
           <AttendancePanel username={username} />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
+  // ── 课件管理：独立页面 ──
+  if (activeTab === 'courses') {
+    return (
+      <div className="h-full flex flex-col">
+        <ErrorBoundary label="课件管理">
+          <CourseManager />
         </ErrorBoundary>
       </div>
     );

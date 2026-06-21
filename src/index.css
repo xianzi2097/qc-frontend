@@ -8,11 +8,17 @@
   --color-cyber-bg: #020617;       /* 深邃极客夜空底 */
 }
 
-/* 全局基础样式 */
+/* 全局基础样式 — 以 1366×768（14"笔记本）为基准 */
+html { font-size: 16px; }
+
 body {
   background-color: var(--color-cyber-bg);
   color: var(--color-white);
 }
+
+/* 大屏自动放大 rem — 全部等比缩放 */
+@media (min-width: 1920px) { html { font-size: 20px; } }  /* 1.25× */
+@media (min-width: 2560px) { html { font-size: 24px; } }  /* 1.5× — 2K 不用调系统缩放 */
 
 /* 自定义入场动画（v4 直接用 CSS 写，不需要 @layer） */
 @keyframes fadeIn {
@@ -101,4 +107,4 @@ body {
   & hr { border: none; border-top: 1px solid #334155; margin: 1.5rem 0; }
 }
 
-/* ── 4K zoom 已移至 HomePage.tsx 组件内，只缩放卡片区 ── */
+/* ── 整体缩放：修改 html font-size 即可等比缩放所有 rem 单位（卡片、图标、间距）── */

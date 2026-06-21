@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  LayoutDashboard, Users, Cpu, LogOut, Mail, Calendar,
+  LayoutDashboard, Users, Cpu, LogOut, Mail, Calendar, BookOpen,
 } from 'lucide-react';
 import { useAuth } from './lib/useAuth';
 import HomePage from './components/HomePage';
@@ -89,6 +89,16 @@ export default function App() {
               }`}
             >
               <Calendar size={18} /> 点名考勤
+            </button>
+            <button
+              onClick={() => setActiveTab('courses')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                activeTab === 'courses'
+                  ? 'bg-brand-orange text-black font-bold shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+                  : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+              }`}
+            >
+              <BookOpen size={18} /> 课件管理
             </button>
           </nav>
         </div>
