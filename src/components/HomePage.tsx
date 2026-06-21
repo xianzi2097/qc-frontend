@@ -113,8 +113,8 @@ export default function HomePage({ onLogin }: Props) {
 
       </div>
 
-      {/* Footer */}
-      <p className="relative z-10 text-center text-xs text-slate-700 pb-5 shrink-0">
+      {/* Footer — 备案信息 */}
+      <p className="text-xs text-slate-700 mt-12 pb-5">
         粤ICP备2026057743号-1 · Arin | 青橙
       </p>
 
