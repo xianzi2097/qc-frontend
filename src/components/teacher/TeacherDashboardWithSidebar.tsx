@@ -96,12 +96,14 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
             >
               <BookOpen size={18} /> 课件管理
             </button>
-            <a
-              href="/"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 mt-4"
-            >
-              <Home size={16} /> 返回主页
-            </a>
+            <div className="border-t border-slate-800 pt-3 mt-3">
+              <a
+                href="/"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+              >
+                <Home size={16} /> 返回主页
+              </a>
+            </div>
           </nav>
         </div>
 
