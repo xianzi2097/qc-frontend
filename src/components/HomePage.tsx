@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BookOpen, GraduationCap, Award, Puzzle } from 'lucide-react';
 import { StarsBackground } from './ui/StarsBackground';
-import AvatarPicker from './ui/AvatarPicker';
+import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
 
 import type { PortalUser } from '../lib/useAuth';
 
@@ -126,12 +126,18 @@ export default function HomePage({ onLogin }: Props) {
             <div className="col-span-1 aspect-square bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3 hover:border-orange-500/30 transition-all duration-300 group hover:translate-y-[-2px]">
               {storedUser ? (
                 <>
-                  <button
-                    onClick={() => setShowAvatarPicker(true)}
-                    className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-orange via-purple-500 to-cyan-400 flex items-center justify-center text-white font-black text-2xl shadow-[0_0_35px_rgba(249,115,22,0.4)] shrink-0 cursor-pointer hover:scale-105 transition-transform"
-                  >
-                    {loggedInNickname.charAt(0)}
-                  </button>
+                  {(() => {
+                    const idx = parseInt((loggedInAvatar || '').replace('avatar_', ''), 10);
+                    const a = AVATARS[isNaN(idx) ? 0 : idx % AVATARS.length];
+                    return (
+                      <button
+                        onClick={() => setShowAvatarPicker(true)}
+                        className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl shadow-[0_0_35px_rgba(249,115,22,0.4)] shrink-0 cursor-pointer hover:scale-105 transition-transform`}
+                      >
+                        {a.icon}
+                      </button>
+                    );
+                  })()}
                   <h2 className="text-lg font-bold text-white shrink-0">{loggedInNickname}</h2>
                   <p className="text-sm text-slate-500 shrink-0">{loggedInRole === 'teacher' ? '老师' : loggedInRole === 'student' ? '学生' : ''}</p>
                   <div className="flex gap-2 mt-1 shrink-0">

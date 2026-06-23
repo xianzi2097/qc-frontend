@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, Users, Cpu, LogOut, Mail, Calendar, BookOpen, Home,
 } from 'lucide-react';
+import { AVATARS } from '../ui/AvatarPicker';
 import TeacherDashboard from './TeacherDashboard';
 
 interface Props {
@@ -9,6 +10,15 @@ interface Props {
   role: string;
   nickname: string;
   logout: () => void;
+}
+
+function getAvatarCfg() {
+  try {
+    const raw = localStorage.getItem('user');
+    const user = raw ? JSON.parse(raw) : null;
+    const idx = parseInt((user?.avatar_path || '').replace('avatar_', ''), 10);
+    return AVATARS[isNaN(idx) ? 0 : idx % AVATARS.length];
+  } catch { return AVATARS[0]; }
 }
 
 export default function TeacherDashboardWithSidebar({ username, role, nickname, logout }: Props) {
@@ -96,14 +106,17 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
         </div>
 
         {/* 底部用户信息 + 登出 */}
-        <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-brand-orange">{displayName}</p>
+        <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarCfg().bg} flex items-center justify-center text-sm shrink-0`}>
+            {getAvatarCfg().icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-brand-orange truncate">{displayName}</p>
             <p className="text-xs text-slate-600 font-mono">{role}</p>
           </div>
           <button
             onClick={logout}
-            className="text-slate-500 hover:text-rose-400 transition-colors"
+            className="text-slate-500 hover:text-rose-400 transition-colors shrink-0"
             title="退出登录"
           >
             <LogOut size={16} />
