@@ -110,7 +110,9 @@ export default function CourseManager() {
       );
       const data = await res.json();
       if (data.status === 'success') {
-        loadMaterials(selectedCourse);
+        // 刷新课件列表和课程列表
+        await loadMaterials(selectedCourse);
+        loadCourses();
       } else {
         alert(data.detail || '删除失败');
       }
@@ -291,7 +293,7 @@ export default function CourseManager() {
                     </div>
                   </a>
                   <button
-                    onClick={() => handleDeleteMaterial(m.name)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteMaterial(m.name); }}
                     className="absolute top-2 right-2 text-slate-600 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
                     title="删除课件"
                   >
