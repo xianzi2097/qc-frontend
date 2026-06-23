@@ -56,15 +56,26 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
   const loadAttendance = async () => {
     if (!selectedClass) return;
-    const res = await fetch(`/api/attendance/${selectedClass.name}?username=${username}&date=${selectedDate}`);
-    const data = await res.json();
-    if (data.status === 'success') {
-      if (data.records.length > 0) {
-        setRecords(data.records);
-      } else {
-        // 没有记录则初始化（全部 present）
-        setRecords(selectedClass.students.map(s => ({ student_id: s.id, name: s.name, status: 'present' })));
+    try {
+      const res = await fetch(`/api/attendance/${selectedClass.name}?username=${username}&date=${selectedDate}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        if (data.records.length > 0) {
+          // 合并已有记录 + 新学生默认出勤
+          const existingMap = new Map<string, AttendanceRecord>();
+          data.records.forEach((r: AttendanceRecord) => existingMap.set(r.student_id, r));
+          const merged: AttendanceRecord[] = selectedClass.students.map(s => {
+            const existing = existingMap.get(s.id);
+            if (existing) return existing;
+            return { student_id: s.id, name: s.name, status: 'present' as const };
+          });
+          setRecords(merged);
+        } else {
+          setRecords(selectedClass.students.map(s => ({ student_id: s.id, name: s.name, status: 'present' })));
+        }
       }
+    } catch {
+      // 静默失败
     }
   };
 
@@ -124,13 +135,31 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   };
 
   // 保存点名
+  const [saveStatus, setSaveStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+
   const handleSaveAttendance = async () => {
     if (!selectedClass) return;
-    await fetch(`/api/attendance/${selectedClass.name}?username=${username}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: selectedDate, records }),
-    });
-    loadMonthlySummary();
+    setSaving(true);
+    setSaveStatus(null);
+    try {
+      const res = await fetch(`/api/attendance/${selectedClass.name}?username=${username}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDate, records }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setSaveStatus({ ok: true, text: `✅ ${selectedDate} 点名已保存` });
+        loadMonthlySummary();
+      } else {
+        setSaveStatus({ ok: false, text: data.detail || '保存失败' });
+      }
+    } catch {
+      setSaveStatus({ ok: false, text: '网络错误，请检查后端' });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveStatus(null), 3000);
+    }
   };
 
   // 切换状态
@@ -285,11 +314,16 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                     </div>
                   )}
 
+                  {saveStatus && (
+                    <div className={`px-4 py-2 rounded-lg text-sm ${saveStatus.ok ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                      {saveStatus.text}
+                    </div>
+                  )}
                   {selectedClass.students.length > 0 && (
                     <div className="flex justify-end">
-                      <button onClick={handleSaveAttendance}
-                        className="text-sm text-black px-6 py-2 rounded-lg font-bold" style={{ backgroundColor: 'var(--accent)' }}>
-                        保存点名
+                      <button onClick={handleSaveAttendance} disabled={saving}
+                        className="text-sm text-black px-6 py-2 rounded-lg font-bold disabled:opacity-50" style={{ backgroundColor: 'var(--accent)' }}>
+                        {saving ? '保存中...' : '保存点名'}
                       </button>
                     </div>
                   )}
