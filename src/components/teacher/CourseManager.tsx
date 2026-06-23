@@ -19,13 +19,13 @@ interface Material {
 
 const TYPE_OPTIONS = [
   { value: 'scratch', label: '🧩 Scratch' },
-  { value: 'python', label: '🐍 Python' },
+  { value: 'python', label: '🍁 Python' },
   { value: 'cpp', label: '⚙️ C++' },
 ];
 
 const TYPE_ICON: Record<string, string> = {
   scratch: '🧩',
-  python: '🐍',
+  python: '🍁',
   cpp: '⚙️',
 };
 

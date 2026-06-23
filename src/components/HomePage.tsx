@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BookOpen, GraduationCap, Award, Puzzle } from 'lucide-react';
 import { StarsBackground } from './ui/StarsBackground';
+import AvatarPicker from './ui/AvatarPicker';
 
 import type { PortalUser } from '../lib/useAuth';
 
@@ -10,11 +11,42 @@ interface Props {
 
 export default function HomePage({ onLogin }: Props) {
   const [showLogin, setShowLogin] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const storedUser = (() => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+  const loggedInNickname = storedUser?.nickname || '';
+  const loggedInRole = storedUser?.role || '';
+  const loggedInAvatar = storedUser?.avatar_path || '0';
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    window.location.reload();
+  };
+
+  const handleAvatarSelect = async (avatarId: string) => {
+    try {
+      await fetch('/api/update-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: storedUser.username, avatar_path: `avatar_${avatarId}` }),
+      });
+      storedUser.avatar_path = `avatar_${avatarId}`;
+      localStorage.setItem('user', JSON.stringify(storedUser));
+      setShowAvatarPicker(false);
+      window.location.reload();
+    } catch {
+      // ignore
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,12 +91,8 @@ export default function HomePage({ onLogin }: Props) {
             <h2 className="text-xl font-bold text-white shrink-0">Scratch 课堂</h2>
             <p className="text-sm text-slate-500 shrink-0">进入课堂，获取素材与案例</p>
             <div className="flex gap-3 justify-center shrink-0 flex-wrap">
-              <a className="text-sm bg-slate-800 hover:bg-green-600/30 text-slate-300 hover:text-green-300 px-5 py-2 rounded-lg transition-all" href="/classroom/?teacher=arin">Arin老师</a>
-              <a className="text-sm bg-slate-800 hover:bg-green-600/30 text-slate-300 hover:text-green-300 px-5 py-2 rounded-lg transition-all" href="/classroom/?teacher=lin">大白老师</a>
-            </div>
-            {/* 课程快捷入口 — 后续可动态渲染 */}
-            <div className="flex gap-2 justify-center flex-wrap shrink-0 text-xs text-slate-600">
-              <span>选择老师后 ↔ 快速进入课程</span>
+              <a className="text-sm bg-slate-800 hover:bg-green-600/30 text-slate-300 hover:text-green-300 px-5 py-2 rounded-lg transition-all" href="/?view=courses&teacher=t1">Arin老师</a>
+              <a className="text-sm bg-slate-800 hover:bg-green-600/30 text-slate-300 hover:text-green-300 px-5 py-2 rounded-lg transition-all" href="/?view=courses&teacher=t2">李老师</a>
             </div>
           </div>
 
@@ -77,9 +105,9 @@ export default function HomePage({ onLogin }: Props) {
               <h2 className="text-lg font-bold text-white shrink-0">学习文档</h2>
               <p className="text-sm text-slate-500 shrink-0">Python / C++ / Scratch</p>
               <div className="flex gap-2 justify-center flex-wrap shrink-0">
-                <a className="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg transition-colors" href="/docs/scratch_course/">Scratch</a>
-                <a className="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg transition-colors" href="/docs/python_course/">Python</a>
-                <a className="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg transition-colors" href="/docs/cpp_course/">C++</a>
+                <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/scratch_course/">Scratch</a>
+                <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/python_course/">Python</a>
+                <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/cpp_course/">C++</a>
               </div>
             </div>
 
@@ -96,15 +124,44 @@ export default function HomePage({ onLogin }: Props) {
 
             {/* 个人中心 — 方卡，最右侧 */}
             <div className="col-span-1 aspect-square bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center gap-3 hover:border-orange-500/30 transition-all duration-300 group hover:translate-y-[-2px]">
-              <Award className="w-14 h-14 text-orange-400 shrink-0 group-hover:scale-110 transition-transform" />
-              <h2 className="text-lg font-bold text-white shrink-0">个人中心</h2>
-              <p className="text-sm text-slate-500 shrink-0">记录你的成长路线</p>
-              <button
-                onClick={() => setShowLogin(true)}
-                className="text-sm bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-5 py-2 rounded-lg shrink-0 transition-colors"
-              >
-                登录
-              </button>
+              {storedUser ? (
+                <>
+                  <button
+                    onClick={() => setShowAvatarPicker(true)}
+                    className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-orange via-purple-500 to-cyan-400 flex items-center justify-center text-white font-black text-2xl shadow-[0_0_35px_rgba(249,115,22,0.4)] shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                  >
+                    {loggedInNickname.charAt(0)}
+                  </button>
+                  <h2 className="text-lg font-bold text-white shrink-0">{loggedInNickname}</h2>
+                  <p className="text-sm text-slate-500 shrink-0">{loggedInRole === 'teacher' ? '老师' : loggedInRole === 'student' ? '学生' : ''}</p>
+                  <div className="flex gap-2 mt-1 shrink-0">
+                    <a
+                      href="/?view=dashboard"
+                      className="text-sm bg-slate-800 hover:bg-orange-600/30 text-slate-300 hover:text-orange-300 px-4 py-2 rounded-lg transition-all"
+                    >
+                      进入空间
+                    </a>
+                    <button
+                      onClick={handleLogout}
+                      className="text-sm bg-slate-800 hover:bg-rose-600/30 text-slate-300 hover:text-rose-300 px-4 py-2 rounded-lg transition-all"
+                    >
+                      退出
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Award className="w-14 h-14 text-orange-400 shrink-0 group-hover:scale-110 transition-transform" />
+                  <h2 className="text-lg font-bold text-white shrink-0">个人中心</h2>
+                  <p className="text-sm text-slate-500 shrink-0">记录你的成长路线</p>
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="text-sm bg-slate-800 hover:bg-orange-600/30 text-slate-300 hover:text-orange-300 px-5 py-2 rounded-lg transition-all"
+                  >
+                    登录
+                  </button>
+                </>
+              )}
             </div>
 
           </div>
@@ -112,6 +169,15 @@ export default function HomePage({ onLogin }: Props) {
         </div>
 
       </div>
+
+      {/* Avatar Picker */}
+      {showAvatarPicker && (
+        <AvatarPicker
+          currentAvatar={loggedInAvatar}
+          onSelect={handleAvatarSelect}
+          onClose={() => setShowAvatarPicker(false)}
+        />
+      )}
 
       {/* Footer — 备案信息 */}
       <p className="text-xs text-slate-700 mt-12 pb-5">
