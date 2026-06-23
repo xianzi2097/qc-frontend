@@ -101,6 +101,24 @@ export default function CourseManager() {
     }
   };
 
+  const handleDeleteMaterial = async (name: string) => {
+    if (!selectedCourse || !confirm(`确定删除课件「${name}」？`)) return;
+    try {
+      const res = await fetch(
+        `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(name)}?teacher=${username}`,
+        { method: 'DELETE' }
+      );
+      const data = await res.json();
+      if (data.status === 'success') {
+        loadMaterials(selectedCourse);
+      } else {
+        alert(data.detail || '删除失败');
+      }
+    } catch {
+      alert('无法连接服务器');
+    }
+  };
+
   const loadMaterials = async (course: Course) => {
     setSelectedCourse(course);
     setMaterialsLoading(true);
@@ -255,23 +273,31 @@ export default function CourseManager() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {materials.map(m => (
-                <a
-                  key={m.name}
-                  href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
-                  target="_blank"
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-center hover:border-brand-orange/30 transition-all group"
-                >
-                  <span className="text-2xl block mb-2">📂</span>
-                  <div className="text-xs font-medium text-white mb-1 truncate">{m.name}</div>
-                  <div className="text-[10px] text-slate-500">
-                    {m.has_main && m.has_student ? '👥 师生版' : m.has_main ? '📘 教师版' : `${m.sb3_count} sb3`}
-                  </div>
-                  <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[10px] text-brand-orange flex items-center justify-center gap-1">
-                      打开 <ExternalLink size={10} />
-                    </span>
-                  </div>
-                </a>
+                <div key={m.name} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-center hover:border-brand-orange/30 transition-all group relative">
+                  <a
+                    href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
+                    target="_blank"
+                    className="block"
+                  >
+                    <span className="text-2xl block mb-2">📂</span>
+                    <div className="text-xs font-medium text-white mb-1 truncate">{m.name}</div>
+                    <div className="text-[10px] text-slate-500">
+                      {m.has_main && m.has_student ? '👥 师生版' : m.has_main ? '📘 教师版' : `${m.sb3_count} sb3`}
+                    </div>
+                    <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[10px] text-brand-orange flex items-center justify-center gap-1">
+                        打开 <ExternalLink size={10} />
+                      </span>
+                    </div>
+                  </a>
+                  <button
+                    onClick={() => handleDeleteMaterial(m.name)}
+                    className="absolute top-2 right-2 text-slate-600 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
+                    title="删除课件"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
             </div>
           )}
