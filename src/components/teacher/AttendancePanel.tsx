@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Users, Pencil } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Users, Pencil, RotateCcw } from 'lucide-react';
 
 // ── 类型 ──
 
@@ -105,9 +105,23 @@ function EditSessionModal({
               className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none" />
           </div>
 
+          {/* 快捷按钮 */}
+          <div className="flex items-center gap-2">
+            <button onClick={() => {
+              setEditStudents(prev => prev.map(s => ({
+                ...s,
+                status: 'present',
+                content: '正常推进',
+                next_plan: '正常推进',
+              })));
+            }}
+              className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
+              <Check size={14} /> 全部正常推进
+            </button>
+          </div>
           {/* 学生表头 */}
           <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 text-xs text-slate-500 px-1">
-            <span className="w-8"></span>
+            <span className="w-32">学生</span>
             <span className="w-16">出勤</span>
             <span>本节课内容</span>
             <span>下节课计划</span>
@@ -116,13 +130,14 @@ function EditSessionModal({
           {/* 每学生一行 */}
           {editStudents.map((s, idx) => (
             <div key={s.id}
-              className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 items-start bg-slate-800/40 rounded-xl p-3 border border-slate-700/50">
-              {/* 名字 */}
-              <div className="w-8 pt-1 flex justify-center">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
+              className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 items-start bg-slate-800/40 rounded-xl p-3 border border-slate-700/50">
+              {/* 名字 + 头像 */}
+              <div className="flex items-center gap-2 pt-1 w-32">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
                   ${s.status === 'present' ? 'bg-green-500/20 text-green-400' : 'bg-rose-500/20 text-rose-400'}`}>
                   {s.name[0]}
                 </div>
+                <span className="text-xs text-white truncate">{fmt(s.name, s.remark)}</span>
               </div>
               {/* 出勤切换 */}
               <div className="w-16 pt-1">
@@ -195,6 +210,28 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     matches: { class_name: string; student_id: string; name: string; remark: string }[];
     showDialog: boolean;
   }>({ matches: [], showDialog: false });
+
+  // ── 垃圾桶 ──
+  const [trashItems, setTrashItems] = useState<{ class_name: string; deleted_at: string; class_data: ClassData }[]>([]);
+  const [showTrash, setShowTrash] = useState(false);
+
+  const loadTrash = useCallback(async () => {
+    const res = await fetch(`/api/trash?username=${username}`);
+    const data = await res.json();
+    if (data.status === 'success') setTrashItems(data.trash);
+  }, [username]);
+
+  const handleRestoreClass = async (name: string) => {
+    await fetch(`/api/trash/restore/${encodeURIComponent(name)}?username=${username}`, { method: 'POST' });
+    loadTrash();
+    loadClasses();
+  };
+
+  const handlePermanentDelete = async (name: string) => {
+    if (!confirm(`永久删除「${name}」？此操作不可恢复！`)) return;
+    await fetch(`/api/trash/${encodeURIComponent(name)}?username=${username}`, { method: 'DELETE' });
+    loadTrash();
+  };
 
   // ── 加载班级 ──
   const loadClasses = useCallback(async () => {
@@ -394,6 +431,14 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
             </div>
           ))}
         </div>
+
+        {/* 垃圾桶入口 */}
+        <div className="border-t border-slate-800 p-2">
+          <button onClick={() => { loadTrash(); setShowTrash(true); }}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors">
+            <Trash2 size={14} /> 垃圾桶
+          </button>
+        </div>
       </div>
 
       {/* 右侧：课堂记录 */}
@@ -407,13 +452,27 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                 <span className="text-xs text-slate-500">{selectedClass.students.length}名学生</span>
               </div>
               <div className="flex items-center gap-2">
+                <button onClick={openNewSession}
+                  className="text-xs text-black px-4 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: 'var(--accent)' }}>
+                  <Check size={14} /> 点名
+                </button>
                 <button onClick={() => { setShowAddStudent(true); setNewStudentName(''); }}
                   className="text-xs text-cyan-400 hover:text-white flex items-center gap-1">
                   <Plus size={14} /> 添加学生
                 </button>
-                <button onClick={openNewSession}
-                  className="text-xs text-black px-3 py-1.5 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>
-                  + 新建记录
+                <button onClick={() => {
+                  if (!selectedClass) return;
+                  const d = new Date();
+                  d.setDate(d.getDate() - 1);
+                  const y = d.toISOString().split('T')[0];
+                  const students: SessionStudent[] = selectedClass.students.map(s => ({
+                    id: s.id, name: s.name, remark: s.remark || '',
+                    status: 'present', content: '', next_plan: '',
+                  }));
+                  setEditModal({ date: y, students });
+                }}
+                  className="text-xs text-slate-400 hover:text-white">
+                  补录
                 </button>
               </div>
             </div>
@@ -565,6 +624,43 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
           onClose={() => setEditModal(null)}
           saving={saving}
         />
+      )}
+
+      {/* 垃圾桶弹窗 */}
+      {showTrash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={e => { if (e.target === e.currentTarget) setShowTrash(false); }}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[500px] max-h-[70vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+              <span className="text-sm text-white font-bold flex items-center gap-2"><Trash2 size={16} /> 垃圾桶</span>
+              <button onClick={() => setShowTrash(false)} className="text-slate-400 hover:text-white p-1"><X size={18} /></button>
+            </div>
+            <div className="flex-1 overflow-auto p-4 space-y-2">
+              {trashItems.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">垃圾桶为空</div>
+              ) : trashItems.map(t => (
+                <div key={t.class_name} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-white">{t.class_name}</span>
+                      <span className="text-xs text-slate-500 ml-2">删除于 {t.deleted_at?.slice(0, 10)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleRestoreClass(t.class_name)}
+                        className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
+                        <RotateCcw size={12} /> 恢复
+                      </button>
+                      <button onClick={() => handlePermanentDelete(t.class_name)}
+                        className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-1.5 hover:bg-rose-500/20">
+                        永久删除
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
