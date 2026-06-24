@@ -68,8 +68,23 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
   }, [username]);
   useEffect(() => { loadFolders(); }, [loadFolders]);
 
+  // ── 轮询：每5秒刷新未读数 ──
+  useEffect(() => {
+    const timer = setInterval(() => {
+      loadFolders();
+      // 刷新当前打开的文件夹
+      if (activeFolder) {
+        setMessagesMap(prev => {
+          const next = new Map(prev);
+          next.delete(activeFolder); // 清除缓存，下次展开时重新加载
+          return next;
+        });
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [loadFolders, activeFolder]);
+
   const loadMessages = (folder: string) => {
-    if (messagesMap.has(folder)) return; // 已有数据，不重复加载
     setLoadingFolders(prev => new Set(prev).add(folder));
     fetch(`/api/messages/inbox?username=${username}&folder=${encodeURIComponent(folder)}`)
       .then(r => r.json())
