@@ -116,6 +116,9 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
       .catch(console.error);
 
     refreshUnread();
+    // 每5秒刷新未读
+    const timer = setInterval(refreshUnread, 5000);
+    return () => clearInterval(timer);
   }, [username]);
 
   const moduleColor: Record<string, string> = {
