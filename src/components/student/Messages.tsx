@@ -240,7 +240,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
                 defaultValue=""
               >
                 <option value="" disabled>移动到...</option>
-                {folders.filter(f => f.name !== selectedMsg.folder).map(f => (
+                {folders.filter(f => f.name !== activeFolder).map(f => (
                   <option key={f.name} value={f.name}>{f.name}</option>
                 ))}
               </select>
