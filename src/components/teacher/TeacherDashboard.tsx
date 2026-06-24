@@ -22,11 +22,11 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
   const allStudents = classes.flatMap(c => c.students);
   const attrKeys = [...new Set(allStudents.flatMap(s => Object.keys(s.descriptors || {})))];
 
-  // ── 点名考勤：独立全屏页面 ──
+  // ── 课堂记录 ──
   if (activeTab === 'attendance') {
     return (
       <div className="h-full flex flex-col">
-        <ErrorBoundary label="点名考勤">
+        <ErrorBoundary label="课堂记录">
           <AttendancePanel username={username} />
         </ErrorBoundary>
       </div>

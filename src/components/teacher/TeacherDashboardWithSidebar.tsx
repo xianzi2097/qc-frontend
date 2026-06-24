@@ -84,7 +84,7 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
                   : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
-              <Calendar size={18} /> 点名考勤
+              <Calendar size={18} /> 课堂记录
             </button>
             <button
               onClick={() => setActiveTab('courses')}

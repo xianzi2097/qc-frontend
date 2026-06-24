@@ -1,123 +1,263 @@
-import { useState, useEffect } from 'react';
-import { Calendar, Users, Check, X, Plus, Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Users, Pencil } from 'lucide-react';
+
+// ── 类型 ──
 
 interface Student {
   id: string;
   name: string;
-  billing_rate: number;
-  account?: string;
+  remark?: string;
 }
 
 interface ClassData {
   name: string;
-  schedule: string[];
   students: Student[];
 }
 
-interface AttendanceRecord {
-  student_id: string;
+interface SessionStudent {
+  id: string;
   name: string;
+  remark: string;
   status: string;
+  content: string;
+  next_plan: string;
 }
+
+interface SessionRecord {
+  date: string;
+  students: SessionStudent[];
+}
+
+// ── 工具 ──
+
+function fmt(name: string, remark?: string): string {
+  return remark ? `${name} (${remark})` : name;
+}
+
+function getToday(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+function getCurrentMonth(): string {
+  return getToday().slice(0, 7);
+}
+
+function prevMonth(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(y, m - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function nextMonth(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(y, m, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+const MONTH_NAMES: Record<string, string> = {
+  '01': '一月', '02': '二月', '03': '三月', '04': '四月',
+  '05': '五月', '06': '六月', '07': '七月', '08': '八月',
+  '09': '九月', '10': '十月', '11': '十一月', '12': '十二月',
+};
+
+// ── 编辑弹窗 ──
+
+function EditSessionModal({
+  date, students, onSave, onClose, saving,
+}: {
+  date: string;
+  students: SessionStudent[];
+  onSave: (date: string, students: SessionStudent[]) => void;
+  onClose: () => void;
+  saving: boolean;
+}) {
+  const [editDate, setEditDate] = useState(date);
+  const [editStudents, setEditStudents] = useState<SessionStudent[]>(students);
+
+  const toggleStatus = (idx: number) => {
+    setEditStudents(prev => prev.map((s, i) =>
+      i === idx ? { ...s, status: s.status === 'present' ? 'absent' : 'present' } : s
+    ));
+  };
+
+  const updateField = (idx: number, field: 'content' | 'next_plan', val: string) => {
+    setEditStudents(prev => prev.map((s, i) =>
+      i === idx ? { ...s, [field]: val } : s
+    ));
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[700px] max-h-[85vh] flex flex-col shadow-2xl"
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+          <span className="text-sm text-white font-bold">课堂记录</span>
+          <button onClick={onClose} className="text-slate-400 hover:text-white p-1"><X size={18} /></button>
+        </div>
+
+        <div className="flex-1 overflow-auto p-6 space-y-4">
+          {/* 日期 */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 w-16 shrink-0">日期</span>
+            <input type="date" value={editDate}
+              onChange={e => setEditDate(e.target.value)}
+              className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none" />
+          </div>
+
+          {/* 学生表头 */}
+          <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 text-xs text-slate-500 px-1">
+            <span className="w-8"></span>
+            <span className="w-16">出勤</span>
+            <span>本节课内容</span>
+            <span>下节课计划</span>
+          </div>
+
+          {/* 每学生一行 */}
+          {editStudents.map((s, idx) => (
+            <div key={s.id}
+              className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 items-start bg-slate-800/40 rounded-xl p-3 border border-slate-700/50">
+              {/* 名字 */}
+              <div className="w-8 pt-1 flex justify-center">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
+                  ${s.status === 'present' ? 'bg-green-500/20 text-green-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                  {s.name[0]}
+                </div>
+              </div>
+              {/* 出勤切换 */}
+              <div className="w-16 pt-1">
+                <button onClick={() => toggleStatus(idx)}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                    s.status === 'present'
+                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                      : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
+                  }`}>
+                  {s.status === 'present' ? <Check size={14} /> : <X size={14} />}
+                </button>
+              </div>
+              {/* 本节课内容 */}
+              <textarea rows={2} value={s.content}
+                onChange={e => updateField(idx, 'content', e.target.value)}
+                placeholder="学了什么…"
+                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none resize-none placeholder-slate-500" />
+              {/* 下节课计划 */}
+              <textarea rows={2} value={s.next_plan}
+                onChange={e => updateField(idx, 'next_plan', e.target.value)}
+                placeholder="下节课计划…"
+                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none resize-none placeholder-slate-500" />
+            </div>
+          ))}
+        </div>
+
+        {/* 底部按钮 */}
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-800">
+          <button onClick={onClose}
+            className="text-xs text-slate-400 px-4 py-2 rounded-lg hover:bg-slate-800">取消</button>
+          <button onClick={() => onSave(editDate, editStudents)} disabled={saving}
+            className="text-xs text-black px-6 py-2 rounded-lg font-bold disabled:opacity-50" style={{ backgroundColor: 'var(--accent)' }}>
+            {saving ? '保存中…' : '保存'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 主组件 ──
 
 interface AttendancePanelProps {
   username: string;
 }
 
 export default function AttendancePanel({ username }: AttendancePanelProps) {
+  // 班级
   const [classes, setClasses] = useState<ClassData[]>([]);
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
-  const [monthlySummary, setMonthlySummary] = useState<any[]>([]);
   const [showAddClass, setShowAddClass] = useState(false);
   const [newClassName, setNewClassName] = useState('');
-  const [newSchedule] = useState(['周六 14:00']);
+
+  // 课堂记录
+  const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [currentMonth, setCurrentMonth] = useState(getCurrentMonth());
+  const [loadingSessions, setLoadingSessions] = useState(false);
+
+  // 编辑弹窗
+  const [editModal, setEditModal] = useState<{
+    date: string;
+    students: SessionStudent[];
+  } | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // 添加学生
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
-  const [newBillingRate, setNewBillingRate] = useState(0);
-  const [activeTab, setActiveTab] = useState<'attendance' | 'monthly'>('attendance');
+  const [dupCheck, setDupCheck] = useState<{
+    matches: { class_name: string; student_id: string; name: string; remark: string }[];
+    showDialog: boolean;
+  }>({ matches: [], showDialog: false });
 
-  // 加载班级列表
-  const loadClasses = async () => {
+  // ── 加载班级 ──
+  const loadClasses = useCallback(async () => {
     const res = await fetch(`/api/classes?username=${username}`);
     const data = await res.json();
     if (data.status === 'success') setClasses(data.classes);
-  };
+  }, [username]);
 
-  useEffect(() => { loadClasses(); }, []);
+  useEffect(() => { loadClasses(); }, [loadClasses]);
 
-  // 选择班级时加载点名记录
+  // ── 选中班级时加载记录 ──
   useEffect(() => {
     if (!selectedClass) return;
-    loadAttendance();
-    loadMonthlySummary();
-  }, [selectedClass, selectedDate]);
+    setLoadingSessions(true);
+    fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}?username=${username}&month=${currentMonth}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') setSessions(data.sessions);
+      })
+      .finally(() => setLoadingSessions(false));
+  }, [selectedClass, currentMonth, username]);
 
-  const loadAttendance = async () => {
-    if (!selectedClass) return;
-    try {
-      const res = await fetch(`/api/attendance/${selectedClass.name}?username=${username}&date=${selectedDate}`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        if (data.records.length > 0) {
-          // 合并已有记录 + 新学生默认出勤
-          const existingMap = new Map<string, AttendanceRecord>();
-          data.records.forEach((r: AttendanceRecord) => existingMap.set(r.student_id, r));
-          const merged: AttendanceRecord[] = selectedClass.students.map(s => {
-            const existing = existingMap.get(s.id);
-            if (existing) return existing;
-            return { student_id: s.id, name: s.name, status: 'present' as const };
-          });
-          setRecords(merged);
-        } else {
-          setRecords(selectedClass.students.map(s => ({ student_id: s.id, name: s.name, status: 'present' })));
-        }
-      }
-    } catch {
-      // 静默失败
-    }
-  };
-
-  const loadMonthlySummary = async () => {
-    if (!selectedClass) return;
-    const month = selectedDate.substring(0, 7);
-    const res = await fetch(`/api/attendance/${selectedClass.name}/monthly?username=${username}&month=${month}`);
-    const data = await res.json();
-    if (data.status === 'success') setMonthlySummary(data.summary);
-  };
-
-  // 创建班级
+  // ── 创建班级 ──
   const handleCreateClass = async () => {
     if (!newClassName.trim()) return;
     await fetch(`/api/classes?username=${username}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newClassName, schedule: newSchedule }),
+      body: JSON.stringify({ name: newClassName, schedule: [] }),
     });
     setNewClassName('');
     setShowAddClass(false);
     loadClasses();
   };
 
-  // 删除班级
+  // ── 删除班级 ──
   const handleDeleteClass = async (name: string) => {
-    if (!confirm(`确定删除班级「${name}」及所有点名记录？`)) return;
-    await fetch(`/api/classes/${name}?username=${username}`, { method: 'DELETE' });
-    if (selectedClass?.name === name) setSelectedClass(null);
+    if (!confirm(`确定删除班级「${name}」？`)) return;
+    await fetch(`/api/classes/${encodeURIComponent(name)}?username=${username}`, { method: 'DELETE' });
+    if (selectedClass?.name === name) { setSelectedClass(null); setSessions([]); }
     loadClasses();
   };
 
-  // 添加学生
-  const handleAddStudent = async () => {
-    if (!selectedClass || !newStudentName.trim()) return;
-    await fetch(`/api/classes/${selectedClass.name}/students?username=${username}`, {
+  // ── 添加学生（含重名检测） ──
+  const startAddStudent = async () => {
+    if (!newStudentName.trim() || !selectedClass) return;
+    const res = await fetch(`/api/classes/find-student?username=${username}&name=${encodeURIComponent(newStudentName)}`);
+    const data = await res.json();
+    if (data.status === 'success' && data.matches.length > 0) {
+      setDupCheck({ matches: data.matches, showDialog: true });
+    } else {
+      await addStudentDirect('');
+    }
+  };
+
+  const addStudentDirect = async (existingId: string) => {
+    if (!selectedClass) return;
+    await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students?username=${username}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newStudentName, billing_rate: newBillingRate }),
+      body: JSON.stringify({ name: newStudentName, existing_id: existingId, remark: '' }),
     });
     setNewStudentName('');
-    setNewBillingRate(0);
     setShowAddStudent(false);
-    // 重新加载班级列表，然后刷新选中的班级
+    setDupCheck({ matches: [], showDialog: false });
     await loadClasses();
     const res = await fetch(`/api/classes?username=${username}`);
     const data = await res.json();
@@ -127,52 +267,82 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     }
   };
 
-  // 删除学生
-  const handleDeleteStudent = async (studentId: string) => {
+  const addStudentWithNew = async (_oldRemark: string, newRemark: string) => {
     if (!selectedClass) return;
-    await fetch(`/api/classes/${selectedClass.name}/students/${studentId}?username=${username}`, { method: 'DELETE' });
-    loadClasses();
-  };
-
-  // 保存点名
-  const [saveStatus, setSaveStatus] = useState<{ ok: boolean; text: string } | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  const handleSaveAttendance = async () => {
-    if (!selectedClass) return;
-    setSaving(true);
-    setSaveStatus(null);
-    try {
-      const res = await fetch(`/api/attendance/${selectedClass.name}?username=${username}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: selectedDate, records }),
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        setSaveStatus({ ok: true, text: `✅ ${selectedDate} 点名已保存` });
-        loadMonthlySummary();
-      } else {
-        setSaveStatus({ ok: false, text: data.detail || '保存失败' });
-      }
-    } catch {
-      setSaveStatus({ ok: false, text: '网络错误，请检查后端' });
-    } finally {
-      setSaving(false);
-      setTimeout(() => setSaveStatus(null), 3000);
+    await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students?username=${username}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newStudentName, existing_id: '', remark: newRemark }),
+    });
+    setNewStudentName('');
+    setShowAddStudent(false);
+    setDupCheck({ matches: [], showDialog: false });
+    await loadClasses();
+    const res = await fetch(`/api/classes?username=${username}`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
+      if (updated) setSelectedClass(updated);
     }
   };
 
-  // 切换状态
-  const toggleStatus = (studentId: string) => {
-    setRecords(prev => prev.map(r =>
-      r.student_id === studentId
-        ? { ...r, status: r.status === 'present' ? 'absent' : 'present' }
-        : r
-    ));
+  // ── 保存课堂记录 ──
+  const handleSaveSession = async (date: string, students: SessionStudent[]) => {
+    if (!selectedClass) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}?username=${username}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, students }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setEditModal(null);
+        const r = await fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}?username=${username}&month=${currentMonth}`);
+        const d = await r.json();
+        if (d.status === 'success') setSessions(d.sessions);
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
+  // ── 删除课堂记录 ──
+  const handleDeleteSession = async (date: string) => {
+    if (!selectedClass || !confirm(`确定删除 ${date} 的记录？`)) return;
+    await fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}/${date}?username=${username}`, { method: 'DELETE' });
+    setSessions(prev => prev.filter(s => s.date !== date));
+  };
 
+  // ── 打开新建弹窗 ──
+  const openNewSession = () => {
+    if (!selectedClass) return;
+    const students: SessionStudent[] = selectedClass.students.map(s => ({
+      id: s.id,
+      name: s.name,
+      remark: s.remark || '',
+      status: 'present',
+      content: '',
+      next_plan: '',
+    }));
+    setEditModal({ date: getToday(), students });
+  };
 
+  // ── 打开编辑弹窗 ──
+  const openEditSession = (session: SessionRecord) => {
+    setEditModal({ date: session.date, students: [...session.students] });
+  };
+
+  // ── 获取出席摘要 ──
+  const attendanceSummary = (students: SessionStudent[]) => {
+    return students.map(s => {
+      const label = fmt(s.name, s.remark);
+      return s.status === 'present'
+        ? <span key={s.id} className="text-green-400">{label}✅ </span>
+        : <span key={s.id} className="text-rose-400">{label}❌ </span>;
+    });
+  };
+
+  // ── 渲染 ──
   return (
     <div className="flex h-full animate-fadeIn">
       {/* 左侧：班级列表 */}
@@ -191,12 +361,10 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
           <div className="px-3 py-2 border-b border-slate-800 space-y-1">
             <input autoFocus value={newClassName} onChange={e => setNewClassName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleCreateClass(); if (e.key === 'Escape') setShowAddClass(false); }}
-              placeholder="班级名称，如 三年级1班"
+              placeholder="班级名称"
               className="w-full bg-slate-800 text-sm text-slate-200 px-2 py-1.5 rounded outline-none border border-slate-700" style={{ borderColor: 'var(--accent)' }} />
-            <div className="flex gap-1">
-              <button onClick={handleCreateClass}
-                className="flex-1 text-xs text-black px-2 py-1 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>确定</button>
-            </div>
+            <button onClick={handleCreateClass}
+              className="w-full text-xs text-black px-2 py-1.5 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>确定</button>
           </div>
         )}
 
@@ -209,7 +377,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
             </div>
           ) : classes.map(c => (
             <div key={c.name}
-              onClick={() => setSelectedClass(c)}
+              onClick={() => { setSelectedClass(c); setCurrentMonth(getCurrentMonth()); }}
               className={`group flex items-center justify-between px-3 py-2 cursor-pointer ${
                 selectedClass?.name === c.name
                   ? 'bg-cyan-400/10 border-l-2 border-cyan-400 text-white'
@@ -228,7 +396,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
         </div>
       </div>
 
-      {/* 右侧：点名/月度统计 */}
+      {/* 右侧：课堂记录 */}
       <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
         {selectedClass ? (
           <>
@@ -239,134 +407,140 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                 <span className="text-xs text-slate-500">{selectedClass.students.length}名学生</span>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => setActiveTab('attendance')}
-                  className={`text-xs px-3 py-1 rounded ${activeTab === 'attendance' ? 'bg-cyan-400/20 text-cyan-400' : 'text-slate-400 hover:text-white'}`}>
-                  点名
+                <button onClick={() => { setShowAddStudent(true); setNewStudentName(''); }}
+                  className="text-xs text-cyan-400 hover:text-white flex items-center gap-1">
+                  <Plus size={14} /> 添加学生
                 </button>
-                <button onClick={() => setActiveTab('monthly')}
-                  className={`text-xs px-3 py-1 rounded ${activeTab === 'monthly' ? 'bg-amber-400/20 text-amber-400' : 'text-slate-400 hover:text-white'}`}>
-                  月度统计
+                <button onClick={openNewSession}
+                  className="text-xs text-black px-3 py-1.5 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>
+                  + 新建记录
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-6">
-              {activeTab === 'attendance' ? (
-                <div className="space-y-6">
-                  {/* 日期选择 + 添加学生 */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
-                        className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none" />
-                      <span className="text-xs text-slate-500">{selectedClass.schedule.join(' / ')}</span>
+            {/* 添加学生表单 */}
+            {showAddStudent && (
+              <div className="px-4 py-2 border-b border-slate-800 bg-slate-900/50">
+                <div className="flex items-center gap-2">
+                  <input autoFocus value={newStudentName} onChange={e => setNewStudentName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') startAddStudent(); if (e.key === 'Escape') setShowAddStudent(false); }}
+                    placeholder="学生姓名"
+                    className="bg-slate-800 text-sm text-slate-200 px-3 py-1.5 rounded outline-none border border-slate-700 w-48" />
+                  <button onClick={startAddStudent}
+                    className="text-xs text-black px-3 py-1.5 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>添加</button>
+                  <button onClick={() => setShowAddStudent(false)}
+                    className="text-xs text-slate-400 px-2 py-1.5 rounded hover:bg-slate-800">取消</button>
+                </div>
+              </div>
+            )}
+
+            {/* 重名检测弹窗 */}
+            {dupCheck.showDialog && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                onClick={e => { if (e.target === e.currentTarget) setDupCheck({ matches: [], showDialog: false }); }}>
+                <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[460px] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+                  <h3 className="text-sm text-white font-bold mb-4">发现同名「{newStudentName}」</h3>
+                  {dupCheck.matches.map(m => (
+                    <div key={m.student_id} className="text-xs text-slate-400 mb-3">
+                      在「{m.class_name}」{m.remark ? `(${m.remark})` : ''}
                     </div>
-                    <button onClick={() => { setShowAddStudent(true); setNewStudentName(''); setNewBillingRate(0); }}
-                      className="text-xs text-cyan-400 hover:text-white flex items-center gap-1">
-                      <Plus size={14} /> 添加学生
+                  ))}
+                  <div className="space-y-3 mt-4">
+                    <button onClick={() => addStudentDirect(dupCheck.matches[0].student_id)}
+                      className="w-full text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-2.5 hover:bg-green-500/20 text-left">
+                      是同一个学生，跨班共享
                     </button>
-                  </div>
-
-                  {showAddStudent && (
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-3">
-                      <input autoFocus value={newStudentName} onChange={e => setNewStudentName(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleAddStudent(); if (e.key === 'Escape') setShowAddStudent(false); }}
-                        placeholder="学生姓名"
-                        className="flex-1 bg-slate-800 text-sm text-slate-200 px-3 py-2 rounded outline-none border border-slate-700" />
-                      <input type="number" value={newBillingRate} onChange={e => setNewBillingRate(Number(e.target.value))}
-                        placeholder="课时费"
-                        className="w-24 bg-slate-800 text-sm text-slate-200 px-3 py-2 rounded outline-none border border-slate-700" />
-                      <button onClick={handleAddStudent}
-                        className="text-sm text-black px-4 py-2 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>确定</button>
-                    </div>
-                  )}
-
-                  {/* 学生列表 */}
-                  {selectedClass.students.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">
-                      <Users size={48} className="mx-auto mb-3 opacity-30" />
-                      <p className="text-sm">还没有学生，点击上方添加</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {records.map(r => (
-                        <div key={r.student_id}
-                          className="flex items-center justify-between bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <button onClick={() => toggleStatus(r.student_id)}
-                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                                r.status === 'present'
-                                  ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                                  : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
-                              }`}>
-                              {r.status === 'present' ? <Check size={16} /> : <X size={16} />}
-                            </button>
-                            <span className="text-sm text-white font-medium">{r.name}</span>
-                            <span className={`text-xs ${r.status === 'present' ? 'text-green-400' : 'text-rose-400'}`}>
-                              {r.status === 'present' ? '出勤' : '请假'}
-                            </span>
-                          </div>
-                          <button onClick={() => handleDeleteStudent(r.student_id)}
-                            className="text-slate-400 hover:text-rose-400">
-                            <Trash2 size={14} />
-                          </button>
+                    <div className="border-t border-slate-700 pt-3">
+                      <p className="text-xs text-slate-400 mb-2">不是同一个人，请输入区分名：</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-300 w-20">原「{newStudentName}」</span>
+                          <input id="oldRemark" defaultValue="大小明" placeholder="如大小明"
+                            className="flex-1 bg-slate-800 text-sm text-slate-200 px-3 py-1.5 rounded outline-none border border-slate-700" />
                         </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {saveStatus && (
-                    <div className={`px-4 py-2 rounded-lg text-sm ${saveStatus.ok ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                      {saveStatus.text}
-                    </div>
-                  )}
-                  {selectedClass.students.length > 0 && (
-                    <div className="flex justify-end">
-                      <button onClick={handleSaveAttendance} disabled={saving}
-                        className="text-sm text-black px-6 py-2 rounded-lg font-bold disabled:opacity-50" style={{ backgroundColor: 'var(--accent)' }}>
-                        {saving ? '保存中...' : '保存点名'}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-300 w-20">新「{newStudentName}」</span>
+                          <input id="newRemark" defaultValue="小小明" placeholder="如小小明"
+                            className="flex-1 bg-slate-800 text-sm text-slate-200 px-3 py-1.5 rounded outline-none border border-slate-700" />
+                        </div>
+                      </div>
+                      <button onClick={() => {
+                        const oldR = (document.getElementById('oldRemark') as HTMLInputElement)?.value || '';
+                        const newR = (document.getElementById('newRemark') as HTMLInputElement)?.value || '';
+                        addStudentWithNew(oldR, newR);
+                      }}
+                        className="w-full text-xs text-black bg-amber-400 rounded-lg px-4 py-2.5 font-bold mt-3 hover:bg-amber-500">
+                        确定，新建学生
                       </button>
                     </div>
-                  )}
+                  </div>
+                  <button onClick={() => setDupCheck({ matches: [], showDialog: false })}
+                    className="w-full text-xs text-slate-400 mt-2 py-2 hover:text-white">取消</button>
+                </div>
+              </div>
+            )}
+
+            {/* 主内容区 */}
+            <div className="flex-1 overflow-auto p-6">
+              {/* 月份切换 */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setCurrentMonth(prevMonth(currentMonth))}
+                    className="text-slate-400 hover:text-white p-1">
+                    <ChevronLeft size={18} />
+                  </button>
+                  <span className="text-sm text-white font-mono">
+                    {currentMonth} {MONTH_NAMES[currentMonth.slice(5, 7)]}
+                  </span>
+                  <button onClick={() => setCurrentMonth(nextMonth(currentMonth))}
+                    className="text-slate-400 hover:text-white p-1">
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* 记录列表 */}
+              {loadingSessions ? (
+                <div className="text-center py-12 text-slate-500 text-sm">加载中…</div>
+              ) : sessions.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">
+                  <Users size={48} className="mx-auto mb-3 opacity-30" />
+                  <p className="text-sm mb-2">本月还没有课堂记录</p>
+                  <button onClick={openNewSession}
+                    className="text-xs text-cyan-400 hover:text-white">+ 新建第一条记录</button>
                 </div>
               ) : (
-                /* 月度统计 */
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-400">统计月份：</span>
-                    <span className="text-sm text-white font-mono">{selectedDate.substring(0, 7)}</span>
-                  </div>
-
-                  {monthlySummary.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">
-                      <Calendar size={48} className="mx-auto mb-3 opacity-30" />
-                      <p className="text-sm">本月还没有点名记录</p>
+                <div className="space-y-2">
+                  {sessions.map(s => (
+                    <div key={s.date}
+                      className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors group cursor-pointer"
+                      onClick={() => openEditSession(s)}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm text-white font-mono">{s.date}</span>
+                            <span className="text-xs text-slate-500">
+                              {s.students.filter(x => x.status === 'present').length}/{s.students.length} 出勤
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-300 flex flex-wrap gap-x-3 gap-y-1">
+                            {attendanceSummary(s.students)}
+                          </div>
+                          {s.students.filter(x => x.content).length > 0 && (
+                            <div className="mt-2 text-xs text-slate-500 line-clamp-1">
+                              {s.students.filter(x => x.content).map(x => `${fmt(x.name, x.remark)}: ${x.content}`).join('｜')}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 ml-3 shrink-0 opacity-0 group-hover:opacity-100">
+                          <button onClick={(e) => { e.stopPropagation(); openEditSession(s); }}
+                            className="text-slate-400 hover:text-cyan-400 p-1"><Pencil size={14} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); handleDeleteSession(s.date); }}
+                            className="text-slate-400 hover:text-rose-400 p-1"><Trash2 size={14} /></button>
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr className="bg-slate-950 text-slate-400 text-xs tracking-wider border-b border-slate-800">
-                            <th className="p-4">学生</th>
-                            <th className="p-4 text-center">出勤</th>
-                            <th className="p-4 text-center">请假</th>
-                            <th className="p-4 text-right">课时费</th>
-                            <th className="p-4 text-right">本月费用</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800 text-sm">
-                          {monthlySummary.map((s, i) => (
-                            <tr key={i} className="hover:bg-slate-800/40 transition-colors">
-                              <td className="p-4 font-medium text-white">{s.name}</td>
-                              <td className="p-4 text-center text-green-400">{s.present}次</td>
-                              <td className="p-4 text-center text-rose-400">{s.absent}次</td>
-                              <td className="p-4 text-right text-slate-300">¥{s.billing_rate}/时</td>
-                              <td className="p-4 text-right text-amber-400 font-bold">¥{s.total_fee}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  ))}
                 </div>
               )}
             </div>
@@ -375,12 +549,23 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
           <div className="flex-1 flex items-center justify-center text-slate-500">
             <div className="text-center">
               <Users size={64} className="mx-auto mb-4 opacity-30" />
-              <p className="text-lg mb-2">选择左侧班级开始点名</p>
+              <p className="text-lg mb-2">选择左侧班级查看课堂记录</p>
               <p className="text-sm text-slate-400">或者创建一个新班级</p>
             </div>
           </div>
         )}
       </div>
+
+      {/* 编辑弹窗 */}
+      {editModal && (
+        <EditSessionModal
+          date={editModal.date}
+          students={editModal.students}
+          onSave={handleSaveSession}
+          onClose={() => setEditModal(null)}
+          saving={saving}
+        />
+      )}
     </div>
   );
 }
