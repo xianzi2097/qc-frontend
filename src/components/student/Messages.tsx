@@ -253,11 +253,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
             <div className="flex-1 overflow-auto p-6">
               <h2 className="text-base font-bold text-white mb-1">{selectedMsg.subject}</h2>
               <div className="text-xs text-slate-500 mb-4 border-b border-slate-800 pb-3">
-                {selectedMsg.folder !== '收件箱' && (
-                  <span className="mr-3">
-                    文件夹：<span style={{ color: 'var(--accent)' }}>{selectedMsg.folder}</span>
-                  </span>
-                )}
+                {selectedMsg.created_at?.slice(0, 16) || ''}
               </div>
               <div
                 className="text-slate-300 leading-relaxed text-sm marked-body"
