@@ -103,15 +103,19 @@ export default function CourseManager() {
 
   const handleDeleteMaterial = async (name: string) => {
     if (!selectedCourse || !confirm(`确定删除课件「${name}」？`)) return;
+    const courseName = selectedCourse.name;
     try {
       const res = await fetch(
-        `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(name)}?teacher=${username}`,
+        `/api/courses/${encodeURIComponent(courseName)}/materials/${encodeURIComponent(name)}?teacher=${username}`,
         { method: 'DELETE' }
       );
       const data = await res.json();
       if (data.status === 'success') {
-        // 刷新课件列表和课程列表
-        await loadMaterials(selectedCourse);
+        // 重新加载同一课程的课件列表
+        const r2 = await fetch(`/api/courses/${encodeURIComponent(courseName)}/materials?teacher=${username}&t=${Date.now()}`);
+        const d2 = await r2.json();
+        if (d2.status === 'success') setMaterials(d2.materials);
+        // 刷新课程列表
         loadCourses();
       } else {
         alert(data.detail || '删除失败');
