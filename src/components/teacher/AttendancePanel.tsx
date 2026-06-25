@@ -462,17 +462,14 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                 </button>
                 <button onClick={() => {
                   if (!selectedClass) return;
-                  const d = new Date();
-                  d.setDate(d.getDate() - 1);
-                  const y = d.toISOString().split('T')[0];
                   const students: SessionStudent[] = selectedClass.students.map(s => ({
                     id: s.id, name: s.name, remark: s.remark || '',
                     status: 'present', content: '', next_plan: '',
                   }));
-                  setEditModal({ date: y, students });
+                  setEditModal({ date: getToday(), students });
                 }}
                   className="text-xs text-slate-400 hover:text-white">
-                  补录
+                  新建记录
                 </button>
               </div>
             </div>
