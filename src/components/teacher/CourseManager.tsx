@@ -73,10 +73,14 @@ export default function CourseManager() {
         setNewName('');
         loadCourses();
       } else {
-        alert(data.detail || '创建失败');
+        // FastAPI 422 验证错误：detail 可能是数组或字符串
+        const msg = Array.isArray(data.detail)
+          ? data.detail.map((e: any) => e.msg || JSON.stringify(e)).join('；')
+          : (data.detail || '创建失败');
+        setError(msg);
       }
     } catch {
-      alert('无法连接服务器');
+      setError('无法连接服务器');
     }
   };
 
