@@ -105,14 +105,10 @@ function EditSessionModal({
               className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none" />
           </div>
 
-          {/* 快捷按钮 */}
           <div className="flex items-center gap-2">
             <button onClick={() => {
               setEditStudents(prev => prev.map(s => ({
-                ...s,
-                status: 'present',
-                content: '正常推进',
-                next_plan: '正常推进',
+                ...s, status: 'present', content: '正常推进', next_plan: '正常推进',
               })));
             }}
               className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
@@ -131,13 +127,17 @@ function EditSessionModal({
           {editStudents.map((s, idx) => (
             <div key={s.id}
               className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 items-start bg-slate-800/40 rounded-xl p-3 border border-slate-700/50">
-              {/* 名字 + 头像 */}
-              <div className="flex items-center gap-2 pt-1 w-32">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
-                  ${s.status === 'present' ? 'bg-green-500/20 text-green-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                  {s.name[0]}
-                </div>
-                <span className="text-xs text-white truncate">{fmt(s.name, s.remark)}</span>
+              {/* 名字 + 独立正常推进 */}
+              <div className="flex items-center gap-1 pt-1 w-32">
+                <span className="text-xs text-white font-medium truncate">{fmt(s.name, s.remark)}</span>
+                <button onClick={() => {
+                  setEditStudents(prev => prev.map((x, i) =>
+                    i === idx ? { ...x, status: 'present', content: '正常推进', next_plan: '正常推进' } : x
+                  ));
+                }}
+                  className="text-[10px] text-green-400/60 hover:text-green-400 ml-0.5 shrink-0" title="正常推进">
+                  推
+                </button>
               </div>
               {/* 出勤切换 */}
               <div className="w-16 pt-1">
@@ -169,7 +169,7 @@ function EditSessionModal({
           <button onClick={onClose}
             className="text-xs text-slate-400 px-4 py-2 rounded-lg hover:bg-slate-800">取消</button>
           <button onClick={() => onSave(editDate, editStudents)} disabled={saving}
-            className="text-xs text-black px-6 py-2 rounded-lg font-bold disabled:opacity-50" style={{ backgroundColor: 'var(--accent)' }}>
+            className="text-xs text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-800 disabled:opacity-50">
             {saving ? '保存中…' : '保存'}
           </button>
         </div>
@@ -361,7 +361,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
       content: '',
       next_plan: '',
     }));
-    setEditModal({ date: getToday(), students });
+    setEditModal({ date: `${currentMonth}-01`, students });
   };
 
   // ── 打开编辑弹窗 ──
