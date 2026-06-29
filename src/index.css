@@ -9,7 +9,7 @@
 }
 
 /* 全局基础样式 — 以 1366×768（14"笔记本）为基准 */
-html { font-size: 16px; }
+html { font-size: 93%; } /* 16px × 0.93 ≈ 14.9px，卡片略缩但文字舒适 */
 
 body {
   background-color: var(--color-cyber-bg);
