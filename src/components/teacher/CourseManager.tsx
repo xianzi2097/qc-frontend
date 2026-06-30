@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw } from 'lucide-react';
 import { useAuth } from '../../lib/useAuth';
 
 interface Course {
@@ -144,6 +144,28 @@ export default function CourseManager() {
     setMaterialsLoading(false);
   };
 
+  // ── 课程回收站 ──
+  const [trashItems, setTrashItems] = useState<any[]>([]);
+  const [showTrash, setShowTrash] = useState(false);
+
+  const loadTrash = useCallback(async () => {
+    const res = await fetch(`/api/trash/items?username=${username}`);
+    const data = await res.json();
+    if (data.status === 'success') setTrashItems(data.items.filter((i: any) => i.type === 'course'));
+  }, [username]);
+
+  const handleRestore = async (folder: string) => {
+    await fetch(`/api/trash/items/${encodeURIComponent(folder)}/restore?username=${username}`, { method: 'POST' });
+    loadTrash();
+    loadCourses();
+  };
+
+  const handlePermanentDelete = async (folder: string) => {
+    if (!confirm('永久删除此课程？不可恢复！')) return;
+    await fetch(`/api/trash/items/${encodeURIComponent(folder)}?username=${username}`, { method: 'DELETE' });
+    loadTrash();
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* 标题栏 */}
@@ -159,6 +181,12 @@ export default function CourseManager() {
             <RefreshCw size={14} /> 刷新
           </button>
           <button
+            onClick={() => { loadTrash(); setShowTrash(true); }}
+            className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Trash2 size={14} /> 回收站
+          </button>
+          <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-3 py-1.5 rounded-lg transition-colors"
           >
@@ -169,7 +197,7 @@ export default function CourseManager() {
 
       {/* 新建课程弹窗 */}
       {showCreate && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6">
           <h3 className="text-sm font-bold text-white mb-4">新建课程</h3>
           <div className="space-y-3">
             <div>
@@ -222,7 +250,7 @@ export default function CourseManager() {
       {loading ? (
         <div className="text-sm text-slate-500">加载中...</div>
       ) : courses.length === 0 ? (
-        <div className="text-sm text-slate-500 bg-slate-900/50 border border-slate-800 rounded-2xl p-8 text-center">
+        <div className="text-sm text-slate-500 bg-slate-900/50 border border-slate-600 rounded-2xl p-8 text-center">
           暂无课程，点击「新建课程」开始创建
         </div>
       ) : (
@@ -234,7 +262,7 @@ export default function CourseManager() {
               className={`bg-slate-900 border rounded-2xl p-5 cursor-pointer transition-all hover:translate-y-[-2px] ${
                 selectedCourse?.name === course.name
                   ? 'border-brand-orange/50 ring-1 ring-brand-orange/20'
-                  : 'border-slate-800 hover:border-slate-700'
+                  : 'border-slate-600 hover:border-slate-500'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -260,7 +288,7 @@ export default function CourseManager() {
 
       {/* 课件详情 */}
       {selectedCourse && (
-        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+        <div className="bg-slate-900/50 border border-slate-600 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <FolderOpen size={16} className="text-brand-orange" />
@@ -311,6 +339,43 @@ export default function CourseManager() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 课程回收站弹窗 */}
+      {showTrash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={e => { if (e.target === e.currentTarget) setShowTrash(false); }}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[500px] max-h-[70vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-600">
+              <span className="text-sm text-white font-bold flex items-center gap-2"><Trash2 size={16} /> 课程回收站</span>
+              <button onClick={() => setShowTrash(false)} className="text-slate-400 hover:text-white p-1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div className="flex-1 overflow-auto p-4 space-y-2">
+              {trashItems.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">回收站为空</div>
+              ) : trashItems.map(t => (
+                <div key={t._folder} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-white">📚 {t.original_path?.split('/').pop()}</span>
+                      <span className="text-xs text-slate-500 ml-2">删除于 {t.deleted_at?.slice(0, 10)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleRestore(t._folder)}
+                        className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
+                        <RotateCcw size={12} /> 恢复
+                      </button>
+                      <button onClick={() => handlePermanentDelete(t._folder)}
+                        className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-1.5 hover:bg-rose-500/20">
+                        永久删除
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

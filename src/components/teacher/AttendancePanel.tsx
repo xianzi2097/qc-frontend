@@ -73,6 +73,23 @@ function EditSessionModal({
 }) {
   const [editDate, setEditDate] = useState(date);
   const [editStudents, setEditStudents] = useState<SessionStudent[]>(students);
+  const [tempStudentName, setTempStudentName] = useState('');
+  const [lessonContent, setLessonContent] = useState('');
+
+  const addTempStudent = () => {
+    const name = tempStudentName.trim();
+    if (!name) return;
+    const tempId = 'temp_' + Date.now();
+    setEditStudents(prev => [...prev, {
+      id: tempId, name, remark: '临时',
+      status: 'present', content: '', next_plan: '',
+    }]);
+    setTempStudentName('');
+  };
+
+  const removeTempStudent = (idx: number) => {
+    setEditStudents(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const toggleStatus = (idx: number) => {
     setEditStudents(prev => prev.map((s, i) =>
@@ -89,26 +106,31 @@ function EditSessionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[700px] max-h-[85vh] flex flex-col shadow-2xl"
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[90vw] max-w-[1100px] min-w-[700px] max-h-[90vh] flex flex-col shadow-2xl"
         onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-600">
           <span className="text-sm text-white font-bold">课堂记录</span>
           <button onClick={onClose} className="text-slate-400 hover:text-white p-1"><X size={18} /></button>
         </div>
 
         <div className="flex-1 overflow-auto p-6 space-y-4">
-          {/* 日期 */}
+          {/* 日期 + 本节课内容 */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 w-16 shrink-0">日期</span>
             <input type="date" value={editDate}
               onChange={e => setEditDate(e.target.value)}
               className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none" />
+            <span className="text-xs text-slate-400 ml-2 shrink-0">本节课内容</span>
+            <input type="text" value={lessonContent}
+              onChange={e => setLessonContent(e.target.value)}
+              placeholder="例如：循环结构"
+              className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-500" />
           </div>
 
           <div className="flex items-center gap-2">
             <button onClick={() => {
               setEditStudents(prev => prev.map(s => ({
-                ...s, status: 'present', content: '正常推进', next_plan: '正常推进',
+                ...s, status: 'present', content: lessonContent || s.content, next_plan: s.next_plan,
               })));
             }}
               className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
@@ -116,8 +138,8 @@ function EditSessionModal({
             </button>
           </div>
           {/* 学生表头 */}
-          <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 text-xs text-slate-500 px-1">
-            <span className="w-32">学生</span>
+          <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 text-sm text-slate-500 px-1">
+            <span className="w-32 xl:w-44">学生</span>
             <span className="w-16">出勤</span>
             <span>本节课内容</span>
             <span>下节课计划</span>
@@ -128,7 +150,7 @@ function EditSessionModal({
             <div key={s.id}
               className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 items-start bg-slate-800/40 rounded-xl p-3 border border-slate-700/50">
               {/* 名字 + 独立正常推进 */}
-              <div className="flex items-center gap-1 pt-1 w-32">
+              <div className="flex items-center gap-1 pt-1 w-32 xl:w-44">
                 <span className="text-xs text-white font-medium truncate">{fmt(s.name, s.remark)}</span>
                 <button onClick={() => {
                   setEditStudents(prev => prev.map((x, i) =>
@@ -151,24 +173,65 @@ function EditSessionModal({
                 </button>
               </div>
               {/* 本节课内容 */}
-              <textarea rows={2} value={s.content}
+              <textarea rows={3} value={s.content}
                 onChange={e => updateField(idx, 'content', e.target.value)}
                 placeholder="学了什么…"
-                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none resize-none placeholder-slate-500" />
+                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none resize-none placeholder-slate-500" />
               {/* 下节课计划 */}
-              <textarea rows={2} value={s.next_plan}
+              <textarea rows={3} value={s.next_plan}
                 onChange={e => updateField(idx, 'next_plan', e.target.value)}
                 placeholder="下节课计划…"
-                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none resize-none placeholder-slate-500" />
+                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none resize-none placeholder-slate-500" />
             </div>
           ))}
+
+          {/* ── 临时学生 ── */}
+          <div className="border-t border-slate-600 pt-3 mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs text-slate-400">临时学生</span>
+              <span className="text-[10px] text-slate-500">（不加入班级花名册，仅本次记录）</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input value={tempStudentName}
+                onChange={e => setTempStudentName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addTempStudent(); }}
+                placeholder="输入临时学生姓名"
+                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none placeholder-slate-500" />
+              <button onClick={addTempStudent}
+                className="text-xs text-black px-3 py-1.5 rounded-lg font-bold bg-cyan-400">
+                <Plus size={14} />
+              </button>
+            </div>
+            {editStudents.filter(s => s.remark === '临时').length > 0 && (
+              <div className="mt-2 space-y-1">
+                {editStudents.filter(s => s.remark === '临时').map((s, _i) => {
+                  const origIdx = editStudents.findIndex(x => x.id === s.id);
+                  return (
+                    <div key={s.id} className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-1.5">
+                      <span className="text-xs text-amber-300 font-medium">{s.name}</span>
+                      <span className="text-[10px] text-amber-500/60">临时</span>
+                      <button onClick={() => removeTempStudent(origIdx)}
+                        className="ml-auto text-rose-400 hover:text-rose-300 p-0.5">
+                        <X size={12} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 底部按钮 */}
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-800">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-600">
           <button onClick={onClose}
             className="text-xs text-slate-400 px-4 py-2 rounded-lg hover:bg-slate-800">取消</button>
-          <button onClick={() => onSave(editDate, editStudents)} disabled={saving}
+          <button onClick={() => {
+              const filled = lessonContent
+                ? editStudents.map(s => ({ ...s, content: s.content || lessonContent }))
+                : editStudents;
+              onSave(editDate, filled);
+            }} disabled={saving}
             className="text-xs text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-800 disabled:opacity-50">
             {saving ? '保存中…' : '保存'}
           </button>
@@ -211,25 +274,40 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     showDialog: boolean;
   }>({ matches: [], showDialog: false });
 
+  // ── 学生列表管理 ──
+  const [showStudentList, setShowStudentList] = useState(false);
+
+  const handleRemoveStudent = async (studentId: string) => {
+    if (!selectedClass || !confirm('确定从班级中移除此学生？')) return;
+    await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students/${studentId}?username=${username}`, { method: 'DELETE' });
+    await loadClasses();
+    const res = await fetch(`/api/classes?username=${username}`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
+      if (updated) setSelectedClass(updated);
+    }
+  };
+
   // ── 垃圾桶 ──
-  const [trashItems, setTrashItems] = useState<{ class_name: string; deleted_at: string; class_data: ClassData }[]>([]);
+  const [trashItems, setTrashItems] = useState<{ type: string; owner: string; original_path: string; deleted_at: string; _folder: string; _size: number }[]>([]);
   const [showTrash, setShowTrash] = useState(false);
 
   const loadTrash = useCallback(async () => {
-    const res = await fetch(`/api/trash?username=${username}`);
+    const res = await fetch(`/api/trash/items?username=${username}`);
     const data = await res.json();
-    if (data.status === 'success') setTrashItems(data.trash);
+    if (data.status === 'success') setTrashItems(data.items);
   }, [username]);
 
-  const handleRestoreClass = async (name: string) => {
-    await fetch(`/api/trash/restore/${encodeURIComponent(name)}?username=${username}`, { method: 'POST' });
+  const handleRestoreClass = async (folderName: string) => {
+    await fetch(`/api/trash/items/${encodeURIComponent(folderName)}/restore?username=${username}`, { method: 'POST' });
     loadTrash();
     loadClasses();
   };
 
-  const handlePermanentDelete = async (name: string) => {
-    if (!confirm(`永久删除「${name}」？此操作不可恢复！`)) return;
-    await fetch(`/api/trash/${encodeURIComponent(name)}?username=${username}`, { method: 'DELETE' });
+  const handlePermanentDelete = async (folderName: string) => {
+    if (!confirm(`永久删除？此操作不可恢复！`)) return;
+    await fetch(`/api/trash/items/${encodeURIComponent(folderName)}?username=${username}`, { method: 'DELETE' });
     loadTrash();
   };
 
@@ -361,7 +439,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
       content: '',
       next_plan: '',
     }));
-    setEditModal({ date: `${currentMonth}-01`, students });
+    setEditModal({ date: getToday(), students });
   };
 
   // ── 打开编辑弹窗 ──
@@ -381,10 +459,10 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
   // ── 渲染 ──
   return (
-    <div className="flex h-full animate-fadeIn">
+    <div className="flex h-full animate-fadeIn border border-slate-600 rounded-xl overflow-hidden">
       {/* 左侧：班级列表 */}
-      <div className="w-72 bg-slate-900/80 border-r border-slate-800 flex flex-col flex-shrink-0">
-        <div className="h-12 border-b border-slate-800 flex items-center justify-between px-3">
+      <div className="w-56 xl:w-80 bg-slate-900/80 border-r border-slate-600 flex flex-col flex-shrink-0">
+        <div className="h-12 border-b border-slate-600 flex items-center justify-between px-3">
           <span className="text-sm text-slate-300 font-mono tracking-wider flex items-center gap-1.5">
             <Users size={16} className="text-cyan-400" /> 班级
           </span>
@@ -395,13 +473,13 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
         </div>
 
         {showAddClass && (
-          <div className="px-3 py-2 border-b border-slate-800 space-y-1">
+          <div className="px-3 py-2 border-b border-slate-600 space-y-1">
             <input autoFocus value={newClassName} onChange={e => setNewClassName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleCreateClass(); if (e.key === 'Escape') setShowAddClass(false); }}
               placeholder="班级名称"
-              className="w-full bg-slate-800 text-sm text-slate-200 px-2 py-1.5 rounded outline-none border border-slate-700" style={{ borderColor: 'var(--accent)' }} />
+              className="w-full bg-slate-800 text-sm text-slate-200 px-2 py-1.5 rounded outline-none border border-cyan-400" />
             <button onClick={handleCreateClass}
-              className="w-full text-xs text-black px-2 py-1.5 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>确定</button>
+              className="w-full text-xs text-black px-2 py-1.5 rounded font-bold bg-cyan-400">确定</button>
           </div>
         )}
 
@@ -433,7 +511,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
         </div>
 
         {/* 垃圾桶入口 */}
-        <div className="border-t border-slate-800 p-2">
+        <div className="border-t border-slate-600 p-2 mt-auto">
           <button onClick={() => { loadTrash(); setShowTrash(true); }}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors">
             <Trash2 size={14} /> 垃圾桶
@@ -446,46 +524,58 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
         {selectedClass ? (
           <>
             {/* 标题栏 */}
-            <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 flex-shrink-0">
+            <div className="h-12 border-b border-slate-600 flex items-center justify-between px-4 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-300 font-mono">{selectedClass.name}</span>
-                <span className="text-xs text-slate-500">{selectedClass.students.length}名学生</span>
+                <button onClick={() => setShowStudentList(!showStudentList)}
+                  className="text-xs text-slate-500 hover:text-cyan-400">
+                  {selectedClass.students.length}名学生 ▾
+                </button>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={openNewSession}
-                  className="text-xs text-black px-4 py-1.5 rounded-lg font-bold flex items-center gap-1" style={{ backgroundColor: 'var(--accent)' }}>
+                  className="text-xs text-black px-4 py-1.5 rounded-lg font-bold flex items-center gap-1 bg-cyan-400">
                   <Check size={14} /> 点名
                 </button>
                 <button onClick={() => { setShowAddStudent(true); setNewStudentName(''); }}
                   className="text-xs text-cyan-400 hover:text-white flex items-center gap-1">
                   <Plus size={14} /> 添加学生
                 </button>
-                <button onClick={() => {
-                  if (!selectedClass) return;
-                  const students: SessionStudent[] = selectedClass.students.map(s => ({
-                    id: s.id, name: s.name, remark: s.remark || '',
-                    status: 'present', content: '', next_plan: '',
-                  }));
-                  setEditModal({ date: getToday(), students });
-                }}
-                  className="text-xs text-slate-400 hover:text-white">
-                  新建记录
-                </button>
               </div>
             </div>
 
             {/* 添加学生表单 */}
             {showAddStudent && (
-              <div className="px-4 py-2 border-b border-slate-800 bg-slate-900/50">
+              <div className="px-4 py-2 border-b border-slate-600 bg-slate-900/50">
                 <div className="flex items-center gap-2">
                   <input autoFocus value={newStudentName} onChange={e => setNewStudentName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') startAddStudent(); if (e.key === 'Escape') setShowAddStudent(false); }}
                     placeholder="学生姓名"
                     className="bg-slate-800 text-sm text-slate-200 px-3 py-1.5 rounded outline-none border border-slate-700 w-48" />
                   <button onClick={startAddStudent}
-                    className="text-xs text-black px-3 py-1.5 rounded font-bold" style={{ backgroundColor: 'var(--accent)' }}>添加</button>
+                    className="text-xs text-black px-3 py-1.5 rounded font-bold bg-cyan-400">添加</button>
                   <button onClick={() => setShowAddStudent(false)}
                     className="text-xs text-slate-400 px-2 py-1.5 rounded hover:bg-slate-800">取消</button>
+                </div>
+              </div>
+            )}
+
+            {/* 学生列表管理 */}
+            {showStudentList && selectedClass && (
+              <div className="px-4 py-2 border-b border-slate-600 bg-slate-900/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-400">班级学生名单</span>
+                  <button onClick={() => setShowStudentList(false)}
+                    className="text-xs text-slate-500 hover:text-white">关闭</button>
+                </div>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {selectedClass.students.map(s => (
+                    <div key={s.id} className="flex items-center justify-between bg-slate-800/40 rounded-lg px-3 py-1.5">
+                      <span className="text-xs text-slate-300">{s.name}{s.remark ? ` (${s.remark})` : ''}</span>
+                      <button onClick={() => handleRemoveStudent(s.id)}
+                        className="text-rose-400/60 hover:text-rose-400 text-xs">移除</button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -555,6 +645,41 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                 </div>
               </div>
 
+              {/* 本月统计 */}
+              {sessions.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center">
+                    <div className="text-2xl text-cyan-400 font-bold font-mono">{sessions.length}</div>
+                    <div className="text-xs text-slate-400 mt-1">本月课时</div>
+                  </div>
+                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center">
+                    {(() => {
+                      const total = sessions.reduce((sum, s) => sum + s.students.length, 0);
+                      const present = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status === 'present').length, 0);
+                      const rate = total > 0 ? Math.round(present / total * 100) : 0;
+                      return (
+                        <>
+                          <div className="text-2xl text-green-400 font-bold font-mono">{rate}%</div>
+                          <div className="text-xs text-slate-400 mt-1">平均出勤率</div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center">
+                    {(() => {
+                      const total = sessions.reduce((sum, s) => sum + s.students.length, 0);
+                      const absent = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status !== 'present').length, 0);
+                      return (
+                        <>
+                          <div className="text-2xl text-rose-400 font-bold font-mono">{absent}/{total}</div>
+                          <div className="text-xs text-slate-400 mt-1">缺勤人次</div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+
               {/* 记录列表 */}
               {loadingSessions ? (
                 <div className="text-center py-12 text-slate-500 text-sm">加载中…</div>
@@ -569,13 +694,13 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                 <div className="space-y-2">
                   {sessions.map(s => (
                     <div key={s.date}
-                      className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors group cursor-pointer"
+                      className="bg-slate-900/50 border border-slate-600 rounded-xl p-4 hover:border-slate-500 transition-colors group cursor-pointer"
                       onClick={() => openEditSession(s)}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm text-white font-mono">{s.date}</span>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-cyan-400">
                               {s.students.filter(x => x.status === 'present').length}/{s.students.length} 出勤
                             </span>
                           </div>
@@ -627,27 +752,31 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
       {showTrash && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
           onClick={e => { if (e.target === e.currentTarget) setShowTrash(false); }}>
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[500px] max-h-[70vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[70vw] max-w-[600px] min-w-[400px] max-h-[70vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-600">
               <span className="text-sm text-white font-bold flex items-center gap-2"><Trash2 size={16} /> 垃圾桶</span>
               <button onClick={() => setShowTrash(false)} className="text-slate-400 hover:text-white p-1"><X size={18} /></button>
             </div>
             <div className="flex-1 overflow-auto p-4 space-y-2">
               {trashItems.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 text-sm">垃圾桶为空</div>
+                <div className="text-center py-8 text-slate-500 text-sm">回收站为空</div>
               ) : trashItems.map(t => (
-                <div key={t.class_name} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4">
+                <div key={t._folder} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-sm text-white">{t.class_name}</span>
-                      <span className="text-xs text-slate-500 ml-2">删除于 {t.deleted_at?.slice(0, 10)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">{t.type === 'class' ? '📋' : t.type === 'course' ? '📚' : '👤'}</span>
+                        <span className="text-sm text-white">{t.original_path}</span>
+                        <span className="text-xs text-slate-500">{t.type === 'class' ? '班级' : t.type === 'course' ? '课程' : '用户'}</span>
+                      </div>
+                      <span className="text-xs text-slate-500 ml-6">删除于 {t.deleted_at?.slice(0, 10)}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => handleRestoreClass(t.class_name)}
+                      <button onClick={() => handleRestoreClass(t._folder)}
                         className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
                         <RotateCcw size={12} /> 恢复
                       </button>
-                      <button onClick={() => handlePermanentDelete(t.class_name)}
+                      <button onClick={() => handlePermanentDelete(t._folder)}
                         className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-1.5 hover:bg-rose-500/20">
                         永久删除
                       </button>

@@ -31,7 +31,7 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
       <div className="w-64 bg-slate-900 border-r border-geek-green/10 flex flex-col justify-between p-4">
         <div>
           {/* Logo */}
-          <div className="flex items-center gap-3 px-2 py-4 mb-6 border-b border-slate-800">
+          <div className="flex items-center gap-3 px-2 py-4 mb-6 border-b border-slate-600">
             <div className="bg-brand-orange p-2 rounded-xl text-black font-black text-xl shadow-[0_0_15px_rgba(249,115,22,0.4)]">
               🍊
             </div>
@@ -96,7 +96,7 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
             >
               <BookOpen size={18} /> 课件管理
             </button>
-            <div className="border-t border-slate-800 pt-3 mt-3">
+            <div className="border-t border-slate-600 pt-3 mt-3">
               <a
                 href="/"
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
@@ -108,7 +108,7 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
         </div>
 
         {/* 底部用户信息 + 登出 */}
-        <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center gap-2">
+        <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-600 flex items-center gap-2">
           <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarCfg().bg} flex items-center justify-center text-sm shrink-0`}>
             {getAvatarCfg().icon}
           </div>

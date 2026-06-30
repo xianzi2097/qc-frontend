@@ -52,13 +52,13 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
           <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
             <Terminal className="text-geek-green" size={20} /> 极客数据看板
           </h2>
-          <span className="text-xs bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-mono">
+          <span className="text-xs bg-slate-900 border border-slate-600 px-3 py-1 rounded-full text-slate-400 font-mono">
             后端：{error ? '离线' : '在线'}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-slate-900 border border-slate-800 hover:border-geek-green/30 p-6 rounded-2xl flex flex-col items-center justify-center min-h-[200px] transition-all duration-300 group hover:translate-y-[-4px]">
+          <div className="bg-slate-900 border border-slate-600 hover:border-geek-green/30 p-6 rounded-2xl flex flex-col items-center justify-center min-h-[200px] transition-all duration-300 group hover:translate-y-[-4px]">
             <span className="text-xs text-slate-500 tracking-wider mb-4">学生总数</span>
             <div className="text-geek-green group-hover:scale-110 transition-transform duration-300 mb-4">
               <Users size={44} />
@@ -68,7 +68,7 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 hover:border-brand-orange/30 p-6 rounded-2xl flex flex-col items-center justify-center min-h-[200px] transition-all duration-300 group hover:translate-y-[-4px]">
+          <div className="bg-slate-900 border border-slate-600 hover:border-brand-orange/30 p-6 rounded-2xl flex flex-col items-center justify-center min-h-[200px] transition-all duration-300 group hover:translate-y-[-4px]">
             <span className="text-xs text-slate-500 tracking-wider mb-4">班级数量</span>
             <div className="text-brand-orange group-hover:scale-110 transition-transform duration-300 mb-4">
               <GraduationCap size={44} />
@@ -78,7 +78,7 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 hover:border-amber-500/30 p-6 rounded-2xl flex flex-col items-center justify-center min-h-[200px] transition-all duration-300 group hover:translate-y-[-4px]">
+          <div className="bg-slate-900 border border-slate-600 hover:border-amber-500/30 p-6 rounded-2xl flex flex-col items-center justify-center min-h-[200px] transition-all duration-300 group hover:translate-y-[-4px]">
             <span className="text-xs text-slate-500 tracking-wider mb-4">属性维度</span>
             <div className="text-amber-400 group-hover:scale-110 transition-transform duration-300 mb-4">
               <Award size={44} />
