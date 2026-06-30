@@ -1,6 +1,6 @@
 ---
 name: qx-dashboard
-description: "Use when: working on qx-dashboard-ts (青橙后台看板), including React components, Tailwind v4 styling, build/deploy to website, auth flow with localStorage, teacher/student role switching. Keywords: 看板, dashboard, 青橙, 后台, qx-dashboard, build, deploy, 部署, 登录, 角色."
+description: "Use when: working on qx-dashboard-ts (青橙后台看板), including React components, Tailwind v4 styling, build/deploy to qc-pocket-space, auth flow with localStorage, teacher/student role switching. Keywords: 看板, dashboard, 青橙, 后台, qx-dashboard, build, deploy, 部署, 登录, 角色."
 ---
 
 # 青橙 Studio 后台看板
@@ -15,9 +15,9 @@ labs_dev/qx-dashboard-ts/     ← React 源码（开发在这里）
       TeacherDashboard.tsx     ← 老师看板（卡片 + 学生表）
       StudentDashboard.tsx     ← 学生中心
 
-website/site/dashboard/       ← Vite build 自动输出到这里
-website/backend/main.py       ← FastAPI 后端（用户表、登录接口）
-website/site/portal/          ← 门户首页 + 登录页
+qc-pocket-space/frontend/dashboard/  ← Vite build 自动输出到这里
+qc-pocket-space/backend/main.py      ← FastAPI 后端（用户表、登录接口）
+qc-pocket-space/frontend/portal/     ← 门户首页 + 登录页
 ```
 
 ## 关键技术约束
@@ -30,7 +30,7 @@ website/site/portal/          ← 门户首页 + 登录页
 - 第三方组件（React Bits、shadcn/ui）直接用，无需 compat
 
 ### 构建 & 部署
-- `npx vite build` → 自动输出到 `../website/site/dashboard/`
+- `npx vite build` → 自动输出到 `../../qc-pocket-space/frontend/dashboard/`
 - 开发时用 `npx vite --host`（`base: '/dashboard/'`）
 - Caddy 已配置 `handle_path /dashboard/*`，build 后重启 Caddy 即可
 

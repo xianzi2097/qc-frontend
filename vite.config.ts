@@ -6,7 +6,7 @@ import { resolve } from 'path'
 export default defineConfig({
   base: '/dashboard/',
   build: {
-    outDir: resolve(__dirname, '../../website/frontend/dashboard'),
+    outDir: resolve(__dirname, '../../qc-pocket-space/frontend/dashboard'),
     emptyOutDir: true,
   },
   server: {
