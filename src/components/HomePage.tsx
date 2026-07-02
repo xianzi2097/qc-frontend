@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen, GraduationCap, Award, Puzzle } from 'lucide-react';
 import { StarsBackground } from './ui/StarsBackground';
 import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
@@ -16,6 +16,18 @@ export default function HomePage({ onLogin }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [teachers, setTeachers] = useState<{ username: string }[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/users?t=${Date.now()}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          setTeachers(data.users.filter((u: any) => u.role === 'teacher'));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const storedUser = (() => {
     try {
@@ -23,7 +35,7 @@ export default function HomePage({ onLogin }: Props) {
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   })();
-  const loggedInNickname = storedUser?.nickname || '';
+  const loggedInUsername = storedUser?.username || '';
   const loggedInRole = storedUser?.role || '';
   const loggedInAvatar = storedUser?.avatar_path || '0';
 
@@ -91,8 +103,19 @@ export default function HomePage({ onLogin }: Props) {
             <h2 className="text-xl font-bold text-white shrink-0">Scratch 课堂</h2>
             <p className="text-sm text-slate-500 shrink-0">进入课堂，获取素材与案例</p>
             <div className="flex gap-3 justify-center shrink-0 flex-wrap">
-              <a className="text-sm bg-slate-800 hover:bg-green-600/30 text-slate-300 hover:text-green-300 px-5 py-2 rounded-lg transition-all" href="/?view=courses&teacher=t1">Arin老师</a>
-              <a className="text-sm bg-slate-800 hover:bg-green-600/30 text-slate-300 hover:text-green-300 px-5 py-2 rounded-lg transition-all" href="/?view=courses&teacher=t2">李老师</a>
+              {teachers.length === 0 ? (
+                <span className="text-sm text-slate-500">暂无老师</span>
+              ) : (
+                teachers.map((t) => (
+                  <a
+                    key={t.username}
+                    className="text-sm bg-slate-800 hover:bg-green-600/30 text-slate-300 hover:text-green-300 px-5 py-2 rounded-lg transition-all"
+                    href={`/?view=courses&teacher=${t.username}`}
+                  >
+                    {t.username}
+                  </a>
+                ))
+              )}
             </div>
           </div>
 
@@ -138,7 +161,7 @@ export default function HomePage({ onLogin }: Props) {
                       </button>
                     );
                   })()}
-                  <h2 className="text-lg font-bold text-white shrink-0">{loggedInNickname}</h2>
+                  <h2 className="text-lg font-bold text-white shrink-0">{loggedInUsername}</h2>
                   <p className="text-sm text-slate-500 shrink-0">{loggedInRole === 'teacher' ? '老师' : loggedInRole === 'student' ? '学生' : ''}</p>
                   <div className="flex gap-2 mt-1 shrink-0">
                     <a

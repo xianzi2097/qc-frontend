@@ -64,7 +64,7 @@ export default function SendMessagePanel({ username, classes }: Props) {
   return (
     <div className="animate-fadeIn space-y-4">
       {/* 发送站内信 */}
-      <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6">
+      <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6 transition-all duration-300 hover:border-brand-orange/30">
         <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
           <Send size={16} className="text-brand-orange" /> 发送站内信
         </h3>
@@ -87,7 +87,7 @@ export default function SendMessagePanel({ username, classes }: Props) {
               >
                 <option value="">输入或选择学生...</option>
                 {allStudents.filter(s => s.username).map(s => (
-                  <option key={s.id} value={s.username}>{s.username}（{s.nickname}）</option>
+                  <option key={s.id} value={s.username}>{s.username}</option>
                 ))}
               </select>
               <input
@@ -133,7 +133,7 @@ export default function SendMessagePanel({ username, classes }: Props) {
       </div>
 
       {/* 快捷：一键发送给全班 */}
-      <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6">
+      <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-400/30">
         <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
           <GraduationCap size={16} className="text-cyan-400" /> 发送给全班
         </h3>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Users, Award, Terminal, GraduationCap } from 'lucide-react';
+import { Users, Award, Terminal, GraduationCap, Calendar, Mail } from 'lucide-react';
 import { useAuth } from '../../lib/useAuth';
 import { useTeacherData } from '../../lib/useTeacherData';
 import ErrorBoundary from '../ui/ErrorBoundary';
@@ -25,7 +25,15 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
   // ── 课堂记录 ──
   if (activeTab === 'attendance') {
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col space-y-3 animate-fadeIn">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            <Calendar className="text-geek-green" size={20} /> 课堂记录
+          </h2>
+          <span className="text-xs bg-slate-900 border border-slate-600 px-3 py-1 rounded-full text-slate-400 font-mono">
+            班级 {classes.length} 个
+          </span>
+        </div>
         <ErrorBoundary label="课堂记录">
           <AttendancePanel username={username} />
         </ErrorBoundary>
@@ -36,7 +44,7 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
   // ── 课件管理：独立页面 ──
   if (activeTab === 'courses') {
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col space-y-3 animate-fadeIn">
         <ErrorBoundary label="课件管理">
           <CourseManager />
         </ErrorBoundary>
@@ -95,18 +103,35 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
   // ── 消息 ──
   if (activeTab === 'messages') {
     return (
-      <ErrorBoundary label="消息">
-        <SendMessagePanel username={username} classes={classes} />
-      </ErrorBoundary>
+      <div className="space-y-3 animate-fadeIn">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            <Mail className="text-brand-orange" size={20} /> 消息中心
+          </h2>
+        </div>
+        <ErrorBoundary label="消息">
+          <SendMessagePanel username={username} classes={classes} />
+        </ErrorBoundary>
+      </div>
     );
   }
 
   // ── 学生管理 ──
   if (activeTab === 'students') {
     return (
-      <ErrorBoundary label="学生管理">
-        <StudentListPanel classes={classes} loading={loading} error={error} attrKeys={attrKeys} />
-      </ErrorBoundary>
+      <div className="space-y-3 animate-fadeIn">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            <Users className="text-cyan-400" size={20} /> 学生管理
+          </h2>
+          <span className="text-xs bg-slate-900 border border-slate-600 px-3 py-1 rounded-full text-slate-400 font-mono">
+            共 {allStudents.length} 人
+          </span>
+        </div>
+        <ErrorBoundary label="学生管理">
+          <StudentListPanel classes={classes} loading={loading} error={error} attrKeys={attrKeys} />
+        </ErrorBoundary>
+      </div>
     );
   }
 

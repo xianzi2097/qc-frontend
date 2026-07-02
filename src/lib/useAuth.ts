@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 export interface PortalUser {
   username: string;
   role: 'teacher' | 'student' | 'admin';
-  nickname: string;
   avatar_path: string;
 }
 
@@ -36,7 +35,6 @@ export function useAuth() {
     user,
     username: user?.username ?? '',
     role: user?.role ?? 'teacher',
-    nickname: user?.nickname ?? '',
     isLoggedIn: !!user,
     login,
     logout,

@@ -24,7 +24,7 @@ export default function StudentListPanel({ classes, loading, error, attrKeys }: 
   return (
     <div className="space-y-6 animate-fadeIn">
       {classes.map(cls => (
-        <div key={cls.class_name} className="bg-slate-900 border border-slate-600 rounded-2xl overflow-hidden">
+        <div key={cls.class_name} className="bg-slate-900 border border-slate-600 rounded-2xl overflow-hidden transition-all duration-300 hover:border-cyan-400/30">
           <div className="bg-slate-950 border-b border-slate-600 px-6 py-3 flex items-center gap-2">
             <GraduationCap size={16} className="text-geek-green" />
             <span className="text-sm font-bold text-white">{cls.class_name}</span>
@@ -42,7 +42,7 @@ export default function StudentListPanel({ classes, loading, error, attrKeys }: 
             <tbody className="divide-y divide-slate-800 text-sm">
               {cls.students.map(stu => (
                 <tr key={stu.id} className="hover:bg-slate-800/40 transition-colors">
-                  <td className="p-4 font-bold text-white">{stu.nickname}</td>
+                  <td className="p-4 font-bold text-white">{stu.username}</td>
                   {attrKeys.map(k => (
                     <td key={k} className="p-4 text-slate-300">
                       {String(stu.descriptors?.[k] ?? '—')}

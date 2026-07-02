@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  LayoutDashboard, Users, Cpu, LogOut, Mail, Calendar, BookOpen, Home,
+  Terminal, Users, Cpu, LogOut, Mail, Calendar, BookOpen, Home,
 } from 'lucide-react';
 import { AVATARS } from '../ui/AvatarPicker';
 import TeacherDashboard from './TeacherDashboard';
@@ -8,7 +8,6 @@ import TeacherDashboard from './TeacherDashboard';
 interface Props {
   username: string;
   role: string;
-  nickname: string;
   logout: () => void;
 }
 
@@ -21,9 +20,8 @@ function getAvatarCfg() {
   } catch { return AVATARS[0]; }
 }
 
-export default function TeacherDashboardWithSidebar({ username, role, nickname, logout }: Props) {
+export default function TeacherDashboardWithSidebar({ username, role, logout }: Props) {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const displayName = nickname || username;
 
   return (
     <div className="flex h-screen bg-cyber-bg text-slate-100 font-sans selection:bg-geek-green selection:text-black">
@@ -32,8 +30,8 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
         <div>
           {/* Logo */}
           <div className="flex items-center gap-3 px-2 py-4 mb-6 border-b border-slate-600">
-            <div className="bg-brand-orange p-2 rounded-xl text-black font-black text-xl shadow-[0_0_15px_rgba(249,115,22,0.4)]">
-              🍊
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-orange via-purple-500 to-cyan-400 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.3)]">
+              <span className="text-3xl">🍊</span>
             </div>
             <div>
               <h1 className="font-bold text-base tracking-wider text-white">青橙 Studio</h1>
@@ -54,7 +52,7 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
                   : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
-              <LayoutDashboard size={18} /> 极客数据看板
+              <Terminal size={18} /> 极客数据看板
             </button>
             <button
               onClick={() => setActiveTab('students')}
@@ -113,7 +111,7 @@ export default function TeacherDashboardWithSidebar({ username, role, nickname, 
             {getAvatarCfg().icon}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-brand-orange truncate">{displayName}</p>
+            <p className="text-sm font-semibold text-brand-orange truncate">{username}</p>
             <p className="text-xs text-slate-600 font-mono">{role}</p>
           </div>
           <button

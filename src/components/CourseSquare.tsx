@@ -18,17 +18,31 @@ interface Material {
   url: string;
 }
 
-const EDITOR_URL = '/Scratch/index.html';
+const TEACHER_ICONS = ['👨‍🏫', '👩‍💻', '👩‍🏫', '🧑‍🏫', '👨‍💻', '👩‍🔬'];
 
-const TEACHERS = [
-  { key: 't1', label: 'Arin老师', icon: '👨‍🏫' },
-  { key: 't2', label: '李老师', icon: '👨‍💻' },
-  { key: 't3', label: '王老师', icon: '👩‍🏫' },
-] as const;
+const TEACHER_COLORS = [
+  'bg-blue-500',
+  'bg-emerald-500',
+  'bg-purple-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-cyan-500',
+];
+
+const TEACHER_SHADOWS = [
+  'rgba(79,172,254,0.4)',
+  'rgba(66,184,131,0.4)',
+  'rgba(168,85,247,0.4)',
+  'rgba(245,158,11,0.4)',
+  'rgba(244,63,94,0.4)',
+  'rgba(6,182,212,0.4)',
+];
+
+const EDITOR_URL = '/Scratch/index.html';
 
 const TYPE_ICON: Record<string, string> = {
   scratch: '🧩',
-  python: '�',
+  python: '🐍',
   cpp: '⚙️',
 };
 
@@ -37,12 +51,10 @@ interface Props {
 }
 
 export default function CourseSquare({ onBack }: Props) {
+  const [teachers, setTeachers] = useState<{ username: string }[]>([]);
   const [teacher, setTeacher] = useState(() => {
-    // 直接从 URL 初始化，避免渲染后再改导致闪跳
     const params = new URLSearchParams(window.location.search);
-    const t = params.get('teacher')?.toLowerCase();
-    if (t && TEACHERS.some(tc => tc.key === t)) return t;
-    return 'arin';
+    return params.get('teacher') || '';
   });
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,8 +62,34 @@ export default function CourseSquare({ onBack }: Props) {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [materialsLoading, setMaterialsLoading] = useState(false);
 
+  // ── 加载老师列表 ──
+  useEffect(() => {
+    fetch(`/api/users?t=${Date.now()}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          const ts = data.users.filter((u: any) => u.role === 'teacher');
+          setTeachers(ts);
+          // 如果 URL 没指定老师或指定的老师不存在，默认第一个
+          const params = new URLSearchParams(window.location.search);
+          const t = params.get('teacher');
+          if (!t || !ts.some((tc: any) => tc.username === t)) {
+            if (ts.length > 0) {
+              const first = ts[0].username;
+              setTeacher(first);
+              const url = new URL(window.location.href);
+              url.searchParams.set('teacher', first);
+              window.history.replaceState({}, '', url.toString());
+            }
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // ── 加载课程列表 ──
   const loadCourses = useCallback(() => {
+    if (!teacher) return;
     setLoading(true);
     setSelectedCourse(null);
     setMaterials([]);
@@ -69,14 +107,13 @@ export default function CourseSquare({ onBack }: Props) {
       .finally(() => setLoading(false));
   }, [teacher]);
 
-  useEffect(() => { loadCourses(); }, [loadCourses]);
+  useEffect(() => { if (teacher) loadCourses(); }, [loadCourses]);
 
   // ── 切换教师 ──
-  const switchTeacher = (key: string) => {
-    setTeacher(key);
-    // 更新 URL 不刷新页面
+  const switchTeacher = (username: string) => {
+    setTeacher(username);
     const url = new URL(window.location.href);
-    url.searchParams.set('teacher', key);
+    url.searchParams.set('teacher', username);
     window.history.replaceState({}, '', url.toString());
   };
 
@@ -135,29 +172,29 @@ export default function CourseSquare({ onBack }: Props) {
 
         {/* 教师筛选 */}
         <div className="flex gap-3 justify-center mb-8">
-          {TEACHERS.map(t => (
-            <button
-              key={t.key}
-              onClick={() => switchTeacher(t.key)}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                teacher === t.key
-                  ? t.key === 't1'
-                    ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(79,172,254,0.4)]'
-                    : t.key === 't2'
-                      ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(66,184,131,0.4)]'
-                      : 'bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]'
-                  : 'bg-slate-800/60 text-slate-400 hover:bg-slate-700/60 hover:text-slate-200'
-              }`}
-            >
-              {t.icon} {t.label}
-            </button>
-          ))}
+          {teachers.length === 0 ? (
+            <span className="text-sm text-slate-500">正在加载...</span>
+          ) : (
+            teachers.map((t, i) => (
+              <button
+                key={t.username}
+                onClick={() => switchTeacher(t.username)}
+                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                  teacher === t.username
+                    ? `${TEACHER_COLORS[i % TEACHER_COLORS.length]} text-white shadow-[0_0_20px_${TEACHER_SHADOWS[i % TEACHER_SHADOWS.length]}]`
+                    : 'bg-slate-800/60 text-slate-400 hover:bg-slate-700/60 hover:text-slate-200'
+                }`}
+              >
+                {TEACHER_ICONS[i % TEACHER_ICONS.length]} {t.username}
+              </button>
+            ))
+          )}
         </div>
 
         {/* 当前教师提示 */}
         <div className="text-center mb-6">
           <span className="text-sm text-slate-500 bg-slate-800/40 px-4 py-1.5 rounded-full">
-            📂 {TEACHERS.find(t => t.key === teacher)?.label} 的课程
+            📂 {teacher} 的课程
           </span>
         </div>
 

@@ -24,9 +24,8 @@ export function useTeacherData(username: string): TeacherData {
           const transformed: ApiClass[] = (data.classes || []).map((c: any) => ({
             class_name: c.name,
             students: (c.students || []).map((s: any) => ({
-              id: s.id,
-              username: '',
-              nickname: s.name,
+              id: s.user_id,
+              username: s.username || '',
               avatar_path: '',
               descriptors: {} as Record<string, unknown>,
             })),

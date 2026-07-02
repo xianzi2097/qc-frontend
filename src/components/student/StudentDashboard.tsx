@@ -12,7 +12,6 @@ import { SparklesCore } from '../ui/sparkles';
 interface PortalUser {
   username: string;
   role: string;
-  nickname: string;
   avatar_path: string;
 }
 
@@ -85,7 +84,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
   const [unreadCount, setUnreadCount] = useState(0);
   const isDev = !portalUser;
   const username = portalUser?.username || 's1';
-  const nickname = portalUser?.nickname || '小极客';
+  const nickname = portalUser?.username || '小极客';
 
   const refreshUnread = () => {
     fetch(`/api/messages/unread-count?username=${username}`)

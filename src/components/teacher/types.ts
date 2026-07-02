@@ -2,7 +2,6 @@
 export interface ApiStudent {
   id: number;
   username: string;
-  nickname: string;
   avatar_path: string;
   descriptors: Record<string, unknown>;
 }

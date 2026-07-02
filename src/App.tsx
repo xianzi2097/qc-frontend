@@ -3,10 +3,11 @@ import { useAuth } from './lib/useAuth';
 import HomePage from './components/HomePage';
 import CourseSquare from './components/CourseSquare';
 import TeacherDashboardWithSidebar from './components/teacher/TeacherDashboardWithSidebar';
+import AdminDashboardWithSidebar from './components/admin/AdminDashboardWithSidebar';
 import StudentDashboard from './components/student/StudentDashboard';
 
 export default function App() {
-  const { user, username, role, nickname, isLoggedIn, login, logout } = useAuth();
+  const { user, username, role, isLoggedIn, login, logout } = useAuth();
 
   const getViewParam = useCallback(() => {
     return new URLSearchParams(window.location.search).get('view');
@@ -36,10 +37,18 @@ export default function App() {
         </div>
       );
     }
+    if (role === 'admin') {
+      return (
+        <AdminDashboardWithSidebar
+          username={username} role={role}
+          logout={logout}
+        />
+      );
+    }
     return (
       <TeacherDashboardWithSidebar
         username={username} role={role}
-        nickname={nickname} logout={logout}
+        logout={logout}
       />
     );
   }

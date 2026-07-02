@@ -139,7 +139,7 @@ function EditSessionModal({
           </div>
           {/* 学生表头 */}
           <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 text-sm text-slate-500 px-1">
-            <span className="w-32 xl:w-44">学生</span>
+            <span className="w-32 xl:w-48">学生</span>
             <span className="w-16">出勤</span>
             <span>本节课内容</span>
             <span>下节课计划</span>
@@ -148,10 +148,10 @@ function EditSessionModal({
           {/* 每学生一行 */}
           {editStudents.map((s, idx) => (
             <div key={s.id}
-              className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 items-start bg-slate-800/40 rounded-xl p-3 border border-slate-700/50">
+              className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 items-start bg-slate-800/40 rounded-xl p-4 border border-slate-700/50">
               {/* 名字 + 独立正常推进 */}
-              <div className="flex items-center gap-1 pt-1 w-32 xl:w-44">
-                <span className="text-xs text-white font-medium truncate">{fmt(s.name, s.remark)}</span>
+              <div className="flex items-center gap-1 pt-1 w-32 xl:w-48">
+                <span className="text-sm text-white font-medium truncate">{fmt(s.name, s.remark)}</span>
                 <button onClick={() => {
                   setEditStudents(prev => prev.map((x, i) =>
                     i === idx ? { ...x, status: 'present', content: '正常推进', next_plan: '正常推进' } : x
@@ -173,12 +173,12 @@ function EditSessionModal({
                 </button>
               </div>
               {/* 本节课内容 */}
-              <textarea rows={3} value={s.content}
+              <textarea rows={4} value={s.content}
                 onChange={e => updateField(idx, 'content', e.target.value)}
                 placeholder="学了什么…"
                 className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none resize-none placeholder-slate-500" />
               {/* 下节课计划 */}
-              <textarea rows={3} value={s.next_plan}
+              <textarea rows={4} value={s.next_plan}
                 onChange={e => updateField(idx, 'next_plan', e.target.value)}
                 placeholder="下节课计划…"
                 className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none resize-none placeholder-slate-500" />
@@ -315,7 +315,18 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   const loadClasses = useCallback(async () => {
     const res = await fetch(`/api/classes?username=${username}`);
     const data = await res.json();
-    if (data.status === 'success') setClasses(data.classes);
+    if (data.status === 'success') {
+      const transformed = data.classes.map((c: any) => ({
+        name: c.name,
+        schedule: c.schedule || [],
+        students: (c.students || []).map((s: any) => ({
+          id: String(s.user_id || ''),
+          name: s.username || '',
+          remark: '',
+        })),
+      }));
+      setClasses(transformed);
+    }
   }, [username]);
 
   useEffect(() => { loadClasses(); }, [loadClasses]);
@@ -648,11 +659,11 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
               {/* 本月统计 */}
               {sessions.length > 0 && (
                 <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center">
+                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-cyan-400/30 hover:translate-y-[-2px]">
                     <div className="text-2xl text-cyan-400 font-bold font-mono">{sessions.length}</div>
                     <div className="text-xs text-slate-400 mt-1">本月课时</div>
                   </div>
-                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center">
+                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-geek-green/30 hover:translate-y-[-2px]">
                     {(() => {
                       const total = sessions.reduce((sum, s) => sum + s.students.length, 0);
                       const present = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status === 'present').length, 0);
@@ -665,7 +676,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                       );
                     })()}
                   </div>
-                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center">
+                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-rose-400/30 hover:translate-y-[-2px]">
                     {(() => {
                       const total = sessions.reduce((sum, s) => sum + s.students.length, 0);
                       const absent = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status !== 'present').length, 0);
@@ -694,7 +705,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                 <div className="space-y-2">
                   {sessions.map(s => (
                     <div key={s.date}
-                      className="bg-slate-900/50 border border-slate-600 rounded-xl p-4 hover:border-slate-500 transition-colors group cursor-pointer"
+                      className="bg-slate-900/50 border border-slate-600 rounded-xl p-4 hover:border-cyan-400/30 transition-all duration-300 group cursor-pointer hover:translate-y-[-2px]"
                       onClick={() => openEditSession(s)}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">

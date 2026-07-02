@@ -259,10 +259,10 @@ export default function CourseManager() {
             <div
               key={course.name}
               onClick={() => loadMaterials(course)}
-              className={`bg-slate-900 border rounded-2xl p-5 cursor-pointer transition-all hover:translate-y-[-2px] ${
+              className={`bg-slate-900 border rounded-2xl p-5 cursor-pointer transition-all duration-300 group hover:translate-y-[-4px] ${
                 selectedCourse?.name === course.name
                   ? 'border-brand-orange/50 ring-1 ring-brand-orange/20'
-                  : 'border-slate-600 hover:border-slate-500'
+                  : 'border-slate-600 hover:border-brand-orange/30'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -275,7 +275,7 @@ export default function CourseManager() {
                 </div>
                 <button
                   onClick={e => { e.stopPropagation(); handleDelete(course.name); }}
-                  className="text-slate-600 hover:text-rose-400 transition-colors p-1"
+                  className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all p-1"
                   title="删除课程"
                 >
                   <Trash2 size={14} />
@@ -311,7 +311,7 @@ export default function CourseManager() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {materials.map(m => (
-                <div key={m.name} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-center hover:border-brand-orange/30 transition-all group relative">
+                <div key={m.name} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-center hover:border-brand-orange/30 transition-all duration-300 group hover:translate-y-[-2px] relative">
                   <a
                     href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
                     target="_blank"
