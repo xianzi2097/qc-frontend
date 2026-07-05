@@ -6,7 +6,7 @@ import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
 import type { PortalUser } from '../lib/useAuth';
 
 interface Props {
-  onLogin: (user: PortalUser) => void;
+  onLogin: (user: PortalUser, token?: string) => void;
 }
 
 export default function HomePage({ onLogin }: Props) {
@@ -41,6 +41,7 @@ export default function HomePage({ onLogin }: Props) {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
     window.location.reload();
   };
 
@@ -67,7 +68,7 @@ export default function HomePage({ onLogin }: Props) {
     try {
       const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username.trim(), password }) });
       const data = await res.json();
-      if (data.status === 'success') { localStorage.setItem('user', JSON.stringify(data.user)); onLogin(data.user as PortalUser); }
+      if (data.status === 'success') { onLogin(data.user as PortalUser, data.token); }
       else setError(data.detail || '登录失败');
     } catch { setError('无法连接服务器'); }
     finally { setLoading(false); }
