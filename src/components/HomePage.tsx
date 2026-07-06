@@ -218,12 +218,17 @@ export default function HomePage({ onLogin }: Props) {
       {showLogin && (
         <div
           className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-          onClick={() => setShowLogin(false)}
         >
           <div
-            className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm"
+            className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm relative"
             onClick={(e) => e.stopPropagation()}
           >
+            <button
+              onClick={() => setShowLogin(false)}
+              className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors text-lg leading-none"
+            >
+              ✕
+            </button>
             <h2 className="text-white text-lg font-bold mb-4 text-center">登录</h2>
 
             {error && (
