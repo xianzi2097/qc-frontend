@@ -44,7 +44,7 @@ export default function StudentListPanel({ classes, loading, error, attrKeys, us
 
   const currentClass = classes.find(c => c.class_name === selectedClass);
   const studentSessions = selectedStudent
-    ? sessions.filter(s => s.students.some(st => st.name === selectedStudent.username))
+    ? sessions.filter(s => s.students.some(st => st.name === (selectedStudent.name || selectedStudent.username)))
     : [];
 
   return (
@@ -92,7 +92,7 @@ export default function StudentListPanel({ classes, loading, error, attrKeys, us
                 <ChevronLeft size={18} />
               </button>
               <User size={16} className="text-cyan-400" />
-              <span className="font-bold text-white">{selectedStudent.username}</span>
+              <span className="font-bold text-white">{selectedStudent.name || selectedStudent.username}</span>
             </div>
 
             <div className="px-5 py-4 border-b border-slate-700/50">
@@ -116,7 +116,7 @@ export default function StudentListPanel({ classes, loading, error, attrKeys, us
               ) : (
                 <div className="space-y-2">
                   {studentSessions.map(s => {
-                    const me = s.students.find(st => st.name === selectedStudent.username);
+                    const me = s.students.find(st => st.name === (selectedStudent.name || selectedStudent.username));
                     return (
                       <div key={s.date} className="bg-slate-800/50 rounded-lg p-3 text-sm border border-slate-700/50">
                         <div className="flex items-center gap-2 mb-1">
@@ -164,7 +164,7 @@ export default function StudentListPanel({ classes, loading, error, attrKeys, us
                     >
                       <td className="p-4 font-bold text-white flex items-center gap-2">
                         <User size={14} className="text-slate-500" />
-                        {stu.username}
+                        {stu.name || stu.username}
                       </td>
                       {attrKeys.map(k => (
                         <td key={k} className="p-4 text-slate-300">
