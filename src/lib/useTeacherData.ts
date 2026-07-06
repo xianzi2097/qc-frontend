@@ -26,6 +26,7 @@ export function useTeacherData(username: string): TeacherData {
             students: (c.students || []).map((s: any) => ({
               id: s.user_id,
               username: s.username || '',
+              name: s.name || s.username || '',
               avatar_path: '',
               descriptors: {} as Record<string, unknown>,
             })),
