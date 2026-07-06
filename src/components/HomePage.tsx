@@ -68,8 +68,10 @@ export default function HomePage({ onLogin }: Props) {
     try {
       const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username.trim(), password }) });
       const data = await res.json();
-      if (data.status === 'success') { onLogin(data.user as PortalUser, data.token); }
-      else setError(data.detail || '登录失败');
+      if (data.status === 'success') {
+        onLogin(data.user as PortalUser, data.token);
+        window.location.href = '/?view=dashboard';
+      } else setError(data.detail || '登录失败');
     } catch { setError('无法连接服务器'); }
     finally { setLoading(false); }
   };

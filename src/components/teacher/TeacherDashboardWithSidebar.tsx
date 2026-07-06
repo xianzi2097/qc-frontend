@@ -52,7 +52,7 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
                   : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
-              <Terminal size={18} /> 极客数据看板
+              <Terminal size={18} /> 数据看板
             </button>
             <button
               onClick={() => setActiveTab('students')}
@@ -62,7 +62,7 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
                   : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
-              <Users size={18} /> 班级学生管理
+              <Users size={18} /> 学生管理
             </button>
             <button
               onClick={() => setActiveTab('messages')}

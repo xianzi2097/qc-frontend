@@ -58,7 +58,7 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
       <div className="space-y-6 animate-fadeIn">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Terminal className="text-geek-green" size={20} /> 极客数据看板
+            <Terminal className="text-geek-green" size={20} /> 数据看板
           </h2>
           <span className="text-xs bg-slate-900 border border-slate-600 px-3 py-1 rounded-full text-slate-400 font-mono">
             后端：{error ? '离线' : '在线'}
@@ -129,7 +129,7 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
           </span>
         </div>
         <ErrorBoundary label="学生管理">
-          <StudentListPanel classes={classes} loading={loading} error={error} attrKeys={attrKeys} />
+          <StudentListPanel classes={classes} loading={loading} error={error} attrKeys={attrKeys} username={username} />
         </ErrorBoundary>
       </div>
     );
