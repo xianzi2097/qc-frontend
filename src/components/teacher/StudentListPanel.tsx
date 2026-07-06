@@ -12,7 +12,12 @@ interface Props {
 
 interface SessionRecord {
   date: string;
-  students: { id: string; name: string; status: string; content: string; remark: string }[];
+  teacher: string;
+  class: string;
+  status: string;
+  content: string;
+  remark: string;
+  next_plan: string;
 }
 
 export default function StudentListPanel({ classes, loading, error, attrKeys, username }: Props) {
@@ -21,14 +26,16 @@ export default function StudentListPanel({ classes, loading, error, attrKeys, us
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
 
   useEffect(() => {
-    if (!selectedClass || !username) return;
-    fetch(`/api/sessions/${encodeURIComponent(selectedClass)}?username=${encodeURIComponent(username)}`)
+    if (!selectedStudent) return;
+    const name = selectedStudent.name || selectedStudent.username;
+    if (!name) return;
+    fetch(`/api/sessions/student/${encodeURIComponent(name)}`)
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') setSessions((data.sessions || []).slice(0, 10));
       })
       .catch(() => setSessions([]));
-  }, [selectedClass, username]);
+  }, [selectedStudent]);
 
   if (loading) {
     return <div className="bg-slate-900 border border-slate-600 rounded-2xl p-12 text-center text-slate-400">加载中…</div>;
@@ -43,9 +50,7 @@ export default function StudentListPanel({ classes, loading, error, attrKeys, us
   }
 
   const currentClass = classes.find(c => c.class_name === selectedClass);
-  const studentSessions = selectedStudent
-    ? sessions.filter(s => s.students.some(st => st.name === (selectedStudent.name || selectedStudent.username)))
-    : [];
+  const studentSessions = selectedStudent ? sessions : [];
 
   return (
     <div className="flex gap-4 h-[70vh] animate-fadeIn">
@@ -116,19 +121,22 @@ export default function StudentListPanel({ classes, loading, error, attrKeys, us
               ) : (
                 <div className="space-y-2">
                   {studentSessions.map(s => {
-                    const me = s.students.find(st => st.name === (selectedStudent.name || selectedStudent.username));
+                    const isOwn = s.teacher === username;
                     return (
-                      <div key={s.date} className="bg-slate-800/50 rounded-lg p-3 text-sm border border-slate-700/50">
+                      <div key={s.date + s.teacher + s.class} className="bg-slate-800/50 rounded-lg p-3 text-sm border border-slate-700/50">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs text-cyan-400 font-mono">{s.date}</span>
                           <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            me?.status === 'present' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                            s.status === 'present' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                           }`}>
-                            {me?.status === 'present' ? '出勤' : '缺勤'}
+                            {s.status === 'present' ? '出勤' : '缺勤'}
+                          </span>
+                          <span className="text-xs text-slate-500 ml-auto">
+                            {s.class}{isOwn ? '' : <span className="text-amber-400">（{s.teacher}）</span>}
                           </span>
                         </div>
-                        {me?.content && <p className="text-slate-400 text-xs leading-relaxed">{me.content}</p>}
-                        {me?.remark && <p className="text-slate-500 text-xs mt-1">备注：{me.remark}</p>}
+                        {s.content && <p className="text-slate-400 text-xs leading-relaxed">{s.content}</p>}
+                        {s.remark && <p className="text-slate-500 text-xs mt-1">备注：{s.remark}</p>}
                       </div>
                     );
                   })}
