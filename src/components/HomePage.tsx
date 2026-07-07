@@ -131,6 +131,7 @@ export default function HomePage({ onLogin }: Props) {
               <h2 className="text-lg font-bold text-white shrink-0">学习文档</h2>
               <p className="text-sm text-slate-500 shrink-0">Python / C++ / Scratch</p>
               <div className="flex gap-2 justify-center flex-wrap shrink-0">
+                <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all font-bold" href="/docs/guide/">📖 使用指南</a>
                 <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/scratch_course/">Scratch</a>
                 <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/python_course/">Python</a>
                 <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/cpp_course/">C++</a>
