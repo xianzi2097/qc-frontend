@@ -213,7 +213,7 @@ export default function HomePage({ onLogin }: Props) {
       )}
 
       {/* Footer — 备案信息 */}
-      <p className="text-xs text-slate-700 mt-12 pb-5">
+      <p className="text-xs text-slate-700 mt-24 pb-8">
         粤ICP备2026057743号-1 · Arin | 青橙
       </p>
 
