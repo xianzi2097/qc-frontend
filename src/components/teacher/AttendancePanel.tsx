@@ -164,8 +164,10 @@ function EditSessionModal({
                 if (presentNoContent.length > 0) {
                   const names = presentNoContent.map(s => fmt(s.name, s.remark)).join('、');
                   showToast(`${names} 无自定义内容，已保存默认值`);
+                  setTimeout(() => onSave(editDate, filled), 1500);
+                } else {
+                  onSave(editDate, filled);
                 }
-                onSave(editDate, filled);
               }} disabled={saving}
               className="text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg px-4 py-1.5 hover:bg-slate-700 disabled:opacity-50">
               {saving ? '保存中…' : '保存'}
