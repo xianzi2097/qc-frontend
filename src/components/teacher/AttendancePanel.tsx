@@ -113,32 +113,47 @@ function EditSessionModal({
           <button onClick={onClose} className="text-slate-400 hover:text-white p-1"><X size={18} /></button>
         </div>
 
-        <div className="flex-1 overflow-auto p-6 space-y-4">
-          {/* 日期 + 本节课内容 */}
+        <div className="flex-1 overflow-auto min-h-0 p-6 space-y-3">
+          {/* 日期 + 本节课内容 + 下节课计划 */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400 w-16 shrink-0">日期</span>
+            <span className="text-xs text-slate-400 shrink-0">📅 日期</span>
             <input type="date" value={editDate}
               onChange={e => setEditDate(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none" />
+              className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none [color-scheme:dark]" />
             <span className="text-xs text-slate-400 ml-2 shrink-0">本节课内容</span>
             <input type="text" value={lessonContent}
               onChange={e => setLessonContent(e.target.value)}
               placeholder="例如：循环结构"
               className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-500" />
+            <span className="text-xs text-slate-400 ml-2 shrink-0">下节课计划</span>
+            <input type="text"
+              placeholder="例如：函数"
+              className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-500" />
           </div>
 
+          {/* 全部正常推进 + 保存 */}
           <div className="flex items-center gap-2">
             <button onClick={() => {
               setEditStudents(prev => prev.map(s => ({
                 ...s, status: 'present', content: lessonContent || s.content, next_plan: s.next_plan,
               })));
             }}
-              className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
+              className="text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 hover:bg-slate-700 flex items-center gap-1">
               <Check size={14} /> 全部正常推进
+            </button>
+            <div className="flex-1"></div>
+            <button onClick={() => {
+                const filled = lessonContent
+                  ? editStudents.map(s => ({ ...s, content: s.content || lessonContent }))
+                  : editStudents;
+                onSave(editDate, filled);
+              }} disabled={saving}
+              className="text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg px-4 py-1.5 hover:bg-slate-700 disabled:opacity-50">
+              {saving ? '保存中…' : '保存'}
             </button>
           </div>
           {/* 学生表头 */}
-          <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 text-sm text-slate-500 px-1">
+          <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 text-xs text-slate-500 px-1">
             <span className="w-32 xl:w-48">学生</span>
             <span className="w-16">出勤</span>
             <span>本节课内容</span>
@@ -148,9 +163,9 @@ function EditSessionModal({
           {/* 每学生一行 */}
           {editStudents.map((s, idx) => (
             <div key={s.id}
-              className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 items-start bg-slate-800/40 rounded-xl p-4 border border-slate-700/50">
+              className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 items-start rounded-lg p-2 border border-slate-700/30">
               {/* 名字 + 独立正常推进 */}
-              <div className="flex items-center gap-1 pt-1 w-32 xl:w-48">
+              <div className="flex items-center gap-1 w-32 xl:w-48">
                 <span className="text-sm text-white font-medium truncate">{fmt(s.name, s.remark)}</span>
                 <button onClick={() => {
                   setEditStudents(prev => prev.map((x, i) =>
@@ -162,7 +177,7 @@ function EditSessionModal({
                 </button>
               </div>
               {/* 出勤切换 */}
-              <div className="w-16 pt-1">
+              <div className="w-16 flex items-center">
                 <button onClick={() => toggleStatus(idx)}
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                     s.status === 'present'
@@ -173,15 +188,17 @@ function EditSessionModal({
                 </button>
               </div>
               {/* 本节课内容 */}
-              <textarea rows={4} value={s.content}
+              <textarea rows={2} value={s.content}
                 onChange={e => updateField(idx, 'content', e.target.value)}
+                onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
                 placeholder="学了什么…"
-                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none resize-none placeholder-slate-500" />
+                className="bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200 outline-none resize-none placeholder-slate-500 overflow-hidden" />
               {/* 下节课计划 */}
-              <textarea rows={4} value={s.next_plan}
+              <textarea rows={2} value={s.next_plan}
                 onChange={e => updateField(idx, 'next_plan', e.target.value)}
+                onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
                 placeholder="下节课计划…"
-                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none resize-none placeholder-slate-500" />
+                className="bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200 outline-none resize-none placeholder-slate-500 overflow-hidden" />
             </div>
           ))}
 
@@ -220,21 +237,6 @@ function EditSessionModal({
               </div>
             )}
           </div>
-        </div>
-
-        {/* 底部按钮 */}
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-600">
-          <button onClick={onClose}
-            className="text-xs text-slate-400 px-4 py-2 rounded-lg hover:bg-slate-800">取消</button>
-          <button onClick={() => {
-              const filled = lessonContent
-                ? editStudents.map(s => ({ ...s, content: s.content || lessonContent }))
-                : editStudents;
-              onSave(editDate, filled);
-            }} disabled={saving}
-            className="text-xs text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-800 disabled:opacity-50">
-            {saving ? '保存中…' : '保存'}
-          </button>
         </div>
       </div>
     </div>
