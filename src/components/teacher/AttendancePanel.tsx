@@ -133,6 +133,7 @@ function EditSessionModal({
 
           {/* 全部正常推进 + 保存 */}
           <div className="flex items-center gap-2">
+            <div className="flex-1"></div>
             <button onClick={() => {
               setEditStudents(prev => prev.map(s => ({
                 ...s, status: 'present', content: lessonContent || s.content, next_plan: s.next_plan,
@@ -141,7 +142,6 @@ function EditSessionModal({
               className="text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 hover:bg-slate-700 flex items-center gap-1">
               <Check size={14} /> 全部正常推进
             </button>
-            <div className="flex-1"></div>
             <button onClick={() => {
                 const filled = lessonContent
                   ? editStudents.map(s => ({ ...s, content: s.content || lessonContent }))
@@ -163,7 +163,7 @@ function EditSessionModal({
           {/* 每学生一行 */}
           {editStudents.map((s, idx) => (
             <div key={s.id}
-              className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 items-start rounded-lg p-2 border border-slate-700/30">
+              className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 items-start rounded px-2 py-1">
               {/* 名字 + 独立正常推进 */}
               <div className="flex items-center gap-1 w-32 xl:w-48">
                 <span className="text-sm text-white font-medium truncate">{fmt(s.name, s.remark)}</span>
