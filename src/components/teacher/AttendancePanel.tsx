@@ -106,7 +106,7 @@ function EditSessionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[90vw] max-w-[1100px] min-w-[700px] max-h-[90vh] flex flex-col shadow-2xl"
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[95vw] max-w-[1000px] min-w-0 max-h-[85vh] flex flex-col shadow-2xl"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-600">
           <span className="text-sm text-white font-bold">课堂记录</span>
