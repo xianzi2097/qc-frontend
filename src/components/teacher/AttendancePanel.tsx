@@ -188,13 +188,13 @@ function EditSessionModal({
                 </button>
               </div>
               {/* 本节课内容 */}
-              <textarea rows={2} value={s.content}
+              <textarea rows={1} value={s.content}
                 onChange={e => updateField(idx, 'content', e.target.value)}
                 onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
                 placeholder="学了什么…"
                 className="bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200 outline-none resize-none placeholder-slate-500 overflow-hidden" />
               {/* 下节课计划 */}
-              <textarea rows={2} value={s.next_plan}
+              <textarea rows={1} value={s.next_plan}
                 onChange={e => updateField(idx, 'next_plan', e.target.value)}
                 onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
                 placeholder="下节课计划…"
