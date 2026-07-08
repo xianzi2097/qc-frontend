@@ -161,7 +161,7 @@ function EditSessionModal({
                 let filled = lessonContent
                   ? editStudents.map(s => ({ ...s, content: s.content || lessonContent }))
                   : editStudents;
-                if (presentNoContent.length > 0 && lessonContent) {
+                if (presentNoContent.length > 0) {
                   const names = presentNoContent.map(s => fmt(s.name, s.remark)).join('、');
                   showToast(`${names} 无自定义内容，已保存默认值`);
                 }
