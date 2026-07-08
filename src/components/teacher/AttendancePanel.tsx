@@ -116,7 +116,6 @@ function EditSessionModal({
         <div className="flex-1 overflow-auto min-h-0 p-6 space-y-3">
           {/* 日期 + 本节课内容 + 下节课计划 */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400 shrink-0">📅 日期</span>
             <input type="date" value={editDate}
               onChange={e => setEditDate(e.target.value)}
               className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none [color-scheme:dark]" />
@@ -153,9 +152,9 @@ function EditSessionModal({
             </button>
           </div>
           {/* 学生表头 */}
-          <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-3 text-xs text-slate-500 px-1">
-            <span className="w-32 xl:w-48">学生</span>
-            <span className="w-16">出勤</span>
+          <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 text-xs text-slate-500 px-1">
+            <span className="w-28 xl:w-40">学生</span>
+            <span className="w-10">出勤</span>
             <span>本节课内容</span>
             <span>下节课计划</span>
           </div>
@@ -165,7 +164,7 @@ function EditSessionModal({
             <div key={s.id}
               className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 items-start rounded px-2 py-1">
               {/* 名字 + 独立正常推进 */}
-              <div className="flex items-center gap-1 w-32 xl:w-48">
+              <div className="flex items-center gap-1 w-28 xl:w-40">
                 <span className="text-sm text-white font-medium truncate">{fmt(s.name, s.remark)}</span>
                 <button onClick={() => {
                   setEditStudents(prev => prev.map((x, i) =>
@@ -177,7 +176,7 @@ function EditSessionModal({
                 </button>
               </div>
               {/* 出勤切换 */}
-              <div className="w-16 flex items-center">
+              <div className="w-10 flex items-center">
                 <button onClick={() => toggleStatus(idx)}
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                     s.status === 'present'
