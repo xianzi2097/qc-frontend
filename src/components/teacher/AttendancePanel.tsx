@@ -75,6 +75,7 @@ function EditSessionModal({
   const [editStudents, setEditStudents] = useState<SessionStudent[]>(students);
   const [tempStudentName, setTempStudentName] = useState('');
   const [lessonContent, setLessonContent] = useState('');
+  const [nextPlanContent, setNextPlanContent] = useState('');
 
   const addTempStudent = () => {
     const name = tempStudentName.trim();
@@ -125,7 +126,8 @@ function EditSessionModal({
               placeholder="例如：循环结构"
               className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-500" />
             <span className="text-xs text-slate-400 ml-2 shrink-0">下节课计划</span>
-            <input type="text"
+            <input type="text" value={nextPlanContent}
+              onChange={e => setNextPlanContent(e.target.value)}
               placeholder="例如：函数"
               className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-500" />
           </div>
@@ -135,7 +137,7 @@ function EditSessionModal({
             <div className="flex-1"></div>
             <button onClick={() => {
               setEditStudents(prev => prev.map(s => ({
-                ...s, status: 'present', content: lessonContent || s.content, next_plan: s.next_plan,
+                ...s, status: 'present', content: lessonContent || s.content, next_plan: nextPlanContent || s.next_plan,
               })));
             }}
               className="text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 hover:bg-slate-700 flex items-center gap-1">
