@@ -76,6 +76,12 @@ function EditSessionModal({
   const [tempStudentName, setTempStudentName] = useState('');
   const [lessonContent, setLessonContent] = useState('');
   const [nextPlanContent, setNextPlanContent] = useState('');
+  const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
+
+  const showToast = (msg: string) => {
+    setToast({ msg, show: true });
+    setTimeout(() => setToast({ msg: '', show: false }), 3000);
+  };
 
   const addTempStudent = () => {
     const name = tempStudentName.trim();
@@ -112,7 +118,7 @@ function EditSessionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[95vw] max-w-[1000px] min-w-0 max-h-[85vh] flex flex-col shadow-2xl"
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[95vw] max-w-[1000px] min-w-0 max-h-[85vh] flex flex-col shadow-2xl relative"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-600">
           <span className="text-sm text-white font-bold">课堂记录</span>
@@ -152,13 +158,13 @@ function EditSessionModal({
                 const presentNoContent = editStudents.filter(
                   s => s.status === 'present' && !s.content.trim()
                 );
-                if (presentNoContent.length > 0) {
-                  const names = presentNoContent.map(s => fmt(s.name, s.remark)).join('、');
-                  if (!confirm(`⚠️ 以下出勤学生还没记录本节课内容：\n${names}\n\n确定继续保存吗？`)) return;
-                }
-                const filled = lessonContent
+                let filled = lessonContent
                   ? editStudents.map(s => ({ ...s, content: s.content || lessonContent }))
                   : editStudents;
+                if (presentNoContent.length > 0 && lessonContent) {
+                  const names = presentNoContent.map(s => fmt(s.name, s.remark)).join('、');
+                  showToast(`${names} 无自定义内容，已保存默认值`);
+                }
                 onSave(editDate, filled);
               }} disabled={saving}
               className="text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg px-4 py-1.5 hover:bg-slate-700 disabled:opacity-50">
@@ -251,6 +257,13 @@ function EditSessionModal({
             )}
           </div>
         </div>
+
+        {/* Toast 提示 */}
+        {toast.show && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-slate-700 border border-slate-500 rounded-lg px-4 py-2 text-xs text-slate-200 shadow-xl whitespace-nowrap animate-fadeIn">
+            {toast.msg}
+          </div>
+        )}
       </div>
     </div>
   );
