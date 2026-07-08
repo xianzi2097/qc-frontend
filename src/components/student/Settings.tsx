@@ -66,36 +66,34 @@ export default function Settings({ username }: Props) {
 
         {/* 修改密码 */}
         <div className="bg-slate-900/60 border border-slate-700 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center gap-2">
-            <Lock size={16} className="text-cyan-400" />
-            <span className="text-sm text-white font-medium">修改密码</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock size={16} className="text-cyan-400" />
+              <span className="text-sm text-white font-medium">修改密码</span>
+            </div>
+            <button onClick={() => setShowPwd(!showPwd)}
+              className="text-slate-500 hover:text-slate-300 p-1" title={showPwd ? '隐藏密码' : '显示密码'}>
+              {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           <div className="space-y-3">
             {/* 原密码 */}
             <div>
               <label className="text-xs text-slate-400 mb-1 block">原密码</label>
-              <div className="relative">
-                <input type={showPwd ? 'text' : 'password'} value={oldPwd}
-                  onChange={e => setOldPwd(e.target.value)}
-                  placeholder="输入原密码"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 pr-10 text-sm text-slate-200 outline-none placeholder-slate-500" />
-              </div>
+              <input type={showPwd ? 'text' : 'password'} value={oldPwd}
+                onChange={e => setOldPwd(e.target.value)}
+                placeholder="输入原密码"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none placeholder-slate-500" />
             </div>
 
             {/* 新密码 */}
             <div>
               <label className="text-xs text-slate-400 mb-1 block">新密码</label>
-              <div className="relative">
-                <input type={showPwd ? 'text' : 'password'} value={newPwd}
-                  onChange={e => setNewPwd(e.target.value)}
-                  placeholder="输入新密码"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 pr-10 text-sm text-slate-200 outline-none placeholder-slate-500" />
-                <button onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1">
-                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+              <input type={showPwd ? 'text' : 'password'} value={newPwd}
+                onChange={e => setNewPwd(e.target.value)}
+                placeholder="输入新密码"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none placeholder-slate-500" />
             </div>
 
             {/* 确认新密码 */}
