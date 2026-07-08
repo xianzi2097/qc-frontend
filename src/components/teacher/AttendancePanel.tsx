@@ -94,7 +94,12 @@ function EditSessionModal({
 
   const toggleStatus = (idx: number) => {
     setEditStudents(prev => prev.map((s, i) =>
-      i === idx ? { ...s, status: s.status === 'present' ? 'absent' : 'present' } : s
+      i === idx ? {
+        ...s,
+        status: s.status === 'present' ? 'absent' : 'present',
+        content: s.status === 'present' ? '' : s.content,
+        next_plan: s.status === 'present' ? '' : s.next_plan,
+      } : s
     ));
   };
 
