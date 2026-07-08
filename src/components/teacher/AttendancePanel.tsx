@@ -149,6 +149,13 @@ function EditSessionModal({
               <Check size={14} /> 全部正常推进
             </button>
             <button onClick={() => {
+                const presentNoContent = editStudents.filter(
+                  s => s.status === 'present' && !s.content.trim()
+                );
+                if (presentNoContent.length > 0) {
+                  const names = presentNoContent.map(s => fmt(s.name, s.remark)).join('、');
+                  if (!confirm(`⚠️ 以下出勤学生还没记录本节课内容：\n${names}\n\n确定继续保存吗？`)) return;
+                }
                 const filled = lessonContent
                   ? editStudents.map(s => ({ ...s, content: s.content || lessonContent }))
                   : editStudents;
