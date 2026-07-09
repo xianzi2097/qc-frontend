@@ -125,7 +125,7 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
       </div>
 
       {/* 主体内容 */}
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="w-[70%] overflow-y-auto p-8">
         <TeacherDashboard activeTab={activeTab} />
       </main>
     </div>

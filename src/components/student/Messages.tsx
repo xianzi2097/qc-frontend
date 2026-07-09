@@ -219,7 +219,7 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
       />
 
       {/* ── 右侧：消息详情 ── */}
-      <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
+      <div className="w-[70%] flex flex-col bg-slate-950 overflow-hidden">
         {selectedMsg ? (
           <>
             <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 flex-shrink-0">

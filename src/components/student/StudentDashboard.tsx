@@ -181,7 +181,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
         </div>
 
         {/* 内容区 */}
-        <div className="flex-1 overflow-auto px-8 pb-6 accent-scrollbar">
+        <div className="w-[70%] mx-auto overflow-auto px-8 pb-6 accent-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeModule}

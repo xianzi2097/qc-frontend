@@ -11,9 +11,11 @@ interface Course {
 
 interface Material {
   name: string;
-  has_main: boolean;
-  has_student: boolean;
-  sb3_count: number;
+  has_main?: boolean;
+  has_student?: boolean;
+  sb3_count?: number;
+  files?: { name: string; size: number }[];
+  file_count?: number;
   url: string;
 }
 
@@ -142,6 +144,61 @@ export default function CourseManager() {
       // ignore
     }
     setMaterialsLoading(false);
+  };
+
+  // ── 上传文件（Python/C++ 课程） ──
+  const handleUploadFile = async (lessonName: string) => {
+    if (!selectedCourse) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.onchange = async () => {
+      const files = input.files;
+      if (!files || files.length === 0) return;
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        await fetch(
+          `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(lessonName)}/upload?teacher=${username}`,
+          { method: 'POST', body: formData }
+        );
+      }
+      // 刷新
+      loadMaterials(selectedCourse);
+      loadCourses();
+    };
+    input.click();
+  };
+
+  // ── 创建新文件夹（Python/C++ 课程） ──
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+
+  const handleCreateFolder = async () => {
+    if (!selectedCourse || !newFolderName.trim()) return;
+    // 创建文件夹只需上传一个空操作——直接用 upload API 创建
+    const formData = new FormData();
+    const blob = new Blob([''], { type: 'text/plain' });
+    formData.append('file', blob, '.keep');
+    await fetch(
+      `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(newFolderName.trim())}/upload?teacher=${username}`,
+      { method: 'POST', body: formData }
+    );
+    setShowNewFolder(false);
+    setNewFolderName('');
+    loadMaterials(selectedCourse);
+    loadCourses();
+  };
+
+  // ── 删除单个文件 ──
+  const handleDeleteFile = async (lessonName: string, fileName: string) => {
+    if (!selectedCourse || !confirm(`确定删除文件「${fileName}」？`)) return;
+    await fetch(
+      `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(lessonName)}/${encodeURIComponent(fileName)}?teacher=${username}`,
+      { method: 'DELETE' }
+    );
+    loadMaterials(selectedCourse);
+    loadCourses();
   };
 
   // ── 课程回收站 ──
@@ -304,39 +361,127 @@ export default function CourseManager() {
 
           {materialsLoading ? (
             <div className="text-sm text-slate-500">加载中...</div>
-          ) : materials.length === 0 ? (
-            <div className="text-sm text-slate-500 text-center py-8">
-              暂无课件，请在 Scratch 编辑器中通过「保存到课件」上传
-            </div>
+          ) : selectedCourse.type === 'scratch' ? (
+            /* ── Scratch 课程：保持原有 sb3 逻辑 ── */
+            materials.length === 0 ? (
+              <div className="text-sm text-slate-500 text-center py-8">
+                暂无课件，请在 Scratch 编辑器中通过「保存到课件」上传
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {materials.map(m => (
+                  <div key={m.name} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-center hover:border-brand-orange/30 transition-all duration-300 group hover:translate-y-[-2px] relative">
+                    <a
+                      href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
+                      target="_blank"
+                      className="block"
+                    >
+                      <span className="text-2xl block mb-2">📂</span>
+                      <div className="text-xs font-medium text-white mb-1 truncate">{m.name}</div>
+                      <div className="text-[10px] text-slate-500">
+                        {m.has_main && m.has_student ? '👥 师生版' : m.has_main ? '📘 教师版' : `${m.sb3_count} sb3`}
+                      </div>
+                      <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-[10px] text-brand-orange flex items-center justify-center gap-1">
+                          打开 <ExternalLink size={10} />
+                        </span>
+                      </div>
+                    </a>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteMaterial(m.name); }}
+                      className="absolute top-2 right-2 text-slate-600 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
+                      title="删除课件"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {materials.map(m => (
-                <div key={m.name} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-center hover:border-brand-orange/30 transition-all duration-300 group hover:translate-y-[-2px] relative">
-                  <a
-                    href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
-                    target="_blank"
-                    className="block"
-                  >
-                    <span className="text-2xl block mb-2">📂</span>
-                    <div className="text-xs font-medium text-white mb-1 truncate">{m.name}</div>
-                    <div className="text-[10px] text-slate-500">
-                      {m.has_main && m.has_student ? '👥 师生版' : m.has_main ? '📘 教师版' : `${m.sb3_count} sb3`}
-                    </div>
-                    <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-[10px] text-brand-orange flex items-center justify-center gap-1">
-                        打开 <ExternalLink size={10} />
-                      </span>
-                    </div>
-                  </a>
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteMaterial(m.name); }}
-                    className="absolute top-2 right-2 text-slate-600 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
-                    title="删除课件"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+            /* ── Python/C++ 课程：文件夹 + 文件管理 ── */
+            <div className="space-y-4">
+              {/* 新建文件夹 */}
+              {showNewFolder ? (
+                <div className="flex gap-2 items-center">
+                  <input
+                    value={newFolderName}
+                    onChange={e => setNewFolderName(e.target.value)}
+                    placeholder="文件夹名称"
+                    className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
+                    onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); }}
+                    autoFocus
+                  />
+                  <button onClick={handleCreateFolder} className="text-xs bg-brand-orange text-black px-3 py-1.5 rounded-lg font-bold">创建</button>
+                  <button onClick={() => { setShowNewFolder(false); setNewFolderName(''); }} className="text-xs text-slate-400 hover:text-slate-200">取消</button>
                 </div>
-              ))}
+              ) : (
+                <button
+                  onClick={() => setShowNewFolder(true)}
+                  className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Plus size={14} /> 新建文件夹
+                </button>
+              )}
+
+              {materials.length === 0 ? (
+                <div className="text-sm text-slate-500 text-center py-8">
+                  暂无课件，点击「新建文件夹」开始添加
+                </div>
+              ) : (
+                materials.map(m => (
+                  <div key={m.name} className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">📁</span>
+                        <span className="text-sm font-bold text-white">{m.name}</span>
+                        <span className="text-[10px] text-slate-500">{m.file_count} 个文件</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleUploadFile(m.name)}
+                          className="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded"
+                        >
+                          上传文件
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMaterial(m.name)}
+                          className="text-slate-600 hover:text-rose-400 transition-colors"
+                          title="删除文件夹"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    {m.files && m.files.length > 0 ? (
+                      <div className="space-y-1">
+                        {m.files.map(f => (
+                          <div key={f.name} className="flex items-center justify-between text-xs text-slate-400 bg-slate-900/50 rounded px-3 py-1.5 group hover:text-slate-200">
+                            <a
+                              href={`${m.url}${f.name}`}
+                              target="_blank"
+                              className="flex items-center gap-2 truncate"
+                            >
+                              <span>📄</span>
+                              <span className="truncate">{f.name}</span>
+                              <span className="text-[10px] text-slate-600">({(f.size / 1024).toFixed(1)} KB)</span>
+                            </a>
+                            <button
+                              onClick={() => handleDeleteFile(m.name, f.name)}
+                              className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"
+                              title="删除文件"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-slate-600 text-center py-2">空文件夹</div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>

@@ -12,9 +12,11 @@ interface Course {
 
 interface Material {
   name: string;
-  has_main: boolean;
-  has_student: boolean;
-  sb3_count: number;
+  has_main?: boolean;
+  has_student?: boolean;
+  sb3_count?: number;
+  files?: { name: string; size: number }[];
+  file_count?: number;
   url: string;
 }
 
@@ -215,32 +217,72 @@ export default function CourseSquare({ onBack }: Props) {
               <div className="text-slate-500 text-sm animate-pulse">加载中...</div>
             </div>
           ) : selectedCourse ? (
-            /* ── 课件网格 ── */
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            /* ── 课件视图 ── */
+            <div className="space-y-4">
+              <div className="text-sm text-slate-400 mb-2">
+                {selectedCourse.type === 'scratch' ? '🧩 Scratch 课件' : '📁 课程资料'}
+              </div>
+
               {materials.length === 0 ? (
-                <div className="col-span-full text-center py-16 text-slate-500 text-sm">
+                <div className="text-center py-16 text-slate-500 text-sm">
                   该课程暂无课件
                 </div>
+              ) : selectedCourse.type === 'scratch' ? (
+                /* ── Scratch 课件：打开编辑器 ── */
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {materials.map(m => (
+                    <button
+                      key={m.name}
+                      onClick={() => openScratch(m.url)}
+                      className="bg-slate-900/60 border border-slate-800 hover:border-green-500/30 rounded-2xl p-5 text-center transition-all hover:translate-y-[-2px] group"
+                    >
+                      <span className="text-3xl block mb-3">📂</span>
+                      <div className="font-bold text-white text-sm mb-1 truncate">{m.name}</div>
+                      <div className="text-xs text-slate-500 mb-2">
+                        {m.has_main && m.has_student
+                          ? '👥 师生版'
+                          : m.has_main
+                            ? '📘 教师版'
+                            : `${m.sb3_count} 个 sb3`}
+                      </div>
+                      <div className="text-xs text-green-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                        打开 <ExternalLink size={12} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
               ) : (
+                /* ── Python/C++ 课程：文件夹 + 文件列表 ── */
                 materials.map(m => (
-                  <button
-                    key={m.name}
-                    onClick={() => openScratch(m.url)}
-                    className="bg-slate-900/60 border border-slate-800 hover:border-green-500/30 rounded-2xl p-5 text-center transition-all hover:translate-y-[-2px] group"
-                  >
-                    <span className="text-3xl block mb-3">📂</span>
-                    <div className="font-bold text-white text-sm mb-1 truncate">{m.name}</div>
-                    <div className="text-xs text-slate-500 mb-2">
-                      {m.has_main && m.has_student
-                        ? '👥 师生版'
-                        : m.has_main
-                          ? '📘 教师版'
-                          : `${m.sb3_count} 个 sb3`}
+                  <div key={m.name} className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xl">📁</span>
+                      <span className="font-bold text-white text-sm">{m.name}</span>
+                      <span className="text-xs text-slate-500">{m.file_count} 个文件</span>
                     </div>
-                    <div className="text-xs text-green-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                      打开 <ExternalLink size={12} />
-                    </div>
-                  </button>
+                    {m.files && m.files.length > 0 ? (
+                      <div className="space-y-1">
+                        {m.files.map(f => (
+                          <a
+                            key={f.name}
+                            href={`${m.url}${f.name}`}
+                            target="_blank"
+                            className="flex items-center justify-between text-sm text-slate-400 hover:text-green-400 bg-slate-800/40 rounded-lg px-4 py-2 transition-colors group"
+                          >
+                            <span className="flex items-center gap-2 truncate">
+                              <span>📄</span>
+                              <span className="truncate">{f.name}</span>
+                            </span>
+                            <span className="text-[10px] text-slate-600 group-hover:text-slate-400">
+                              {(f.size / 1024).toFixed(1)} KB
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-slate-600 text-center py-2">空文件夹</div>
+                    )}
+                  </div>
                 ))
               )}
             </div>

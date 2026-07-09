@@ -77,10 +77,10 @@ export default function HomePage({ onLogin }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-cyber-bg p-6">
+    <div className="min-h-screen flex flex-col items-center relative bg-cyber-bg px-6 pt-6">
       <StarsBackground />
 
-      {/* 主内容区 — 全部使用 rem 单位，修改 html font-size 整体缩放 */}
+      {/* 主内容区 */}
       <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center">
 
         {/* Header */}
@@ -131,7 +131,7 @@ export default function HomePage({ onLogin }: Props) {
               <h2 className="text-lg font-bold text-white shrink-0">学习文档</h2>
               <p className="text-sm text-slate-500 shrink-0">Python / C++ / Scratch</p>
               <div className="flex gap-2 justify-center flex-wrap shrink-0">
-                <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all font-bold" href="/docs/guide/">Start</a>
+                <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/guide/">Start</a>
                 <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/scratch_course/">Scratch</a>
                 <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/python_course/">Python</a>
                 <a className="text-sm bg-slate-800 hover:bg-purple-600/30 text-slate-300 hover:text-purple-300 px-4 py-1.5 rounded-lg transition-all" href="/docs/cpp_course/">C++</a>
@@ -213,7 +213,7 @@ export default function HomePage({ onLogin }: Props) {
       )}
 
       {/* Footer — 备案信息 */}
-      <p className="text-xs text-slate-700 mt-24 pb-8">
+      <p className="text-xs text-slate-700 mt-auto pt-8 pb-3">
         粤ICP备2026057743号-1 · Arin | 青橙
       </p>
 

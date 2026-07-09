@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, CheckCircle, GraduationCap } from 'lucide-react';
+import { Send, CheckCircle } from 'lucide-react';
 import type { ApiClass } from './types';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 
 export default function SendMessagePanel({ username, classes }: Props) {
   const [recipient, setRecipient] = useState('');
+  const [classSend, setClassSend] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
@@ -20,12 +21,9 @@ export default function SendMessagePanel({ username, classes }: Props) {
     setResult(null);
     setSending(true);
     try {
-      // 检查是否发送给全班
-      const isClassSend = recipient.startsWith('__class:');
       let targets: string[];
-      if (isClassSend) {
-        const className = recipient.replace('__class:', '');
-        const cls = classes.find(c => c.class_name === className);
+      if (classSend) {
+        const cls = classes.find(c => c.class_name === classSend);
         targets = cls ? cls.students.map(s => s.username).filter(Boolean) : [];
         if (targets.length === 0) {
           setResult({ ok: false, text: '该班级没有学生' });
@@ -47,7 +45,7 @@ export default function SendMessagePanel({ username, classes }: Props) {
       }
 
       if (success > 0) {
-        const label = isClassSend ? `${targets.length} 位学生` : recipient;
+        const label = classSend ? `${classSend} 全班（${targets.length} 人）` : recipient;
         setResult({ ok: true, text: `✅ 消息已发送给 ${label}（成功${success}条` + (fail > 0 ? `，失败${fail}条` : '') + `）` });
         setSubject('');
         setBody('');
@@ -62,7 +60,7 @@ export default function SendMessagePanel({ username, classes }: Props) {
   };
 
   return (
-    <div className="animate-fadeIn space-y-4">
+    <div className="animate-fadeIn">
       {/* 发送站内信 */}
       <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6 transition-all duration-300 hover:border-brand-orange/30">
         <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
@@ -80,25 +78,34 @@ export default function SendMessagePanel({ username, classes }: Props) {
           <div>
             <label className="text-xs text-slate-500 mb-1 block">收件人</label>
             <div className="flex gap-2">
-              <select
-                value={recipient}
-                onChange={e => setRecipient(e.target.value)}
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-brand-orange transition-colors"
-              >
-                <option value="">输入或选择学生...</option>
-                {allStudents.filter(s => s.username).map(s => (
-                  <option key={s.id} value={s.username}>{s.username}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={recipient}
-                onChange={e => setRecipient(e.target.value)}
-                placeholder="或手写账号"
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-brand-orange transition-colors"
-              />
+              <div className="flex-1">
+                <select
+                  value={recipient}
+                  onChange={e => { setRecipient(e.target.value); setClassSend(''); }}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-brand-orange transition-colors"
+                >
+                  <option value="">选择学生...</option>
+                  {allStudents.filter(s => s.username).map(s => (
+                    <option key={s.id} value={s.username}>{s.username}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1">
+                <select
+                  value={classSend}
+                  onChange={e => { setClassSend(e.target.value); setRecipient(''); }}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-brand-orange transition-colors"
+                >
+                  <option value="">发送给班级...</option>
+                  {classes.map(c => (
+                    <option key={c.class_name} value={c.class_name}>
+                      {c.class_name}（{c.students.length} 人）
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <p className="text-[10px] text-slate-600 mt-1">下拉选择学生，或右侧手写输入账号</p>
+            <p className="text-[10px] text-slate-600 mt-1">互斥：选班级则群发，填学生则单独发送</p>
           </div>
           <div>
             <label className="text-xs text-slate-500 mb-1 block">主题</label>
@@ -123,33 +130,13 @@ export default function SendMessagePanel({ username, classes }: Props) {
           <div className="flex justify-end">
             <button
               onClick={handleSend}
-              disabled={sending || !recipient || !subject || !body}
+              disabled={sending || (!recipient && !classSend) || !subject || !body}
               className="flex items-center gap-2 bg-brand-orange text-black font-bold px-6 py-3 rounded-xl text-sm hover:bg-orange-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {sending ? '发送中...' : <><Send size={16} /> 发送</>}
             </button>
           </div>
         </div>
-      </div>
-
-      {/* 快捷：一键发送给全班 */}
-      <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-400/30">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
-          <GraduationCap size={16} className="text-cyan-400" /> 发送给全班
-        </h3>
-        <p className="text-xs text-slate-500 mb-4">选择班级，填写主题和正文后点「发送」即可群发</p>
-        <select
-          value={recipient}
-          onChange={e => setRecipient(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-cyan-400 transition-colors"
-        >
-          <option value="">选择班级...</option>
-          {classes.map(c => (
-            <option key={c.class_name} value={`__class:${c.class_name}`}>
-              {c.class_name}（{c.students.length} 人）
-            </option>
-          ))}
-        </select>
       </div>
     </div>
   );
