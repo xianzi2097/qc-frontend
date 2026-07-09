@@ -26,7 +26,7 @@ const origFetch = window.fetch.bind(window);
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   // 登录/注册接口不需要 token
   const url = typeof input === 'string' ? input : input instanceof Request ? input.url : input.toString();
-  if (url.includes('/api/login') || url.includes('/api/register')) {
+  if (url.includes('/api/login')) {
     return origFetch(input, init);
   }
 
