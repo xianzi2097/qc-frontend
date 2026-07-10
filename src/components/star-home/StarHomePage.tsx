@@ -106,8 +106,9 @@ export default function StarHomePage({ onLogin }: Props) {
       size: 0.35,
       href: '/docs/guide/',
       textureKey: 'moon',
+      noSelfRotation: true, // 潮汐锁定，永远一面对着地球
       axialTilt: 0.03,
-      x: -1.6, y: 1.0, z: 0,
+      x: 1.6, y: 1.0, z: 0,
       satellites: [
         { text: '📘 Python', href: '/docs/python_course/' },
         { text: '📙 C++', href: '/docs/cpp_course/' },

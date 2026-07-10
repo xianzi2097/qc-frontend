@@ -17,6 +17,8 @@ export interface PlanetEntry {
   z: number;
   /** 地轴倾斜角（弧度），地球约 0.41（23.4°） */
   axialTilt?: number;
+  /** 不自转（如月球，潮汐锁定） */
+  noSelfRotation?: boolean;
   satellites?: { text: string; href: string }[];
 }
 
@@ -51,7 +53,9 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
   }, []);
 
   useFrame(() => {
-    meshRef.current.rotation.y += 0.005;
+    if (!entry.noSelfRotation) {
+      meshRef.current.rotation.y += 0.005;
+    }
   });
 
   return (
