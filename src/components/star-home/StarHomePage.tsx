@@ -148,18 +148,19 @@ export default function StarHomePage({ onLogin }: Props) {
     },
   ], [teachers, storedUser, loggedInUsername, loggedInRole]);
 
+  const [selectedEntry, setSelectedEntry] = useState<PlanetEntry | null>(null);
+
   const handlePlanetClick = (entry: PlanetEntry) => {
-    if (entry.id === 'profile') {
-      if (!storedUser) {
-        setShowLogin(true);
-        return;
-      }
-      // 如果点击的是退出卫星，走 logout
-      window.location.href = entry.href;
+    // 个人中心未登录 → 弹出登录
+    if (entry.id === 'profile' && !storedUser) {
+      setShowLogin(true);
       return;
     }
-    window.location.href = entry.href;
+    // 其他 → 弹出科技卡片
+    setSelectedEntry(entry);
   };
+
+  const selectedEntryData = selectedEntry ? planetEntries.find(e => e.id === selectedEntry.id) : null;
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#050510' }}>
@@ -279,6 +280,90 @@ export default function StarHomePage({ onLogin }: Props) {
             </div>
           </div>
         )}
+
+        {/* ── 星球详情卡片 ── */}
+        {selectedEntry && selectedEntryData && (() => {
+          const e = selectedEntryData;
+          return (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 50,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              pointerEvents: 'auto',
+            }} onClick={() => setSelectedEntry(null)}>
+              {/* 背景模糊 */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'rgba(0,0,0,0.3)',
+                backdropFilter: 'blur(3px)',
+              }} />
+              {/* 卡片 */}
+              <div onClick={(e) => e.stopPropagation()} style={{
+                position: 'relative',
+                background: `linear-gradient(135deg, rgba(15,15,30,0.95), rgba(5,5,16,0.95))`,
+                border: `1px solid ${e.color}44`,
+                borderRadius: 20,
+                padding: '36px 40px',
+                maxWidth: 420,
+                width: '90%',
+                boxShadow: `0 0 60px ${e.color}22, 0 0 120px ${e.color}11, inset 0 0 60px ${e.color}08`,
+                backdropFilter: 'blur(12px)',
+              }}>
+                {/* 标题 */}
+                <div style={{
+                  color: '#fff', fontSize: 22, fontWeight: 800,
+                  letterSpacing: 1, marginBottom: 12,
+                  textShadow: `0 0 30px ${e.color}`,
+                }}>
+                  {e.label}
+                </div>
+                {/* 描述 */}
+                <div style={{
+                  color: 'rgba(255,255,255,0.5)', fontSize: 13,
+                  marginBottom: 24, lineHeight: 1.6,
+                }}>
+                  {e.desc}
+                </div>
+                {/* 卫星按钮 */}
+                {e.satellites && e.satellites.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                    {e.satellites.map(s => (
+                      <a key={s.text} href={s.href}
+                        style={{
+                          color: e.color,
+                          border: `1px solid ${e.color}44`,
+                          background: `${e.color}11`,
+                          padding: '8px 18px', borderRadius: 10,
+                          fontSize: 13, fontWeight: 600,
+                          textDecoration: 'none', cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          textShadow: `0 0 10px ${e.color}`,
+                        }}
+                        onMouseEnter={(ev) => { ev.currentTarget.style.background = `${e.color}22`; ev.currentTarget.style.boxShadow = `0 0 20px ${e.color}44`; }}
+                        onMouseLeave={(ev) => { ev.currentTarget.style.background = `${e.color}11`; ev.currentTarget.style.boxShadow = ''; }}
+                      >
+                        {s.text}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {/* 关闭按钮 */}
+                <button onClick={() => setSelectedEntry(null)} style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'rgba(255,255,255,0.4)',
+                  padding: '8px 20px', borderRadius: 10,
+                  fontSize: 13, cursor: 'pointer',
+                  width: '100%', transition: 'all 0.2s',
+                }}
+                  onMouseEnter={(ev) => { ev.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                  onMouseLeave={(ev) => { ev.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 头像选择器 */}
         {showAvatarPicker && (

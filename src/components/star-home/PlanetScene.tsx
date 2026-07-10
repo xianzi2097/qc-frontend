@@ -74,11 +74,8 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
           textShadow:`0 0 30px ${entry.color},0 2px 12px rgba(0,0,0,0.9)`,
           pointerEvents:'none', userSelect:'none',
         }}>
-          <div style={{ fontSize: entry.size > 0.8 ? 20 : 15, fontWeight: 800, letterSpacing: 1, marginBottom: 2 }}>
+          <div style={{ fontSize: entry.size > 0.8 ? 20 : 15, fontWeight: 800, letterSpacing: 1 }}>
             {entry.label}
-          </div>
-          <div style={{ fontSize: entry.size > 0.8 ? 13 : 11, fontWeight: 400, opacity: 0.55 }}>
-            {entry.desc}
           </div>
         </div>
       </Html>
