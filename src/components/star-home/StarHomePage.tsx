@@ -108,7 +108,7 @@ export default function StarHomePage({ onLogin }: Props) {
       textureKey: 'moon',
       noSelfRotation: true, // 潮汐锁定，永远一面对着地球
       axialTilt: 0.03,
-      x: 1.6, y: 1.0, z: 0,
+      x: 1.6, y: -0.3, z: 0,
       satellites: [
         { text: '📘 Python', href: '/docs/python_course/' },
         { text: '📙 C++', href: '/docs/cpp_course/' },
@@ -119,11 +119,11 @@ export default function StarHomePage({ onLogin }: Props) {
       id: 'create',
       label: '自由创作',
       desc: 'Scratch 4.0 引擎 · 纯净模式',
-      color: '#22d3ee',
+      color: '#e8c87a',
       size: 0.5,
       href: '/Scratch/index.html',
-      textureKey: 'uranus',
-      x: -1.8, y: -1.8, z: 0,
+      textureKey: 'venus',
+      x: -2.2, y: 1.5, z: 0,
       satellites: [
         { text: '🎨 开始创作', href: '/Scratch/index.html' },
       ],
@@ -136,7 +136,7 @@ export default function StarHomePage({ onLogin }: Props) {
       size: 0.55,
       href: '/?view=dashboard',
       textureKey: 'mars',
-      x: 1.8, y: -1.8, z: 0,
+      x: 1.8, y: -0.8, z: 0,
       satellites: storedUser
         ? [
             { text: '🚪 进入空间', href: '/?view=dashboard' },
