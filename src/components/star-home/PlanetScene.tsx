@@ -23,12 +23,13 @@ interface Props {
   onPlanetClick: (entry: PlanetEntry) => void;
 }
 
-/* ── 真实星球贴图 URL（Solar System Scope，CC-BY 4.0） ── */
-const TEXTURE_URLS: Record<string, string> = {
-  venus:  'https://www.solarsystemscope.com/textures/download/2k_venus_atmosphere.jpg',
-  earth:  'https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg',
-  uranus: 'https://www.solarsystemscope.com/textures/download/2k_uranus.jpg',
-  mars:   'https://www.solarsystemscope.com/textures/download/2k_mars.jpg',
+/* ── 本地纹理映射 ── */
+const BASE = '/dashboard/';
+const TEXTURE_MAP: Record<string, string> = {
+  venus:  `${BASE}textures/venus_atmosphere.jpg`,
+  earth:  `${BASE}textures/earth_daymap.jpg`,
+  uranus: `${BASE}textures/uranus.jpg`,
+  mars:   `${BASE}textures/mars.jpg`,
 };
 
 /* ── 单颗星球 ── */
@@ -36,7 +37,7 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
   const meshRef = useRef<THREE.Mesh>(null!);
   const groupRef = useRef<THREE.Group>(null!);
   const [hovered, setHovered] = useState(false);
-  const texture = useTexture(TEXTURE_URLS[entry.textureKey] || TEXTURE_URLS.earth);
+  const texture = useTexture(TEXTURE_MAP[entry.textureKey] || TEXTURE_MAP.earth);
 
   useEffect(() => { groupRef.current.position.set(entry.x, entry.y, entry.z); }, []);
 
@@ -47,18 +48,14 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
 
   return (
     <group ref={groupRef}>
-      <mesh scale={1.12}>
-        <sphereGeometry args={[entry.size, 32, 32]} />
-        <meshBasicMaterial color={entry.color} transparent opacity={0.06} side={THREE.BackSide} />
-      </mesh>
       <mesh ref={meshRef}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
         onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
       >
         <sphereGeometry args={[entry.size, 64, 64]} />
-        <meshStandardMaterial map={texture} roughness={0.6} metalness={0.1}
-          emissive={new THREE.Color(entry.color)} emissiveIntensity={hovered ? 0.3 : 0.04} />
+        <meshStandardMaterial map={texture} roughness={0.5} metalness={0.0}
+          emissive={new THREE.Color(entry.color)} emissiveIntensity={hovered ? 0.3 : 0.06} />
       </mesh>
       <Html position={[0, entry.size + 0.5, 0]} center>
         <div style={{
@@ -139,9 +136,10 @@ function SceneSetup() {
 /* ── 灯光 ── */
 function SceneLights() {
   return (<>
-    <ambientLight intensity={0.4} color="#222244" />
-    <directionalLight position={[8,12,10]} intensity={2.5} color="#ffeedd" />
-    <directionalLight position={[-6,-2,-8]} intensity={0.5} color="#4488ff" />
+    {/* 固定方向光从 QC-Studio 方向（左上）照来，星球自转产生光影变化 */}
+    <ambientLight intensity={0.3} color="#ffffff" />
+    <directionalLight position={[-6,8,4]} intensity={8} color="#fff5e6" />
+    <directionalLight position={[4,-3,-6]} intensity={2} color="#88ccff" />
   </>);
 }
 
@@ -150,7 +148,7 @@ export default function PlanetScene({ entries, onPlanetClick }: Props) {
   return (
     <Canvas camera={{position:[0,1.5,8],fov:45,near:0.1,far:500}}
       style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',zIndex:0}}
-      gl={{antialias:true,toneMapping:THREE.ACESFilmicToneMapping,toneMappingExposure:1}}
+      gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:2}}
       onCreated={({gl})=>{gl.setPixelRatio(Math.min(window.devicePixelRatio,2))}}
     >
       <SceneLights /><Stars />
