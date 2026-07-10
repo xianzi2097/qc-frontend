@@ -150,7 +150,7 @@ function SceneLights() {
   return (<>
     <ambientLight intensity={0.45} color="#88aacc" />
     {/* 主光：模拟太阳，右上空 */}
-    <directionalLight position={[4, 6, 3]} intensity={10} color="#fff5e6" />
+    <directionalLight position={[-4, 6, 3]} intensity={10} color="#fff5e6" />
   </>);
 }
 
@@ -161,18 +161,7 @@ export default function PlanetScene({ entries, onPlanetClick }: Props) {
       style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',zIndex:0}}
       gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:2}}
       onCreated={({gl})=>{
-        gl.setPixelRatio(Math.min(window.devicePixelRatio, 1));
-        // 锁 30fps，省 GPU
-        const clock = new THREE.Clock();
-        const interval = 1/30;
-        const origRender = gl.render.bind(gl);
-        let last = 0;
-        gl.render = (scene, camera) => {
-          const t = clock.getElapsedTime();
-          if (t - last < interval) return;
-          last = t;
-          origRender(scene, camera);
-        };
+        gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       }}
     >
       <SceneLights /><Stars />

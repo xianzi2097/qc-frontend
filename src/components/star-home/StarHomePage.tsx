@@ -103,12 +103,12 @@ export default function StarHomePage({ onLogin }: Props) {
       label: '学习文档',
       desc: 'Python / C++ / Scratch',
       color: '#94a3b8',
-      size: 0.35,
+      size: 0.32,
       href: '/docs/guide/',
       textureKey: 'moon',
       noSelfRotation: true, // 潮汐锁定，永远一面对着地球
       axialTilt: 0.03,
-      x: 1.6, y: -0.3, z: 0,
+      x: 1.6, y: 1.5, z: 0,
       satellites: [
         { text: '📘 Python', href: '/docs/python_course/' },
         { text: '📙 C++', href: '/docs/cpp_course/' },
@@ -123,7 +123,7 @@ export default function StarHomePage({ onLogin }: Props) {
       size: 0.5,
       href: '/Scratch/index.html',
       textureKey: 'venus',
-      x: -2.2, y: 1.5, z: 0,
+       x: -3.3, y: -0.05, z: 0,
       satellites: [
         { text: '🎨 开始创作', href: '/Scratch/index.html' },
       ],
@@ -136,7 +136,7 @@ export default function StarHomePage({ onLogin }: Props) {
       size: 0.55,
       href: '/?view=dashboard',
       textureKey: 'mars',
-      x: 1.8, y: -0.8, z: 0,
+      x: 3.3, y: -0.05, z: 0,
       satellites: storedUser
         ? [
             { text: '🚪 进入空间', href: '/?view=dashboard' },
@@ -178,7 +178,7 @@ export default function StarHomePage({ onLogin }: Props) {
         lineHeight: 1.3,
       }}>
         <div style={{ color: '#fff', fontSize: 20, fontWeight: 900, letterSpacing: 1 }}>
-          🍊 QC-Studio
+          QC-Studio
           <span style={{
             fontSize: 10, fontWeight: 600, color: '#f97316',
             background: 'rgba(249,115,22,0.15)',
