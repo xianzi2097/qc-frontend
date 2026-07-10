@@ -133,13 +133,28 @@ function SceneSetup() {
   return <OrbitControls enableDamping dampingFactor={0.08} minDistance={4} maxDistance={15} maxPolarAngle={Math.PI/2.5} />;
 }
 
-/* ── 灯光 ── */
+/* ── 灯光（追随相机，始终从左上角照射） ── */
 function SceneLights() {
+  const mainLight = useRef<THREE.DirectionalLight>(null!);
+  const fillLight = useRef<THREE.DirectionalLight>(null!);
+  const { camera } = useThree();
+
+  useFrame(() => {
+    const mainOff = new THREE.Vector3(-4, 5, 3).applyQuaternion(camera.quaternion);
+    mainLight.current.position.copy(camera.position.clone().add(mainOff));
+    mainLight.current.target.position.copy(camera.position);
+    mainLight.current.target.updateMatrixWorld();
+
+    const fillOff = new THREE.Vector3(3, -2, -4).applyQuaternion(camera.quaternion);
+    fillLight.current.position.copy(camera.position.clone().add(fillOff));
+    fillLight.current.target.position.copy(camera.position);
+    fillLight.current.target.updateMatrixWorld();
+  });
+
   return (<>
-    {/* 固定方向光从 QC-Studio 方向（左上）照来，星球自转产生光影变化 */}
     <ambientLight intensity={0.3} color="#ffffff" />
-    <directionalLight position={[-6,8,4]} intensity={8} color="#fff5e6" />
-    <directionalLight position={[4,-3,-6]} intensity={2} color="#88ccff" />
+    <directionalLight ref={mainLight} intensity={8} color="#fff5e6" />
+    <directionalLight ref={fillLight} intensity={1.5} color="#88ccff" />
   </>);
 }
 
