@@ -85,13 +85,14 @@ export default function StarHomePage({ onLogin }: Props) {
       id: 'scratch',
       label: 'Scratch 课堂',
       desc: '进入课堂 获取素材与案例',
-      color: '#4ade80',
+      color: '#4a9eff',
       size: 1.1,
       href: teachers.length > 0
         ? `/?view=courses&teacher=${teachers[0].username}`
         : '/?view=courses',
-      textureKey: 'venus',
-      x: 0, y: 1.3, z: 0,
+      textureKey: 'earth',
+      axialTilt: 0.41, // ~23.4° 真实地轴倾斜
+      x: 0, y: 0, z: 0,
       satellites: teachers.map(t => ({
         text: `👤 ${t.username}`,
         href: `/?view=courses&teacher=${t.username}`,
@@ -101,11 +102,12 @@ export default function StarHomePage({ onLogin }: Props) {
       id: 'docs',
       label: '学习文档',
       desc: 'Python / C++ / Scratch',
-      color: '#a78bfa',
-      size: 0.55,
+      color: '#94a3b8',
+      size: 0.35,
       href: '/docs/guide/',
-      textureKey: 'earth',
-      x: -3.2, y: -1.8, z: 0,
+      textureKey: 'moon',
+      axialTilt: 0.03,
+      x: -1.6, y: 1.0, z: 0,
       satellites: [
         { text: '📘 Python', href: '/docs/python_course/' },
         { text: '📙 C++', href: '/docs/cpp_course/' },
@@ -120,7 +122,7 @@ export default function StarHomePage({ onLogin }: Props) {
       size: 0.5,
       href: '/Scratch/index.html',
       textureKey: 'uranus',
-      x: 0, y: -1.8, z: 0,
+      x: -1.8, y: -1.8, z: 0,
       satellites: [
         { text: '🎨 开始创作', href: '/Scratch/index.html' },
       ],
@@ -133,7 +135,7 @@ export default function StarHomePage({ onLogin }: Props) {
       size: 0.55,
       href: '/?view=dashboard',
       textureKey: 'mars',
-      x: 3.2, y: -1.8, z: 0,
+      x: 1.8, y: -1.8, z: 0,
       satellites: storedUser
         ? [
             { text: '🚪 进入空间', href: '/?view=dashboard' },

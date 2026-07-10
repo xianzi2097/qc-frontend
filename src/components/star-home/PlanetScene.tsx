@@ -15,6 +15,8 @@ export interface PlanetEntry {
   x: number;
   y: number;
   z: number;
+  /** 地轴倾斜角（弧度），地球约 0.41（23.4°） */
+  axialTilt?: number;
   satellites?: { text: string; href: string }[];
 }
 
@@ -30,6 +32,7 @@ const TEXTURE_MAP: Record<string, string> = {
   earth:  `${BASE}textures/earth_daymap.jpg`,
   uranus: `${BASE}textures/uranus.jpg`,
   mars:   `${BASE}textures/mars.jpg`,
+  moon:   `${BASE}textures/moon.jpg`,
 };
 
 /* ── 单颗星球 ── */
@@ -39,11 +42,16 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
   const [hovered, setHovered] = useState(false);
   const texture = useTexture(TEXTURE_MAP[entry.textureKey] || TEXTURE_MAP.earth);
 
-  useEffect(() => { groupRef.current.position.set(entry.x, entry.y, entry.z); }, []);
+  useEffect(() => {
+    groupRef.current.position.set(entry.x, entry.y, entry.z);
+    // 设置地轴倾斜
+    if (entry.axialTilt) {
+      meshRef.current.rotation.x = entry.axialTilt;
+    }
+  }, []);
 
   useFrame(() => {
     meshRef.current.rotation.y += 0.005;
-    meshRef.current.rotation.x += 0.0005;
   });
 
   return (
@@ -54,8 +62,7 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
       >
         <sphereGeometry args={[entry.size, 64, 64]} />
-        <meshStandardMaterial map={texture} roughness={0.5} metalness={0.0}
-          emissive={new THREE.Color(entry.color)} emissiveIntensity={hovered ? 0.3 : 0.06} />
+        <meshStandardMaterial map={texture} roughness={0.5} metalness={0.0} />
       </mesh>
       <Html position={[0, entry.size + 0.5, 0]} center>
         <div style={{
@@ -129,14 +136,14 @@ function Stars() {
 /* ── 场景设置 ── */
 function SceneSetup() {
   const {camera}=useThree();
-  useEffect(()=>{camera.position.set(0,1.5,8);camera.lookAt(0,0,0);},[camera]);
-  return <OrbitControls enableDamping dampingFactor={0.08} minDistance={4} maxDistance={15} maxPolarAngle={Math.PI/2.5} />;
+  useEffect(()=>{camera.position.set(0,1.5,12);camera.lookAt(0,0,0);},[camera]);
+  return <OrbitControls enableDamping dampingFactor={0.08} minDistance={4} maxDistance={15} maxPolarAngle={Math.PI/2.5}
+    target={[0,0,0]} />;
 }
 
 /* ── 灯光（追随相机，始终从左上角照射） ── */
 function SceneLights() {
   const mainLight = useRef<THREE.DirectionalLight>(null!);
-  const fillLight = useRef<THREE.DirectionalLight>(null!);
   const { camera } = useThree();
 
   useFrame(() => {
@@ -144,27 +151,21 @@ function SceneLights() {
     mainLight.current.position.copy(camera.position.clone().add(mainOff));
     mainLight.current.target.position.copy(camera.position);
     mainLight.current.target.updateMatrixWorld();
-
-    const fillOff = new THREE.Vector3(3, -2, -4).applyQuaternion(camera.quaternion);
-    fillLight.current.position.copy(camera.position.clone().add(fillOff));
-    fillLight.current.target.position.copy(camera.position);
-    fillLight.current.target.updateMatrixWorld();
   });
 
   return (<>
     <ambientLight intensity={0.3} color="#ffffff" />
     <directionalLight ref={mainLight} intensity={8} color="#fff5e6" />
-    <directionalLight ref={fillLight} intensity={1.5} color="#88ccff" />
   </>);
 }
 
 /* ── 主场景 ── */
 export default function PlanetScene({ entries, onPlanetClick }: Props) {
   return (
-    <Canvas camera={{position:[0,1.5,8],fov:45,near:0.1,far:500}}
+    <Canvas camera={{position:[0,1.5,12],fov:30,near:0.1,far:500}}
       style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',zIndex:0}}
       gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:2}}
-      onCreated={({gl})=>{gl.setPixelRatio(Math.min(window.devicePixelRatio,2))}}
+      onCreated={({gl})=>{gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))}}
     >
       <SceneLights /><Stars />
       {entries.map(e=><Planet key={e.id} entry={e} onClick={()=>onPlanetClick(e)} />)}
