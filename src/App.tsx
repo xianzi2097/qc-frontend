@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAuth } from './lib/useAuth';
-import HomePage from './components/HomePage';
+import HomePage from './components/star-home/StarHomePage';
 import CourseSquare from './components/CourseSquare';
 import TeacherDashboardWithSidebar from './components/teacher/TeacherDashboardWithSidebar';
 import AdminDashboardWithSidebar from './components/admin/AdminDashboardWithSidebar';
