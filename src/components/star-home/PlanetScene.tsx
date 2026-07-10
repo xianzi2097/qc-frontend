@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, useTexture } from '@react-three/drei';
+import { OrbitControls, Html, Text3D, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
 /* ── 入口数据 ── */
@@ -41,14 +41,24 @@ const TEXTURE_MAP: Record<string, string> = {
 function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void }) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const groupRef = useRef<THREE.Group>(null!);
+  const textRef = useRef<any>(null!);
   const [hovered, setHovered] = useState(false);
   const texture = useTexture(TEXTURE_MAP[entry.textureKey] || TEXTURE_MAP.earth);
+  const rockTex = useTexture(TEXTURE_MAP.moon);
 
   useEffect(() => {
     groupRef.current.position.set(entry.x, entry.y, entry.z);
     // 设置地轴倾斜
     if (entry.axialTilt) {
       meshRef.current.rotation.x = entry.axialTilt;
+    }
+    // 3D 文字居中
+    if (textRef.current) {
+      const geo = textRef.current.geometry;
+      geo.computeBoundingBox();
+      const box = geo.boundingBox!;
+      const cx = (box.max.x - box.min.x) / 2 + box.min.x;
+      textRef.current.position.x -= cx;
     }
   }, []);
 
@@ -68,17 +78,22 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
         <sphereGeometry args={[entry.size, 64, 64]} />
         <meshStandardMaterial map={texture} roughness={0.5} metalness={0.0} />
       </mesh>
-      <Html position={[0, entry.size + 0.5, 0]} center>
-        <div style={{
-          color:'#fff', textAlign:'center',
-          textShadow:`0 0 30px ${entry.color},0 2px 12px rgba(0,0,0,0.9)`,
-          pointerEvents:'none', userSelect:'none',
-        }}>
-          <div style={{ fontSize: entry.size > 0.8 ? 20 : 15, fontWeight: 800, letterSpacing: 1 }}>
-            {entry.label}
-          </div>
-        </div>
-      </Html>
+      {/* 3D 浮雕文字 */}
+      <Text3D
+        ref={textRef}
+        position={[0, -entry.size - 0.35, 0]}
+        size={entry.size > 0.8 ? 0.3 : 0.22}
+        height={0.06}
+        bevelEnabled
+        bevelSize={0.02}
+        bevelThickness={0.03}
+        bevelSegments={3}
+        curveSegments={8}
+        font="/dashboard/fonts/helvetiker_bold.typeface.json"
+      >
+        {entry.label}
+        <meshStandardMaterial map={rockTex} roughness={0.9} metalness={0} />
+      </Text3D>
       {entry.satellites?.map((sat, i) => (
         <SatelliteButton key={sat.text} sat={sat} index={i} total={entry.satellites!.length}
           planetSize={entry.size} color={entry.color} />
@@ -137,8 +152,8 @@ function Stars() {
 /* ── 场景设置 ── */
 function SceneSetup() {
   const {camera}=useThree();
-  useEffect(()=>{camera.position.set(0,1.5,12);camera.lookAt(0,0,0);},[camera]);
-  return <OrbitControls enableDamping dampingFactor={0.08} minDistance={4} maxDistance={15} maxPolarAngle={Math.PI/2.5}
+  useEffect(()=>{camera.position.set(0,0,12);camera.lookAt(0,0,0);},[camera]);
+  return <OrbitControls enableDamping dampingFactor={0.08} minDistance={4} maxDistance={15} maxPolarAngle={Math.PI/2}
     target={[0,0,0]} />;
 }
 
@@ -154,7 +169,7 @@ function SceneLights() {
 /* ── 主场景 ── */
 export default function PlanetScene({ entries, onPlanetClick }: Props) {
   return (
-    <Canvas camera={{position:[0,1.5,12],fov:30,near:0.1,far:500}}
+    <Canvas camera={{position:[0,0,12],fov:30,near:0.1,far:500}}
       style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',zIndex:0}}
       gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:2}}
       onCreated={({gl})=>{
