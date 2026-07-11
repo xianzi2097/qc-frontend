@@ -351,7 +351,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
         schedule: c.schedule || [],
         students: (c.students || []).map((s: any) => ({
           id: String(s.user_id || ''),
-          name: s.username || '',
+          name: s.name || s.username || '',
           remark: '',
         })),
       }));
