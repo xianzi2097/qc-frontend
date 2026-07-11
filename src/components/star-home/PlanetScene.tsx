@@ -42,7 +42,6 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
   const meshRef = useRef<THREE.Mesh>(null!);
   const groupRef = useRef<THREE.Group>(null!);
   const textRef = useRef<any>(null!);
-  const [hovered, setHovered] = useState(false);
   const texture = useTexture(TEXTURE_MAP[entry.textureKey] || TEXTURE_MAP.earth);
   const rockTex = useTexture(TEXTURE_MAP.moon);
 
@@ -72,8 +71,8 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
     <group ref={groupRef}>
       <mesh ref={meshRef}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={() => { document.body.style.cursor = 'default'; }}
       >
         <sphereGeometry args={[entry.size, 64, 64]} />
         <meshStandardMaterial map={texture} roughness={0.5} metalness={0.0} />
@@ -135,7 +134,7 @@ function SatelliteButton({ sat, index, total, planetSize, color }: {
 /* ── 星星 ── */
 function Stars() {
   const ref = useRef<THREE.Points>(null!);
-  const [g] = useState(() => {
+  const g = useMemo(() => {
     const pos = new Float32Array(4000*3), col = new Float32Array(4000*3);
     for (let i = 0; i < 4000; i++) {
       const r=60+Math.random()*200, theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1);
@@ -146,6 +145,7 @@ function Stars() {
     const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setAttribute('color',new THREE.BufferAttribute(col,3));
     return geo;
   },[]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return (<points ref={ref} geometry={g}><pointsMaterial size={0.25} transparent opacity={0.9} blending={THREE.AdditiveBlending} sizeAttenuation vertexColors /></points>);
 }
 
