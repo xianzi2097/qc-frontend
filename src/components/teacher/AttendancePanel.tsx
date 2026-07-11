@@ -310,13 +310,12 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   const handleRemoveStudent = async (studentId: string) => {
     if (!selectedClass || !confirm('确定从班级中移除此学生？')) return;
     await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students/${studentId}?username=${username}`, { method: 'DELETE' });
+    // 立即乐观更新 selectedClass，避免删除第二个学生时使用过期数据
+    setSelectedClass(prev => prev ? {
+      ...prev,
+      students: prev.students.filter(s => s.id !== studentId)
+    } : null);
     await loadClasses();
-    const res = await fetch(`/api/classes?username=${username}`);
-    const data = await res.json();
-    if (data.status === 'success') {
-      const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
-      if (updated) setSelectedClass(updated);
-    }
   };
 
   // ── 垃圾桶 ──
@@ -476,11 +475,13 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   // ── 保存课堂记录 ──
   const handleSaveSession = async (date: string, students: SessionStudent[]) => {
     if (!selectedClass) return;
+    // 确保每个学生都有 id（老数据可能缺失）
+    const safe = students.map(s => ({ ...s, id: s.id || String(Date.now()) }));
     setSaving(true);
     try {
       const res = await fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}?username=${username}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, students }),
+        body: JSON.stringify({ date, students: safe }),
       });
       const data = await res.json();
       if (data.status === 'success') {
