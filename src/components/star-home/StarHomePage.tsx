@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { BookOpen, GraduationCap, Award, Puzzle } from 'lucide-react';
-import AvatarPicker, { AVATARS } from '../ui/AvatarPicker';
+import AvatarPicker from '../ui/AvatarPicker';
 import type { PortalUser } from '../../lib/useAuth';
 import PlanetScene from './PlanetScene';
 import type { PlanetEntry } from './PlanetScene';
@@ -38,12 +37,6 @@ export default function StarHomePage({ onLogin }: Props) {
   const loggedInUsername = storedUser?.username || '';
   const loggedInRole = storedUser?.role || '';
   const loggedInAvatar = storedUser?.avatar_path || '0';
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('auth_token');
-    window.location.reload();
-  };
 
   const handleAvatarSelect = async (avatarId: string) => {
     try {
