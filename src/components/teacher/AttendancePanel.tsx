@@ -394,50 +394,82 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   };
 
   // ── 添加学生（含重名检测） ──
+  const [addError, setAddError] = useState('');
+
   const startAddStudent = async () => {
     if (!newStudentName.trim() || !selectedClass) return;
-    const res = await fetch(`/api/classes/find-student?username=${username}&name=${encodeURIComponent(newStudentName)}`);
-    const data = await res.json();
-    if (data.status === 'success' && data.matches.length > 0) {
-      setDupCheck({ matches: data.matches, showDialog: true });
-    } else {
-      await addStudentDirect('');
+    setAddError('');
+    try {
+      const res = await fetch(`/api/classes/find-student?username=${username}&name=${encodeURIComponent(newStudentName)}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setAddError(err.detail || `查询失败 (${res.status})`);
+        return;
+      }
+      const data = await res.json();
+      if (data.status === 'success' && data.matches && data.matches.length > 0) {
+        setDupCheck({ matches: data.matches, showDialog: true });
+      } else {
+        await addStudentDirect('');
+      }
+    } catch (e) {
+      setAddError('网络错误，请检查连接');
     }
   };
 
   const addStudentDirect = async (existingId: string) => {
     if (!selectedClass) return;
-    await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students?username=${username}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newStudentName, existing_id: existingId, remark: '' }),
-    });
-    setNewStudentName('');
-    setShowAddStudent(false);
-    setDupCheck({ matches: [], showDialog: false });
-    await loadClasses();
-    const res = await fetch(`/api/classes?username=${username}`);
-    const data = await res.json();
-    if (data.status === 'success') {
-      const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
-      if (updated) setSelectedClass(updated);
+    setAddError('');
+    try {
+      const res = await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students?username=${username}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newStudentName, existing_id: existingId, remark: '' }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setAddError(err.detail || `添加失败 (${res.status})`);
+        return;
+      }
+      setNewStudentName('');
+      setShowAddStudent(false);
+      setDupCheck({ matches: [], showDialog: false });
+      await loadClasses();
+      const res2 = await fetch(`/api/classes?username=${username}`);
+      const data = await res2.json();
+      if (data.status === 'success') {
+        const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
+        if (updated) setSelectedClass(updated);
+      }
+    } catch (e) {
+      setAddError('网络错误，请检查连接');
     }
   };
 
   const addStudentWithNew = async (_oldRemark: string, newRemark: string) => {
     if (!selectedClass) return;
-    await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students?username=${username}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newStudentName, existing_id: '', remark: newRemark }),
-    });
-    setNewStudentName('');
-    setShowAddStudent(false);
-    setDupCheck({ matches: [], showDialog: false });
-    await loadClasses();
-    const res = await fetch(`/api/classes?username=${username}`);
-    const data = await res.json();
-    if (data.status === 'success') {
-      const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
-      if (updated) setSelectedClass(updated);
+    setAddError('');
+    try {
+      const res = await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students?username=${username}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newStudentName, existing_id: '', remark: newRemark }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setAddError(err.detail || `添加失败 (${res.status})`);
+        return;
+      }
+      setNewStudentName('');
+      setShowAddStudent(false);
+      setDupCheck({ matches: [], showDialog: false });
+      await loadClasses();
+      const res2 = await fetch(`/api/classes?username=${username}`);
+      const data = await res2.json();
+      if (data.status === 'success') {
+        const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
+        if (updated) setSelectedClass(updated);
+      }
+    } catch (e) {
+      setAddError('网络错误，请检查连接');
     }
   };
 
@@ -595,9 +627,12 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                     className="bg-slate-800 text-sm text-slate-200 px-3 py-1.5 rounded outline-none border border-slate-700 w-48" />
                   <button onClick={startAddStudent}
                     className="text-xs text-black px-3 py-1.5 rounded font-bold bg-cyan-400">添加</button>
-                  <button onClick={() => setShowAddStudent(false)}
+                  <button onClick={() => { setShowAddStudent(false); setAddError(''); }}
                     className="text-xs text-slate-400 px-2 py-1.5 rounded hover:bg-slate-800">取消</button>
                 </div>
+                {addError && (
+                  <div className="text-xs text-rose-400 mt-1">{addError}</div>
+                )}
               </div>
             )}
 

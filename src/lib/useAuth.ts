@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface PortalUser {
   username: string;
@@ -40,6 +40,14 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       localStorage.removeItem('auth_token');
       window.location.reload();
     }
+    // 403 权限不足：提示用户重新登录
+    if (res.status === 403) {
+      const data = await res.clone().json().catch(() => null);
+      alert(data?.detail || '权限不足，请重新登录');
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+      window.location.reload();
+    }
     return res;
   }
   return origFetch(input, init);
@@ -48,6 +56,39 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 /** 统一的身份获取 hook，支持登录/登出 */
 export function useAuth() {
   const [user, setUser] = useState<PortalUser | null>(readUser);
+  const [validating, setValidating] = useState(true);
+
+  // ── 页面加载时验证 token 有效性 ──
+  useEffect(() => {
+    const storedUser = readUser();
+    const storedToken = readToken();
+
+    // 没有 user 或 token，直接标记为未登录
+    if (!storedUser || !storedToken) {
+      if (storedUser && !storedToken) {
+        // 有 user 但没 token（旧缓存），清除
+        localStorage.removeItem('user');
+        setUser(null);
+      }
+      setValidating(false);
+      return;
+    }
+
+    // 用 /api/user/profile 验证 token 是否仍有效
+    fetch('/api/user/profile')
+      .then(res => {
+        if (!res.ok) {
+          // token 无效或用户已被删除，清除登录状态
+          localStorage.removeItem('user');
+          localStorage.removeItem('auth_token');
+          setUser(null);
+        }
+      })
+      .catch(() => {
+        // 网络错误不清除，可能是暂时断网
+      })
+      .finally(() => setValidating(false));
+  }, []);
 
   const login = useCallback((u: PortalUser, token?: string) => {
     localStorage.setItem('user', JSON.stringify(u));
@@ -65,7 +106,8 @@ export function useAuth() {
     user,
     username: user?.username ?? '',
     role: user?.role ?? 'teacher',
-    isLoggedIn: !!user,
+    isLoggedIn: !!user && !validating,
+    validating,
     token: readToken(),
     login,
     logout,
