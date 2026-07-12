@@ -12,9 +12,10 @@ export interface PlanetEntry {
   size: number;
   href: string;
   textureKey: string;
-  x: number; // 我们只用它来提取“离太阳的距离”，废弃它的绝对坐标意义
-  y: number; // 强制废弃！全部按 0 处理
-  z: number; // 强制废弃！交由 sin/cos 旋转引擎计算
+  x: number;   // 轨道半径
+  y: number;   // 高度（未启用）
+  z: number;   // 废弃
+  angle?: number; // 角度（弧度），不设则按 (x,0,0) 摆放
   axialTilt?: number;
   noSelfRotation?: boolean;
   reverseRotation?: boolean;
@@ -25,6 +26,7 @@ interface Props {
   entries: PlanetEntry[];
   onPlanetClick: (entry: PlanetEntry) => void;
   orbitalSatellites?: OrbitalSatelliteData[];
+  onCameraChange?: (p: THREE.Vector3) => void;
 }
 
 export interface OrbitalSatelliteData {
@@ -87,12 +89,14 @@ function Planet({ entry, onClick, planetPositionsRef }: {
   useEffect(() => {
     // 初始位置固定，不公转
     if (groupRef.current) {
-      groupRef.current.position.set(entry.x, 0, entry.z);
+      const px = entry.angle != null ? entry.x * Math.cos(entry.angle) : entry.x;
+      const pz = entry.angle != null ? entry.x * Math.sin(entry.angle) : entry.z;
+      groupRef.current.position.set(px, 0, pz);
       // 通知探测器行星位置
       if (!planetPositionsRef.current[entry.id]) {
         planetPositionsRef.current[entry.id] = new THREE.Vector3();
       }
-      planetPositionsRef.current[entry.id].set(entry.x, 0, entry.z);
+      planetPositionsRef.current[entry.id].set(px, 0, pz);
     }
     if (entry.axialTilt && meshRef.current) {
       meshRef.current.rotation.x = entry.axialTilt;
@@ -112,7 +116,7 @@ function Planet({ entry, onClick, planetPositionsRef }: {
       const angle = t * 0.4;
       groupRef.current.position.set(
         earthPos.x + Math.cos(angle) * 0.8,
-        0,
+        0.45,
         earthPos.z + Math.sin(angle) * 0.8,
       );
       meshRef.current.rotation.y = angle + Math.PI / 2; // 潮汐锁定，永远一面对着地球
@@ -235,12 +239,15 @@ function Stars() {
   return (<points ref={ref} geometry={g}><pointsMaterial size={0.2} transparent opacity={0.8} blending={THREE.AdditiveBlending} vertexColors /></points>);
 }
 
-function SceneSetup() {
+function SceneSetup({ onCamChange }: { onCamChange?: (p: THREE.Vector3) => void }) {
   const {camera}=useThree();
   useEffect(()=>{
     camera.position.set(10, 25, 0.1); // 相机对准右侧，太阳在左侧
     camera.lookAt(10,0,0);
   },[camera]);
+  useFrame(() => {
+    onCamChange?.(camera.position);
+  });
   return <OrbitControls enableDamping dampingFactor={0.05} minDistance={5} maxDistance={80} maxPolarAngle={Math.PI/2.1} target={[10,0,0]} />;
 }
 
@@ -252,7 +259,7 @@ function SceneLights() {
   </>);
 }
 
-export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites }: Props) {
+export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites, onCameraChange }: Props) {
   const planetPositionsRef = useRef<Record<string, THREE.Vector3>>({});
 
   return (
@@ -265,9 +272,9 @@ export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites 
       
       {/* 动态绘制完美轨道环 */}
       {entries.map(e => {
-        if (e.id === 'sun') return null;
-        // 把乱七八糟的坐标强行修正为一个干净的半径
-        const radius = Math.sqrt(e.x * e.x + e.z * e.z);
+        if (e.id === 'sun' || e.id === 'moon') return null;
+        // 轨道环半径直接用 x
+        const radius = Math.abs(e.x);
         return radius > 0 ? <OrbitRing key={`orbit-${e.id}`} radius={radius} /> : null;
       })}
 
@@ -279,7 +286,7 @@ export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites 
         <OrbitalSatellite key={s.id} data={s} planetPositionsRef={planetPositionsRef} />
       ))}
       
-      <SceneSetup />
+      <SceneSetup onCamChange={onCameraChange} />
     </Canvas>
   );
 }
