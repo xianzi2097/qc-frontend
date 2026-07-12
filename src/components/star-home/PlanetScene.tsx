@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, Text3D, useTexture } from '@react-three/drei';
+import { OrbitControls, Html, Text3D, useTexture, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 /* ── 入口数据 ── */
@@ -19,12 +19,26 @@ export interface PlanetEntry {
   axialTilt?: number;
   /** 不自转（如月球，潮汐锁定） */
   noSelfRotation?: boolean;
+  /** 反向自转（如金星逆行） */
+  reverseRotation?: boolean;
   satellites?: { text: string; href: string }[];
 }
 
 interface Props {
   entries: PlanetEntry[];
   onPlanetClick: (entry: PlanetEntry) => void;
+  orbitalSatellites?: OrbitalSatelliteData[];
+}
+
+/* ── 绕飞卫星数据 ── */
+export interface OrbitalSatelliteData {
+  id: string;
+  targetX: number; targetY: number; targetZ: number;
+  distance: number;
+  speed: number;
+  texture?: string;
+  model?: string;
+  size?: number;
 }
 
 /* ── 本地纹理映射 ── */
@@ -32,6 +46,7 @@ const BASE = '/dashboard/';
 const TEXTURE_MAP: Record<string, string> = {
   venus:  `${BASE}textures/venus_atmosphere.jpg`,
   earth:  `${BASE}textures/earth_daymap.jpg`,
+  earth_night: `${BASE}textures/earth_nightmap.jpg`,
   uranus: `${BASE}textures/uranus.jpg`,
   mars:   `${BASE}textures/mars.jpg`,
   moon:   `${BASE}textures/moon.jpg`,
@@ -44,6 +59,8 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
   const textRef = useRef<any>(null!);
   const texture = useTexture(TEXTURE_MAP[entry.textureKey] || TEXTURE_MAP.earth);
   const rockTex = useTexture(TEXTURE_MAP.moon);
+  const nightTex = useTexture(TEXTURE_MAP.earth_night);
+  const isEarth = entry.textureKey === 'earth';
 
   useEffect(() => {
     groupRef.current.position.set(entry.x, entry.y, entry.z);
@@ -63,7 +80,7 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
 
   useFrame(() => {
     if (!entry.noSelfRotation) {
-      meshRef.current.rotation.y += 0.005;
+      meshRef.current.rotation.y += entry.reverseRotation ? -0.005 : 0.005;
     }
   });
 
@@ -75,7 +92,14 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
         onPointerOut={() => { document.body.style.cursor = 'default'; }}
       >
         <sphereGeometry args={[entry.size, 64, 64]} />
-        <meshStandardMaterial map={texture} roughness={0.5} metalness={0.0} />
+        <meshStandardMaterial
+          map={texture}
+          roughness={1.0}
+          metalness={0.0}
+          emissiveMap={isEarth ? nightTex : undefined}
+          emissive={isEarth ? '#ffffff' : '#000000'}
+          emissiveIntensity={isEarth ? 0.15 : 0}
+        />
       </mesh>
       {/* 3D 浮雕文字 */}
       <Text3D
@@ -131,6 +155,54 @@ function SatelliteButton({ sat, index, total, planetSize, color }: {
   );
 }
 
+/* ── 绕飞卫星 ── */
+function OrbitalSatellite({ data }: { data: OrbitalSatelliteData }) {
+  const groupRef = useRef<THREE.Group>(null!);
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const { camera } = useThree();
+
+  // 加载 3D 模型或 Sprite 纹理
+  const gltf = data.model ? useGLTF(data.model) : null;
+  const tex = data.texture ? useTexture(data.texture) : null;
+
+  useFrame(() => {
+    const t = performance.now() / 1000;
+    const angle = t * data.speed;
+    const d = data.distance;
+    groupRef.current.position.set(
+      data.targetX + Math.cos(angle) * d,
+      data.targetY + Math.sin(angle * 1.3) * d * 0.25,
+      data.targetZ + Math.sin(angle) * d * 0.6,
+    );
+    // 3D 模型绕自身 Y 轴旋转，Sprite 始终面向相机
+    if (meshRef.current) {
+      meshRef.current.rotation.y += 0.01;
+    } else if (groupRef.current) {
+      groupRef.current.lookAt(camera.position);
+    }
+  });
+
+  const s = data.size ?? 0.4;
+
+  if (gltf) {
+    // 3D 模型模式
+    return (
+      <group ref={groupRef}>
+        <primitive ref={meshRef} object={gltf.scene.clone()} scale={s} />
+      </group>
+    );
+  }
+
+  // Sprite 图标模式（兜底）
+  return (
+    <group ref={groupRef}>
+      <sprite scale={[s, s, 1]}>
+        <spriteMaterial map={tex || undefined} transparent opacity={0.85} />
+      </sprite>
+    </group>
+  );
+}
+
 /* ── 星星 ── */
 function Stars() {
   const ref = useRef<THREE.Points>(null!);
@@ -160,14 +232,14 @@ function SceneSetup() {
 /* ── 灯光 ── */
 function SceneLights() {
   return (<>
-    <ambientLight intensity={0.45} color="#88aacc" />
-    {/* 主光：模拟太阳，右上空 */}
-    <directionalLight position={[-4, 6, 3]} intensity={10} color="#fff5e6" />
+    <ambientLight intensity={0.15} color="#c8d8e8" />
+    {/* 远距离柔光，模拟太阳 */}
+    <directionalLight position={[-10, 3.5, 0]} intensity={10.5} color="#ffe8d0" />
   </>);
 }
 
 /* ── 主场景 ── */
-export default function PlanetScene({ entries, onPlanetClick }: Props) {
+export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites }: Props) {
   return (
     <Canvas camera={{position:[0,0,12],fov:30,near:0.1,far:500}}
       style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',zIndex:0}}
@@ -178,6 +250,7 @@ export default function PlanetScene({ entries, onPlanetClick }: Props) {
     >
       <SceneLights /><Stars />
       {entries.map(e=><Planet key={e.id} entry={e} onClick={()=>onPlanetClick(e)} />)}
+      {orbitalSatellites?.map(s => <OrbitalSatellite key={s.id} data={s} />)}
       <SceneSetup />
     </Canvas>
   );

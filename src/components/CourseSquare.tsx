@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GraduationCap, ChevronLeft, ExternalLink } from 'lucide-react';
 import { StarsBackground } from './ui/StarsBackground';
 
@@ -48,11 +49,8 @@ const TYPE_ICON: Record<string, string> = {
   cpp: '⚙️',
 };
 
-interface Props {
-  onBack: () => void;
-}
-
-export default function CourseSquare({ onBack }: Props) {
+export default function CourseSquare() {
+  const navigate = useNavigate();
   const [teachers, setTeachers] = useState<{ username: string }[]>([]);
   const [teacher, setTeacher] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -155,7 +153,7 @@ export default function CourseSquare({ onBack }: Props) {
         {/* 顶部导航 */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={onBack}
+            onClick={() => navigate('/')}
             className="flex items-center gap-1.5 text-sm bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl transition-all"
           >
             <ChevronLeft size={16} /> 返回主页
