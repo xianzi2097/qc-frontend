@@ -44,7 +44,7 @@ export default function StarHomePage() {
       size: 0.25,
       href: '',
       textureKey: 'mercury',
-      x: 2.5, y: 1.13, z: 0,
+      x: 2.5, y: 0, z: 0,
       angle: 3.21,
     },
     {
@@ -56,7 +56,7 @@ export default function StarHomePage() {
       href: '',
       textureKey: 'venus',
       axialTilt: 3.096,
-      x: 4.5, y: 1.79, z: 0,
+      x: 4.5, y: 0, z: 0,
       angle: -0.05,
     },
     {
@@ -68,7 +68,7 @@ export default function StarHomePage() {
       href: '',
       textureKey: 'earth',
       axialTilt: 0.409,
-      x: 6.5, y: 1.30, z: 0,
+      x: 6.5, y: 0, z: 0,
       angle:0.0
     },
     {      id: 'moon',
@@ -78,8 +78,8 @@ export default function StarHomePage() {
       size: 0.15,
       href: '',
       textureKey: 'moon',
-      axialTilt: 0.027,
-      x: 3.5, y: 0, z: 0.8,
+      noSelfRotation: true,
+      x: 7.3, y: 0.4, z: -0.6,
     },
     {      id: 'profile',
       label: '火星',
@@ -89,7 +89,7 @@ export default function StarHomePage() {
       href: '',
       textureKey: 'mars',
       axialTilt: 0.440,
-      x:8.5, y: 0.30, z: 0,
+      x:8.5, y: 0, z: 0,
       angle: -0.1,
     },
     // ── 外行星（装饰） ──
@@ -101,7 +101,7 @@ export default function StarHomePage() {
       size: 1.0,
       href: '',
       textureKey: 'jupiter',
-      x: 11.5, y: -2.03, z: 0,
+      x: 11.5, y: 0, z: 0,
       angle: 0,
     },
     {
@@ -113,8 +113,8 @@ export default function StarHomePage() {
       href: '',
       textureKey: 'saturn',
       axialTilt: 0.467,
-      x: 15, y: -4.24, z: 0,
-      angle: -0.35,
+      x: 15, y: 0, z: 0,
+      angle: 0.35,
     },
     {
       id: 'uranus',
@@ -125,7 +125,7 @@ export default function StarHomePage() {
       href: '',
       textureKey: 'uranus',
       axialTilt: 1.706,
-      x: 18.0, y: -6.24, z: 0,
+      x: 18.0, y: 0, z: 0,
       angle: 0.2,
     },
     {
@@ -136,8 +136,8 @@ export default function StarHomePage() {
       size: 0.48,
       href: '',
       textureKey: 'neptune',
-      x: 21.5, y: -8.21, z: 0,
-      angle: 0.4,
+      x: 21.5, y: 0, z: 0,
+      angle: -0.1,
     },
   ], []);
 

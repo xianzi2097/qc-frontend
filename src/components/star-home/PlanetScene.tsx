@@ -91,7 +91,7 @@ function Planet({ entry, onClick, planetPositionsRef }: {
     if (groupRef.current) {
       const px = entry.angle != null ? entry.x * Math.cos(entry.angle) : entry.x;
       const pz = entry.angle != null ? entry.x * Math.sin(entry.angle) : entry.z;
-      groupRef.current.position.set(px, 0, pz);
+      groupRef.current.position.set(px, entry.y ?? 0, pz);
       // 通知探测器行星位置
       if (!planetPositionsRef.current[entry.id]) {
         planetPositionsRef.current[entry.id] = new THREE.Vector3();
@@ -103,24 +103,10 @@ function Planet({ entry, onClick, planetPositionsRef }: {
     }
   }, [entry.x, entry.z, entry.axialTilt]);
 
-  useFrame((state) => {
+  useFrame(() => {
     // 自转
     if (!entry.noSelfRotation && meshRef.current) {
       meshRef.current.rotation.y += entry.reverseRotation ? -0.005 : 0.005;
-    }
-    // 月球绕地球公转 + 潮汐锁定
-    if (entry.id === 'moon' && groupRef.current && meshRef.current) {
-      const earthPos = planetPositionsRef.current['scratch'];
-      if (!earthPos) return;
-      const t = state.clock.getElapsedTime();
-      const angle = t * 0.4;
-      groupRef.current.position.set(
-        earthPos.x + Math.cos(angle) * 0.8,
-        0.45,
-        earthPos.z + Math.sin(angle) * 0.8,
-      );
-      meshRef.current.rotation.y = angle + Math.PI / 2; // 潮汐锁定，永远一面对着地球
-      return;
     }
   });
 
@@ -242,7 +228,7 @@ function Stars() {
 function SceneSetup({ onCamChange }: { onCamChange?: (p: THREE.Vector3) => void }) {
   const {camera}=useThree();
   useEffect(()=>{
-    camera.position.set(10, 25, 0.1); // 相机对准右侧，太阳在左侧
+    camera.position.set(10, 25, 0.1);
     camera.lookAt(10,0,0);
   },[camera]);
   useFrame(() => {
