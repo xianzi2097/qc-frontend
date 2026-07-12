@@ -1,6 +1,6 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, Text, useTexture, useGLTF } from '@react-three/drei';
+import { OrbitControls, Line, Text, useTexture, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 /* ── 入口数据 ── */
@@ -12,14 +12,11 @@ export interface PlanetEntry {
   size: number;
   href: string;
   textureKey: string;
-  x: number;
-  y: number;
-  z: number;
-  /** 地轴倾斜角（弧度），地球约 0.41（23.4°） */
+  x: number; // 我们只用它来提取“离太阳的距离”，废弃它的绝对坐标意义
+  y: number; // 强制废弃！全部按 0 处理
+  z: number; // 强制废弃！交由 sin/cos 旋转引擎计算
   axialTilt?: number;
-  /** 不自转（如月球，潮汐锁定） */
   noSelfRotation?: boolean;
-  /** 反向自转（如金星逆行） */
   reverseRotation?: boolean;
   satellites?: { text: string; href: string }[];
 }
@@ -30,7 +27,6 @@ interface Props {
   orbitalSatellites?: OrbitalSatelliteData[];
 }
 
-/* ── 绕飞卫星数据 ── */
 export interface OrbitalSatelliteData {
   id: string;
   targetX: number; targetY: number; targetZ: number;
@@ -41,7 +37,6 @@ export interface OrbitalSatelliteData {
   size?: number;
 }
 
-/* ── 本地纹理映射 ── */
 const BASE = '/dashboard/';
 const TEXTURE_MAP: Record<string, string> = {
   venus:  `${BASE}textures/venus_atmosphere.jpg`,
@@ -50,27 +45,78 @@ const TEXTURE_MAP: Record<string, string> = {
   uranus: `${BASE}textures/uranus.jpg`,
   mars:   `${BASE}textures/mars.jpg`,
   moon:   `${BASE}textures/moon.jpg`,
+  jupiter: `${BASE}textures/jupiter.jpg`,
+  saturn:  `${BASE}textures/saturn.jpg`,
+  neptune: `${BASE}textures/neptune.jpg`,
+  sun:     `${BASE}textures/sun.jpg`,
+  mercury: `${BASE}textures/mercury.jpg`,
 };
 
-/* ── 单颗星球 ── */
-function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void }) {
+/* ── 完美的 2D 纯平轨道环 ── */
+function OrbitRing({ radius }: { radius: number }) {
+  const points = useMemo(() => {
+    const pts: [number, number, number][] = [];
+    for (let i = 0; i <= 128; i++) {
+      const angle = (i / 128) * Math.PI * 2;
+      pts.push([
+        Math.cos(angle) * radius,
+        0, // 强制 Y=0，绝对纯平
+        Math.sin(angle) * radius,
+      ]);
+    }
+    return pts;
+  }, [radius]);
+
+  return <Line points={points} color="#ffffff" opacity={0.15} transparent lineWidth={1} />;
+}
+
+/* ── 行星物理引擎 ── */
+function Planet({ entry, onClick, planetPositionsRef }: { 
+  entry: PlanetEntry; 
+  onClick: () => void;
+  planetPositionsRef: React.MutableRefObject<Record<string, THREE.Vector3>>;
+}) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const groupRef = useRef<THREE.Group>(null!);
   const texture = useTexture(TEXTURE_MAP[entry.textureKey] || TEXTURE_MAP.earth);
   const nightTex = useTexture(TEXTURE_MAP.earth_night);
   const isEarth = entry.textureKey === 'earth';
+  const isSun = entry.id === 'sun';
+
 
   useEffect(() => {
-    groupRef.current.position.set(entry.x, entry.y, entry.z);
-    // 设置地轴倾斜
-    if (entry.axialTilt) {
+    // 初始位置固定，不公转
+    if (groupRef.current) {
+      groupRef.current.position.set(entry.x, 0, entry.z);
+      // 通知探测器行星位置
+      if (!planetPositionsRef.current[entry.id]) {
+        planetPositionsRef.current[entry.id] = new THREE.Vector3();
+      }
+      planetPositionsRef.current[entry.id].set(entry.x, 0, entry.z);
+    }
+    if (entry.axialTilt && meshRef.current) {
       meshRef.current.rotation.x = entry.axialTilt;
     }
-  }, []);
+  }, [entry.x, entry.z, entry.axialTilt]);
 
-  useFrame(() => {
-    if (!entry.noSelfRotation) {
+  useFrame((state) => {
+    // 自转
+    if (!entry.noSelfRotation && meshRef.current) {
       meshRef.current.rotation.y += entry.reverseRotation ? -0.005 : 0.005;
+    }
+    // 月球绕地球公转 + 潮汐锁定
+    if (entry.id === 'moon' && groupRef.current && meshRef.current) {
+      const earthPos = planetPositionsRef.current['scratch'];
+      if (!earthPos) return;
+      const t = state.clock.getElapsedTime();
+      const angle = t * 0.4;
+      groupRef.current.position.set(
+        earthPos.x + Math.cos(angle) * 0.8,
+        0,
+        earthPos.z + Math.sin(angle) * 0.8,
+      );
+      meshRef.current.rotation.y = angle + Math.PI / 2; // 潮汐锁定，永远一面对着地球
+      return;
     }
   });
 
@@ -82,96 +128,81 @@ function Planet({ entry, onClick }: { entry: PlanetEntry; onClick: () => void })
         onPointerOut={() => { document.body.style.cursor = 'default'; }}
       >
         <sphereGeometry args={[entry.size, 64, 64]} />
+        {isSun ? (
+          <meshBasicMaterial map={texture} color="#d4d4d4"/>
+        ) : (
         <meshStandardMaterial
           map={texture}
-          roughness={1.0}
-          metalness={0.0}
+          roughness={0.8}
+          metalness={0.1}
           emissiveMap={isEarth ? nightTex : undefined}
           emissive={isEarth ? '#ffffff' : '#000000'}
-          emissiveIntensity={isEarth ? 0.15 : 0}
+          emissiveIntensity={isEarth ? 0.3 : 0}
         />
+        )}
       </mesh>
-      {/* 中文标签（扁平文字，支持中文字体） */}
+      {/* 名称标签 */}
       <Text
-        position={[0, -entry.size - 0.4, 0]}
-        fontSize={entry.size > 0.8 ? 0.28 : 0.2}
-        color="#ffffff"
-        font="/dashboard/fonts/NotoSansSC-Regular.ttf"
+        position={[0, -entry.size - 0.35, 0]}
+        fontSize={0.25}
+        color="white"
         anchorX="center"
-        anchorY="middle"
-        letterSpacing={0.05}
+        anchorY="top"
+        opacity={0.8}
+        outlineWidth={0.02}
+        outlineColor="#000000"
       >
         {entry.label}
       </Text>
-      {entry.satellites?.map((sat, i) => (
-        <SatelliteButton key={sat.text} sat={sat} index={i} total={entry.satellites!.length}
-          planetSize={entry.size} color={entry.color} />
-      ))}
     </group>
   );
 }
 
-/* ── 卫星按钮 ── */
-function SatelliteButton({ sat, index, total, planetSize, color }: {
-  sat: { text: string; href: string }; index: number; total: number; planetSize: number; color: string;
+/* ── 探测器/月球引擎 (完全跟随宿主的动态旋转) ── */
+function OrbitalSatellite({ data, planetPositionsRef }: { 
+  data: OrbitalSatelliteData; 
+  planetPositionsRef: React.MutableRefObject<Record<string, THREE.Vector3>>;
 }) {
-  const seedAngle = useMemo(() => (index / total) * Math.PI * 2, [index, total]);
-  const speed = useMemo(() => 0.15 + Math.random() * 0.08, []);
-  const [pos, setPos] = useState({ x: 0, y: 0, z: 0 });
-  const dist = planetSize + 1.2;
-  useFrame(() => {
-    const t = performance.now() / 1000;
-    const a = seedAngle + t * speed * 0.3;
-    setPos({ x: Math.cos(a)*dist, y: Math.sin(a*1.2)*dist*0.4, z: Math.sin(a)*dist*0.3 });
-  });
-  return (
-    <Html position={[pos.x, pos.y, pos.z]} center>
-      <a href={sat.href} style={{
-        color, border:`1px solid ${color}44`, background:'rgba(0,0,0,0.5)',
-        backdropFilter:'blur(6px)', padding:'4px 12px', borderRadius:16,
-        fontSize:12, fontWeight:600, textDecoration:'none', display:'inline-block',
-        cursor:'pointer', transition:'all 0.2s', whiteSpace:'nowrap', pointerEvents:'auto',
-      }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform='scale(1.12)'; e.currentTarget.style.boxShadow=`0 0 24px ${color}`; e.currentTarget.style.borderColor=color; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; e.currentTarget.style.borderColor=`${color}44`; }}
-      >
-        {sat.text}
-      </a>
-    </Html>
-  );
-}
-
-/* ── 绕飞卫星 ── */
-function OrbitalSatellite({ data }: { data: OrbitalSatelliteData }) {
   const groupRef = useRef<THREE.Group>(null!);
   const meshRef = useRef<THREE.Mesh>(null!);
   const { camera } = useThree();
 
-  // 加载 3D 模型或 Sprite 纹理
   const gltf = data.model ? useGLTF(data.model) : null;
   const tex = data.texture ? useTexture(data.texture) : null;
 
-  useFrame(() => {
-    const t = performance.now() / 1000;
-    const angle = t * data.speed;
-    const d = data.distance;
-    groupRef.current.position.set(
-      data.targetX + Math.cos(angle) * d,
-      data.targetY + Math.sin(angle * 1.3) * d * 0.25,
-      data.targetZ + Math.sin(angle) * d * 0.6,
-    );
-    // 3D 模型绕自身 Y 轴旋转，Sprite 始终面向相机
-    if (meshRef.current) {
-      meshRef.current.rotation.y += 0.01;
-    } else if (groupRef.current) {
-      groupRef.current.lookAt(camera.position);
+  const parentPlanetId = useMemo(() => {
+    const idLower = data.id.toLowerCase();
+    if (idLower.includes('moon')) return 'scratch';
+    if (idLower.includes('mars') || idLower.includes('rover') || idLower === 'mro') return 'profile';
+    return 'scratch'; // 默认回退
+  }, [data.id]);
+
+  useFrame((state) => {
+    // 获取宿主行星此刻由于公转产生的实时 [X, 0, Z]
+    const liveCenter = planetPositionsRef.current[parentPlanetId];
+    if (liveCenter && groupRef.current) {
+      const t = state.clock.getElapsedTime();
+      const angle = t * data.speed;
+      const d = data.distance;
+      
+      // 在宿主星的实时坐标上叠加探测器的圆周运动
+      groupRef.current.position.set(
+        liveCenter.x + Math.cos(angle) * d,
+        liveCenter.y + Math.sin(angle) * d * 0.2, // 允许探测器有轻微 Y 轴上下浮动增加动感
+        liveCenter.z + Math.sin(angle) * d
+      );
+
+      if (meshRef.current) {
+        meshRef.current.rotation.y += 0.02; 
+      } else {
+        groupRef.current.lookAt(camera.position); 
+      }
     }
   });
 
   const s = data.size ?? 0.4;
 
   if (gltf) {
-    // 3D 模型模式
     return (
       <group ref={groupRef}>
         <primitive ref={meshRef} object={gltf.scene.clone()} scale={s} />
@@ -179,64 +210,75 @@ function OrbitalSatellite({ data }: { data: OrbitalSatelliteData }) {
     );
   }
 
-  // Sprite 图标模式（兜底）
   return (
     <group ref={groupRef}>
       <sprite scale={[s, s, 1]}>
-        <spriteMaterial map={tex || undefined} transparent opacity={0.85} />
+        <spriteMaterial map={tex || undefined} transparent opacity={0.9} />
       </sprite>
     </group>
   );
 }
 
-/* ── 星星 ── */
 function Stars() {
   const ref = useRef<THREE.Points>(null!);
   const g = useMemo(() => {
-    const pos = new Float32Array(4000*3), col = new Float32Array(4000*3);
-    for (let i = 0; i < 4000; i++) {
-      const r=60+Math.random()*200, theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1);
+    const pos = new Float32Array(3500*3), col = new Float32Array(3500*3);
+    for (let i = 0; i < 3500; i++) {
+      const r=80+Math.random()*150, theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1);
       pos[i*3]=r*Math.sin(phi)*Math.cos(theta); pos[i*3+1]=r*Math.cos(phi); pos[i*3+2]=r*Math.sin(phi)*Math.sin(theta);
       const t=Math.random();
-      if(t<0.1){col[i*3]=0.8;col[i*3+1]=0.85;col[i*3+2]=1}else if(t<0.15){col[i*3]=1;col[i*3+1]=0.85;col[i*3+2]=0.7}else{col[i*3]=1;col[i*3+1]=1;col[i*3+2]=1}
+      if(t<0.1){col[i*3]=0.8;col[i*3+1]=0.85;col[i*3+2]=1}else{col[i*3]=1;col[i*3+1]=1;col[i*3+2]=1}
     }
     const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setAttribute('color',new THREE.BufferAttribute(col,3));
     return geo;
   },[]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return (<points ref={ref} geometry={g}><pointsMaterial size={0.25} transparent opacity={0.9} blending={THREE.AdditiveBlending} sizeAttenuation vertexColors /></points>);
+  return (<points ref={ref} geometry={g}><pointsMaterial size={0.2} transparent opacity={0.8} blending={THREE.AdditiveBlending} vertexColors /></points>);
 }
 
-/* ── 场景设置 ── */
 function SceneSetup() {
   const {camera}=useThree();
-  useEffect(()=>{camera.position.set(0,0,12);camera.lookAt(0,0,0);},[camera]);
-  return <OrbitControls enableDamping dampingFactor={0.08} minDistance={4} maxDistance={15} maxPolarAngle={Math.PI/2}
-    target={[0,0,0]} />;
+  useEffect(()=>{
+    camera.position.set(10, 25, 0.1); // 相机对准右侧，太阳在左侧
+    camera.lookAt(10,0,0);
+  },[camera]);
+  return <OrbitControls enableDamping dampingFactor={0.05} minDistance={5} maxDistance={80} maxPolarAngle={Math.PI/2.1} target={[10,0,0]} />;
 }
 
-/* ── 灯光 ── */
 function SceneLights() {
   return (<>
-    <ambientLight intensity={0.15} color="#c8d8e8" />
-    {/* 远距离柔光，模拟太阳 */}
-    <directionalLight position={[-10, 3.5, 0]} intensity={10.5} color="#ffe8d0" />
+    <ambientLight intensity={0.08} color="#c8d8e8" />
+    {/* 光源在太阳中心 */}
+    <pointLight position={[0, 0, 0]} intensity={15} distance={50} decay={0.5} color="#ffdd88" />
   </>);
 }
 
-/* ── 主场景 ── */
 export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites }: Props) {
+  const planetPositionsRef = useRef<Record<string, THREE.Vector3>>({});
+
   return (
-    <Canvas camera={{position:[0,0,12],fov:30,near:0.1,far:500}}
+    <Canvas camera={{position:[0,25,0.1],fov:35,near:0.1,far:500}}
       style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',zIndex:0}}
-      gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:2}}
-      onCreated={({gl})=>{
-        gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-      }}
+      gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:1.5}}
     >
-      <SceneLights /><Stars />
-      {entries.map(e=><Planet key={e.id} entry={e} onClick={()=>onPlanetClick(e)} />)}
-      {orbitalSatellites?.map(s => <OrbitalSatellite key={s.id} data={s} />)}
+      <SceneLights />
+      <Stars />
+      
+      {/* 动态绘制完美轨道环 */}
+      {entries.map(e => {
+        if (e.id === 'sun') return null;
+        // 把乱七八糟的坐标强行修正为一个干净的半径
+        const radius = Math.sqrt(e.x * e.x + e.z * e.z);
+        return radius > 0 ? <OrbitRing key={`orbit-${e.id}`} radius={radius} /> : null;
+      })}
+
+      {entries.map(e => (
+        <Planet key={e.id} entry={e} onClick={() => onPlanetClick(e)} planetPositionsRef={planetPositionsRef} />
+      ))}
+      
+      {orbitalSatellites?.map(s => (
+        <OrbitalSatellite key={s.id} data={s} planetPositionsRef={planetPositionsRef} />
+      ))}
+      
       <SceneSetup />
     </Canvas>
   );

@@ -1,24 +1,4 @@
-import { useNavigate } from 'react-router-dom';
 import type { PlanetEntry } from './PlanetScene';
-
-/** 每个星球对应的导航菜单项 */
-const PLANET_ACTIONS: Record<string, { label: string; href?: string; external?: boolean }[]> = {
-  scratch: [
-    { label: '📚 进入课程广场', href: '/courses' },
-  ],
-  docs: [
-    { label: '🚀 快速开始', href: '/docs/guide/', external: true },
-    { label: '🐍 Python 课程', href: '/docs/python_course/', external: true },
-    { label: '⚙️ C++ 课程', href: '/docs/cpp_course/', external: true },
-    { label: '🧩 Scratch 课程', href: '/docs/scratch_course/', external: true },
-  ],
-  create: [
-    { label: '🎨 开始创作', href: '/Scratch/index.html', external: true },
-  ],
-  profile: [
-    { label: '🚪 登录 / 进入空间', href: '/dashboard' },
-  ],
-};
 
 interface Props {
   entry: PlanetEntry;
@@ -26,17 +6,6 @@ interface Props {
 }
 
 export default function DetailCard({ entry, onClose }: Props) {
-  const navigate = useNavigate();
-  const actions = PLANET_ACTIONS[entry.id] || [];
-
-  const handleAction = (href: string, external?: boolean) => {
-    if (external) {
-      window.location.href = href;
-    } else {
-      navigate(href);
-    }
-    onClose();
-  };
 
   return (
     <div
@@ -69,36 +38,6 @@ export default function DetailCard({ entry, onClose }: Props) {
 
         {/* 描述 */}
         <p className="text-white/40 text-sm leading-relaxed mb-6">{entry.desc}</p>
-
-        {/* 菜单按钮 */}
-        <div className="flex flex-col gap-2.5 mb-5">
-          {actions.map((action) => (
-            <button
-              key={action.label}
-              onClick={() => handleAction(action.href || '', action.external)}
-              className="group w-full text-left px-5 py-3 rounded-xl text-sm font-semibold
-                transition-all duration-200 hover:scale-[1.02] cursor-pointer"
-              style={{
-                color: entry.color,
-                border: `1px solid ${entry.color}44`,
-                background: `${entry.color}11`,
-                textShadow: `0 0 10px ${entry.color}`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = `${entry.color}22`;
-                e.currentTarget.style.boxShadow = `0 0 20px ${entry.color}44`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = `${entry.color}11`;
-                e.currentTarget.style.boxShadow = '';
-              }}
-            >
-              <span className="opacity-70 group-hover:opacity-100 transition-opacity">
-                {action.label}
-              </span>
-            </button>
-          ))}
-        </div>
 
         {/* 底部发光线条 */}
         <div className="w-full h-px mb-5" style={{
