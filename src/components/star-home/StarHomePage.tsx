@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import PlanetScene from './PlanetScene';
 import type { PlanetEntry, OrbitalSatelliteData } from './PlanetScene';
 import StarHomeLogo from './StarHomeLogo';
+import DetailCard from './DetailCard';
 
 const BASE = '/dashboard/';
 
@@ -20,6 +21,7 @@ const orbitalSatellites: OrbitalSatelliteData[] = [
 
 /** 星球主页 — 纯 UI 壳，逐步加功能 */
 export default function StarHomePage() {
+  const [selectedEntry, setSelectedEntry] = useState<PlanetEntry | null>(null);
   const planetEntries = useMemo<PlanetEntry[]>(() => [
     {
       id: 'scratch',
@@ -71,13 +73,13 @@ export default function StarHomePage() {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#050510]">
       <StarHomeLogo />
-      <PlanetScene entries={planetEntries} onPlanetClick={() => {}} orbitalSatellites={orbitalSatellites} />
+      <PlanetScene entries={planetEntries} onPlanetClick={setSelectedEntry} orbitalSatellites={orbitalSatellites} />
 
       {/* ── UI 覆盖层槽位 ── */}
       <div className="fixed inset-0 pointer-events-none z-10">
-        {/* TODO: LoginModal */}
-        {/* TODO: DetailCard */}
-        {/* TODO: AvatarPicker */}
+        {selectedEntry && (
+          <DetailCard entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+        )}
       </div>
     </div>
   );
