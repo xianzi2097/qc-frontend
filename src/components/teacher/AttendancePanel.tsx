@@ -392,6 +392,25 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     loadClasses();
   };
 
+  // ── 改名班级 ──
+  const handleRenameClass = async (oldName: string) => {
+    const newName = prompt('请输入新名称：', oldName);
+    if (!newName || newName === oldName) return;
+    const res = await fetch(`/api/classes/${encodeURIComponent(oldName)}?username=${username}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName, schedule: [] }),
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      if (selectedClass?.name === oldName) {
+        setSelectedClass({ ...selectedClass, name: newName });
+      }
+      loadClasses();
+    } else {
+      alert(data.detail || '改名失败');
+    }
+  };
+
   // ── 添加学生（含重名检测） ──
   const [addError, setAddError] = useState('');
 
@@ -576,10 +595,16 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                 <span className="text-sm truncate">{c.name}</span>
                 <span className="text-xs text-slate-400">{c.students.length}人</span>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); handleDeleteClass(c.name); }}
-                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-400 p-0.5">
-                <Trash2 size={14} />
-              </button>
+              <div className="flex items-center gap-0.5">
+                <button onClick={(e) => { e.stopPropagation(); handleRenameClass(c.name); }}
+                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-cyan-400 p-0.5" title="改名">
+                  <Pencil size={14} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteClass(c.name); }}
+                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-400 p-0.5" title="删除">
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
