@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RotateCcw, UserX, Plus } from 'lucide-react';
-import Loader from '../ui/Loader';
+import { useLoading } from '../../lib/useLoading';
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('users');
@@ -29,17 +29,18 @@ export default function AdminDashboard() {
 
 function UserList() {
   const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { wrap } = useLoading();
   const [showCreate, setShowCreate] = useState(false);
   const [newUser, setNewUser] = useState({ username: '', password: '111111', role: 'teacher' });
   const [msg, setMsg] = useState('');
 
   const load = () => {
-    setLoading(true);
-    fetch('/api/users')
-      .then(r => r.json())
-      .then(d => { if (d.status === 'success') setUsers(d.users); })
-      .finally(() => setLoading(false));
+    wrap(
+      fetch('/api/users')
+        .then(r => r.json())
+        .then(d => { if (d.status === 'success') setUsers(d.users); }),
+      '加载用户列表...'
+    ).catch(() => {});
   };
 
   useEffect(() => { load(); }, []);
@@ -71,8 +72,6 @@ function UserList() {
     await fetch(`/api/users/${username}`, { method: 'DELETE' });
     load();
   };
-
-  if (loading) return <Loader text="加载用户列表..." />;
 
   return (
     <div className="space-y-3">
@@ -136,14 +135,15 @@ function UserList() {
 
 function TrashList() {
   const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { wrap } = useLoading();
 
   const load = () => {
-    setLoading(true);
-    fetch('/api/trash?username=admin')
-      .then(r => r.json())
-      .then(d => { if (d.status === 'success') setItems(d.trash); })
-      .finally(() => setLoading(false));
+    wrap(
+      fetch('/api/trash?username=admin')
+        .then(r => r.json())
+        .then(d => { if (d.status === 'success') setItems(d.trash); }),
+      '加载垃圾桶...'
+    ).catch(() => {});
   };
 
   useEffect(() => { load(); }, []);
@@ -164,8 +164,6 @@ function TrashList() {
     await fetch('/api/trash?username=admin', { method: 'DELETE' });
     load();
   };
-
-  if (loading) return <Loader text="加载垃圾桶..." />;
 
   return (
     <div className="space-y-3">

@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './lib/useAuth';
+import { LoadingProvider, useLoading } from './lib/useLoading';
+import LoadingOverlay from './components/ui/LoadingOverlay';
 import StarHomePage from './components/star-home/StarHomePage';
 import HomePage from './components/HomePage';
 import CourseSquare from './components/CourseSquare';
@@ -8,19 +10,17 @@ import TeacherDashboardWithSidebar from './components/teacher/TeacherDashboardWi
 import AdminDashboardWithSidebar from './components/admin/AdminDashboardWithSidebar';
 import StudentDashboard from './components/student/StudentDashboard';
 
-import Loader from './components/ui/Loader';
-
 /** 看板页面 — 需登录，按角色分流 */
 function DashboardPage() {
   const { user, username, role, isLoggedIn, logout, validating } = useAuth();
+  const { show: showLoading, hide: hideLoading } = useLoading();
 
-  if (validating) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-cyber-bg">
-        <Loader text="验证登录状态..." />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (validating) showLoading('验证登录状态...');
+    else hideLoading();
+  }, [validating]);
+
+  if (validating) return null;
 
   if (!isLoggedIn) return <Navigate to="/" replace />;
 
@@ -58,12 +58,15 @@ function HomePageSwitch() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePageSwitch />} />
-        <Route path="/courses" element={<CourseSquare />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-      </Routes>
-    </BrowserRouter>
+    <LoadingProvider>
+      <BrowserRouter>
+        <LoadingOverlay />
+        <Routes>
+          <Route path="/" element={<HomePageSwitch />} />
+          <Route path="/courses" element={<CourseSquare />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+        </Routes>
+      </BrowserRouter>
+    </LoadingProvider>
   );
 }

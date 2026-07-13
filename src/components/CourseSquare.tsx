@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, ChevronLeft, ExternalLink } from 'lucide-react';
-import Loader from './ui/Loader';
+import { useLoading } from '../lib/useLoading';
 import { StarsBackground } from './ui/StarsBackground';
 
 // ── 类型定义 ──
@@ -52,60 +52,60 @@ const TYPE_ICON: Record<string, string> = {
 
 export default function CourseSquare() {
   const navigate = useNavigate();
+  const { wrap } = useLoading();
   const [teachers, setTeachers] = useState<{ username: string }[]>([]);
   const [teacher, setTeacher] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('teacher') || '';
   });
   const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [materialsLoading, setMaterialsLoading] = useState(false);
 
   // ── 加载老师列表 ──
   useEffect(() => {
-    fetch(`/api/users?t=${Date.now()}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') {
-          const ts = data.users.filter((u: any) => u.role === 'teacher');
-          setTeachers(ts);
-          // 如果 URL 没指定老师或指定的老师不存在，默认第一个
-          const params = new URLSearchParams(window.location.search);
-          const t = params.get('teacher');
-          if (!t || !ts.some((tc: any) => tc.username === t)) {
-            if (ts.length > 0) {
-              const first = ts[0].username;
-              setTeacher(first);
-              const url = new URL(window.location.href);
-              url.searchParams.set('teacher', first);
-              window.history.replaceState({}, '', url.toString());
+    wrap(
+      fetch(`/api/users?t=${Date.now()}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const ts = data.users.filter((u: any) => u.role === 'teacher');
+            setTeachers(ts);
+            const params = new URLSearchParams(window.location.search);
+            const t = params.get('teacher');
+            if (!t || !ts.some((tc: any) => tc.username === t)) {
+              if (ts.length > 0) {
+                const first = ts[0].username;
+                setTeacher(first);
+                const url = new URL(window.location.href);
+                url.searchParams.set('teacher', first);
+                window.history.replaceState({}, '', url.toString());
+              }
             }
           }
-        }
-      })
-      .catch(() => {});
+        }),
+      '加载课程...'
+    ).catch(() => {});
   }, []);
 
   // ── 加载课程列表 ──
   const loadCourses = useCallback(() => {
     if (!teacher) return;
-    setLoading(true);
     setSelectedCourse(null);
     setMaterials([]);
 
-    fetch(`/api/courses?teacher=${teacher}&t=${Date.now()}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success') {
-          setCourses(data.courses);
-        } else {
-          setCourses([]);
-        }
-      })
-      .catch(() => setCourses([]))
-      .finally(() => setLoading(false));
+    wrap(
+      fetch(`/api/courses?teacher=${teacher}&t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            setCourses(data.courses);
+          } else {
+            setCourses([]);
+          }
+        }),
+      '加载课程...'
+    ).catch(() => setCourses([]));
   }, [teacher]);
 
   useEffect(() => { if (teacher) loadCourses(); }, [loadCourses]);
@@ -121,18 +121,18 @@ export default function CourseSquare() {
   // ── 加载课件列表 ──
   const loadMaterials = (course: Course) => {
     setSelectedCourse(course);
-    setMaterialsLoading(true);
-    fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${teacher}&t=${Date.now()}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success') {
-          setMaterials(data.materials);
-        } else {
-          setMaterials([]);
-        }
-      })
-      .catch(() => setMaterials([]))
-      .finally(() => setMaterialsLoading(false));
+    wrap(
+      fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${teacher}&t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            setMaterials(data.materials);
+          } else {
+            setMaterials([]);
+          }
+        }),
+      '加载课件...'
+    ).catch(() => setMaterials([]));
   };
 
   // ── 返回课程列表 ──
@@ -170,11 +170,6 @@ export default function CourseSquare() {
           <h1 className="text-3xl font-black text-white mb-2">📚 课程广场</h1>
           <p className="text-slate-500 text-sm">浏览老师们的课程，选择你喜欢的课件开始学习</p>
         </div>
-
-        {loading || materialsLoading || teachers.length === 0 ? (
-          <Loader text="加载课程..." />
-        ) : (
-          <>
 
         {/* 教师筛选 */}
         <div className="flex gap-3 justify-center mb-8">
@@ -312,9 +307,6 @@ export default function CourseSquare() {
             </div>
           )}
         </div>
-
-        </>
-        )}
 
         {/* Footer */}
         <p className="text-xs text-slate-700 text-center mt-12 pb-5">

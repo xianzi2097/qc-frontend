@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw } from 'lucide-react';
-import Loader from '../ui/Loader';
+import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
 interface Course {
@@ -34,30 +34,29 @@ const TYPE_ICON: Record<string, string> = {
 
 export default function CourseManager() {
   const { username } = useAuth();
+  const { wrap } = useLoading();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState('scratch');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [materialsLoading, setMaterialsLoading] = useState(false);
 
   const loadCourses = useCallback(() => {
-    setLoading(true);
     setError('');
-    fetch(`/api/courses?teacher=${username}&t=${Date.now()}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') {
-          setCourses(data.courses);
-        } else {
-          setError(data.detail || '加载失败');
-        }
-      })
-      .catch(() => setError('无法连接服务器'))
-      .finally(() => setLoading(false));
+    wrap(
+      fetch(`/api/courses?teacher=${username}&t=${Date.now()}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            setCourses(data.courses);
+          } else {
+            setError(data.detail || '加载失败');
+          }
+        }),
+      '加载课程列表...'
+    ).catch(() => setError('无法连接服务器'));
   }, [username]);
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
@@ -134,17 +133,16 @@ export default function CourseManager() {
 
   const loadMaterials = async (course: Course) => {
     setSelectedCourse(course);
-    setMaterialsLoading(true);
-    try {
-      const res = await fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${username}&t=${Date.now()}`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        setMaterials(data.materials);
-      }
-    } catch {
-      // ignore
-    }
-    setMaterialsLoading(false);
+    await wrap(
+      fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${username}&t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            setMaterials(data.materials);
+          }
+        }),
+      '加载课件...'
+    ).catch(() => {});
   };
 
   // ── 上传文件（Python/C++ 课程） ──
@@ -305,9 +303,7 @@ export default function CourseManager() {
       )}
 
       {/* 课程列表 */}
-      {loading ? (
-        <Loader text="加载课程列表..." />
-      ) : courses.length === 0 ? (
+      {courses.length === 0 ? (
         <div className="text-sm text-slate-500 bg-slate-900/50 border border-slate-600 rounded-2xl p-8 text-center">
           暂无课程，点击「新建课程」开始创建
         </div>
@@ -360,9 +356,7 @@ export default function CourseManager() {
             </button>
           </div>
 
-          {materialsLoading ? (
-            <Loader text="加载课件..." />
-          ) : selectedCourse.type === 'scratch' ? (
+          {selectedCourse.type === 'scratch' ? (
             /* ── Scratch 课程：保持原有 sb3 逻辑 ── */
             materials.length === 0 ? (
               <div className="text-sm text-slate-500 text-center py-8">
