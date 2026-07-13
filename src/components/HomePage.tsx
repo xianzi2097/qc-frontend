@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, GraduationCap, Award, Puzzle, Orbit } from 'lucide-react';
+import { useLoading } from '../lib/useLoading';
 import { StarsBackground } from './ui/StarsBackground';
 import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function HomePage({ onLogin, onSwitchHome }: Props) {
+  const { wrap } = useLoading();
   const [showLogin, setShowLogin] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [username, setUsername] = useState('');
@@ -20,14 +22,16 @@ export default function HomePage({ onLogin, onSwitchHome }: Props) {
   const [teachers, setTeachers] = useState<{ username: string }[]>([]);
 
   useEffect(() => {
-    fetch(`/api/users?t=${Date.now()}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') {
-          setTeachers(data.users.filter((u: any) => u.role === 'teacher'));
-        }
-      })
-      .catch(() => {});
+    wrap(
+      fetch(`/api/users?t=${Date.now()}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            setTeachers(data.users.filter((u: any) => u.role === 'teacher'));
+          }
+        }),
+      '加载中...'
+    ).catch(() => {});
   }, []);
 
   const storedUser = (() => {
