@@ -1,12 +1,20 @@
+import { useEffect } from 'react';
 import { useLoading } from '../../lib/useLoading';
-import Loader from './Loader';
 
 export default function LoadingOverlay() {
-  const { loading, text } = useLoading();
-  if (!loading) return null;
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-cyber-bg">
-      <Loader text={text} />
-    </div>
-  );
+  const { loading } = useLoading();
+
+  useEffect(() => {
+    const el = document.getElementById('splash-loader');
+    if (!el) return;
+    if (loading) {
+      // 更新文字（可选）
+      const p = el.querySelector('p');
+      if (p) p.textContent = '加载中...';
+    } else {
+      el.style.display = 'none';
+    }
+  }, [loading]);
+
+  return null;
 }

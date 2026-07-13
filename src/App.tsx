@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './lib/useAuth';
 import { LoadingProvider, useLoading } from './lib/useLoading';
@@ -57,11 +57,6 @@ function HomePageSwitch() {
 }
 
 export default function App() {
-  // React 接管后移除 HTML 内联 splash
-  useEffect(() => {
-    document.getElementById('splash-loader')?.remove();
-  }, []);
-
   return (
     <LoadingProvider>
       <BrowserRouter>
