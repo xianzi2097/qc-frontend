@@ -8,6 +8,8 @@ import TeacherDashboardWithSidebar from './components/teacher/TeacherDashboardWi
 import AdminDashboardWithSidebar from './components/admin/AdminDashboardWithSidebar';
 import StudentDashboard from './components/student/StudentDashboard';
 
+import Loader from './components/ui/Loader';
+
 /** 看板页面 — 需登录，按角色分流 */
 function DashboardPage() {
   const { user, username, role, isLoggedIn, logout, validating } = useAuth();
@@ -15,7 +17,7 @@ function DashboardPage() {
   if (validating) {
     return (
       <div className="h-screen flex items-center justify-center bg-cyber-bg">
-        <div className="text-slate-400 text-lg animate-pulse">加载中...</div>
+        <Loader text="验证登录状态..." />
       </div>
     );
   }

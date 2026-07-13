@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw } from 'lucide-react';
+import Loader from '../ui/Loader';
 import { useAuth } from '../../lib/useAuth';
 
 interface Course {
@@ -305,7 +306,7 @@ export default function CourseManager() {
 
       {/* 课程列表 */}
       {loading ? (
-        <div className="text-sm text-slate-500">加载中...</div>
+        <Loader text="加载课程列表..." />
       ) : courses.length === 0 ? (
         <div className="text-sm text-slate-500 bg-slate-900/50 border border-slate-600 rounded-2xl p-8 text-center">
           暂无课程，点击「新建课程」开始创建
@@ -360,7 +361,7 @@ export default function CourseManager() {
           </div>
 
           {materialsLoading ? (
-            <div className="text-sm text-slate-500">加载中...</div>
+            <Loader text="加载课件..." />
           ) : selectedCourse.type === 'scratch' ? (
             /* ── Scratch 课程：保持原有 sb3 逻辑 ── */
             materials.length === 0 ? (

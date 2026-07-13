@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RotateCcw, UserX, Plus } from 'lucide-react';
+import Loader from '../ui/Loader';
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('users');
@@ -71,7 +72,7 @@ function UserList() {
     load();
   };
 
-  if (loading) return <div className="text-slate-500">加载中...</div>;
+  if (loading) return <Loader text="加载用户列表..." />;
 
   return (
     <div className="space-y-3">
@@ -164,7 +165,7 @@ function TrashList() {
     load();
   };
 
-  if (loading) return <div className="text-slate-500">加载中...</div>;
+  if (loading) return <Loader text="加载垃圾桶..." />;
 
   return (
     <div className="space-y-3">

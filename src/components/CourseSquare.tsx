@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, ChevronLeft, ExternalLink } from 'lucide-react';
+import Loader from './ui/Loader';
 import { StarsBackground } from './ui/StarsBackground';
 
 // ── 类型定义 ──
@@ -170,12 +171,14 @@ export default function CourseSquare() {
           <p className="text-slate-500 text-sm">浏览老师们的课程，选择你喜欢的课件开始学习</p>
         </div>
 
+        {loading || materialsLoading || teachers.length === 0 ? (
+          <Loader text="加载课程..." />
+        ) : (
+          <>
+
         {/* 教师筛选 */}
         <div className="flex gap-3 justify-center mb-8">
-          {teachers.length === 0 ? (
-            <span className="text-sm text-slate-500">正在加载...</span>
-          ) : (
-            teachers.map((t, i) => (
+          {teachers.map((t, i) => (
               <button
                 key={t.username}
                 onClick={() => switchTeacher(t.username)}
@@ -187,8 +190,7 @@ export default function CourseSquare() {
               >
                 {TEACHER_ICONS[i % TEACHER_ICONS.length]} {t.username}
               </button>
-            ))
-          )}
+            ))}
         </div>
 
         {/* 当前教师提示 */}
@@ -210,11 +212,7 @@ export default function CourseSquare() {
             </button>
           )}
 
-          {loading || materialsLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-slate-500 text-sm animate-pulse">加载中...</div>
-            </div>
-          ) : selectedCourse ? (
+          {selectedCourse ? (
             /* ── 课件视图 ── */
             <div className="space-y-4">
               <div className="text-sm text-slate-400 mb-2">
@@ -314,6 +312,9 @@ export default function CourseSquare() {
             </div>
           )}
         </div>
+
+        </>
+        )}
 
         {/* Footer */}
         <p className="text-xs text-slate-700 text-center mt-12 pb-5">
