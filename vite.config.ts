@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'path'
 
 export default defineConfig({
-  base: '/dashboard/',
+  base: '/',
   build: {
     outDir: resolve(__dirname, '../../qc-pocket-space/frontend/dashboard'),
     emptyOutDir: true,

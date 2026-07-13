@@ -20,13 +20,13 @@ export interface PlanetEntry {
   noSelfRotation?: boolean;
   reverseRotation?: boolean;
   satellites?: { text: string; href: string }[];
+  showLabel?: boolean;
 }
 
 interface Props {
   entries: PlanetEntry[];
   onPlanetClick: (entry: PlanetEntry) => void;
   orbitalSatellites?: OrbitalSatelliteData[];
-  onCameraChange?: (p: THREE.Vector3) => void;
 }
 
 export interface OrbitalSatelliteData {
@@ -39,7 +39,7 @@ export interface OrbitalSatelliteData {
   size?: number;
 }
 
-const BASE = '/dashboard/';
+const BASE = '/';
 const TEXTURE_MAP: Record<string, string> = {
   venus:  `${BASE}textures/venus_atmosphere.jpg`,
   earth:  `${BASE}textures/earth_daymap.jpg`,
@@ -131,19 +131,17 @@ function Planet({ entry, onClick, planetPositionsRef }: {
         />
         )}
       </mesh>
-      {/* 名称标签 */}
-      <Text
-        position={[0, -entry.size - 0.35, 0]}
-        fontSize={0.25}
-        color="white"
-        anchorX="center"
-        anchorY="top"
-        opacity={0.8}
-        outlineWidth={0.02}
-        outlineColor="#000000"
-      >
-        {entry.label}
-      </Text>
+      {entry.showLabel && (
+        <Text
+          position={[0, -entry.size - 0.35, 0]}
+          fontSize={0.25}
+          color="white"
+          anchorX="center"
+          anchorY="top"
+        >
+          {entry.label}
+        </Text>
+      )}
     </group>
   );
 }
@@ -224,14 +222,11 @@ function Stars() {
   return (<points ref={ref} geometry={g}><pointsMaterial size={0.2} transparent opacity={0.8} blending={THREE.AdditiveBlending} vertexColors /></points>);
 }
 
-function SceneSetup({ onCamChange }: { onCamChange?: (p: THREE.Vector3) => void }) {
+function SceneSetup() {
   const {camera}=useThree();
   useEffect(()=>{
     camera.position.set(6.5, 0, 5);
   },[camera]);
-  useFrame(() => {
-    onCamChange?.(camera.position);
-  });
   return <OrbitControls enableDamping dampingFactor={0.05} minDistance={5} maxDistance={80} maxPolarAngle={Math.PI/2.1} target={[6.5,0,0]} />;
 }
 
@@ -239,11 +234,11 @@ function SceneLights() {
   return (<>
     <ambientLight intensity={0.08} color="#c8d8e8" />
     {/* 光源在太阳中心 */}
-    <pointLight position={[0, 0, 0]} intensity={15} distance={50} decay={0.5} color="#ffdd88" />
+    <pointLight position={[0, 0, 0]} intensity={15} distance={50} decay={0.5} color="#fffaec" />
   </>);
 }
 
-export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites, onCameraChange }: Props) {
+export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites }: Props) {
   const planetPositionsRef = useRef<Record<string, THREE.Vector3>>({});
 
   return (
@@ -270,7 +265,7 @@ export default function PlanetScene({ entries, onPlanetClick, orbitalSatellites,
         <OrbitalSatellite key={s.id} data={s} planetPositionsRef={planetPositionsRef} />
       ))}
       
-      <SceneSetup onCamChange={onCameraChange} />
+      <SceneSetup />
     </Canvas>
   );
 }

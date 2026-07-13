@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, GraduationCap, Award, Puzzle } from 'lucide-react';
+import { BookOpen, GraduationCap, Award, Puzzle, Orbit } from 'lucide-react';
 import { StarsBackground } from './ui/StarsBackground';
 import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
 
@@ -7,9 +7,10 @@ import type { PortalUser } from '../lib/useAuth';
 
 interface Props {
   onLogin: (user: PortalUser, token?: string) => void;
+  onSwitchHome?: () => void;
 }
 
-export default function HomePage({ onLogin }: Props) {
+export default function HomePage({ onLogin, onSwitchHome }: Props) {
   const [showLogin, setShowLogin] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [username, setUsername] = useState('');
@@ -70,7 +71,7 @@ export default function HomePage({ onLogin }: Props) {
       const data = await res.json();
       if (data.status === 'success') {
         onLogin(data.user as PortalUser, data.token);
-        window.location.href = '/?view=dashboard';
+        window.location.href = '/dashboard';
       } else setError(data.detail || '登录失败');
     } catch { setError('无法连接服务器'); }
     finally { setLoading(false); }
@@ -88,13 +89,20 @@ export default function HomePage({ onLogin }: Props) {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-orange via-purple-500 to-cyan-400 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.3)]">
             <span className="text-3xl">🍊</span>
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-black text-white flex items-center gap-2">
               QC-Studio
               <span className="text-xs bg-brand-orange/20 text-brand-orange px-2.5 py-0.5 rounded-full">Beta</span>
             </h1>
             <p className="text-sm text-slate-400">少儿编程学习平台</p>
           </div>
+          <button
+            onClick={onSwitchHome}
+            className="flex items-center gap-1.5 text-xs bg-slate-800/60 hover:bg-slate-700/60 text-slate-400 hover:text-slate-200 px-3 py-1.5 rounded-xl transition-all"
+            title="切换到星球主页"
+          >
+            <Orbit size={14} /> 星球
+          </button>
         </div>
 
         {/* 英雄卡布局：Scratch 全宽 + 下方三张小卡 */}
@@ -113,7 +121,7 @@ export default function HomePage({ onLogin }: Props) {
                   <a
                     key={t.username}
                     className="text-sm bg-slate-800 hover:bg-green-600/30 text-slate-300 hover:text-green-300 px-5 py-2 rounded-lg transition-all"
-                    href={`/?view=courses&teacher=${t.username}`}
+                    href={`/courses?teacher=${t.username}`}
                   >
                     {t.username}
                   </a>
@@ -169,7 +177,7 @@ export default function HomePage({ onLogin }: Props) {
                   <p className="text-sm text-slate-500 shrink-0">{loggedInRole === 'teacher' ? '老师' : loggedInRole === 'student' ? '学生' : ''}</p>
                   <div className="flex gap-2 mt-1 shrink-0">
                     <a
-                      href="/?view=dashboard"
+                      href="/dashboard"
                       className="text-sm bg-slate-800 hover:bg-orange-600/30 text-slate-300 hover:text-orange-300 px-4 py-2 rounded-lg transition-all"
                     >
                       进入空间

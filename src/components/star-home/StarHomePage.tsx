@@ -1,11 +1,11 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
+import { LayoutGrid } from 'lucide-react';
 import PlanetScene from './PlanetScene';
 import type { PlanetEntry, OrbitalSatelliteData } from './PlanetScene';
 import StarHomeLogo from './StarHomeLogo';
 import DetailCard from './DetailCard';
-import * as THREE from 'three';
 
-const BASE = '/dashboard/';
+const BASE = '/';
 
 /** 绕飞卫星数据 */
 const orbitalSatellites: OrbitalSatelliteData[] = [
@@ -20,9 +20,8 @@ const orbitalSatellites: OrbitalSatelliteData[] = [
 ];
 
 /** 星球主页 — 纯 UI 壳，逐步加功能 */
-export default function StarHomePage() {
+export default function StarHomePage({ onSwitchHome }: { onSwitchHome?: () => void }) {
   const [selectedEntry, setSelectedEntry] = useState<PlanetEntry | null>(null);
-  const [camPos, setCamPos] = useState({ x: 0, y: 0, z: 0 });
   const planetEntries = useMemo<PlanetEntry[]>(() => [
     // 太阳系：太阳在中心，行星在不同角度环绕
     {
@@ -141,14 +140,18 @@ export default function StarHomePage() {
     },
   ], []);
 
-  const handleCamChange = useCallback((p: THREE.Vector3) => {
-    setCamPos({ x: p.x, y: p.y, z: p.z });
-  }, []);
-
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#050510]">
+      {/* 切换回卡片主页 */}
+      <button
+        onClick={onSwitchHome}
+        className="fixed top-4 right-4 z-20 flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1.5 rounded-xl transition-all"
+        title="切换到卡片主页"
+      >
+        <LayoutGrid size={14} /> 卡片
+      </button>
       <StarHomeLogo />
-      <PlanetScene entries={planetEntries} onPlanetClick={setSelectedEntry} orbitalSatellites={orbitalSatellites} onCameraChange={handleCamChange} />
+      <PlanetScene entries={planetEntries} onPlanetClick={setSelectedEntry} orbitalSatellites={orbitalSatellites} />
 
       {/* ── UI 覆盖层槽位 ── */}
       <div className="fixed inset-0 pointer-events-none z-10">
@@ -157,10 +160,6 @@ export default function StarHomePage() {
         )}
       </div>
 
-      {/* ── 相机位置调试 ── */}
-      <div className="fixed bottom-4 left-4 z-20 font-mono text-xs text-white/70 bg-black/50 px-2 py-1 rounded pointer-events-none select-none">
-        cam x:{camPos.x.toFixed(1)} y:{camPos.y.toFixed(1)} z:{camPos.z.toFixed(2)}
-      </div>
     </div>
   );
 }
