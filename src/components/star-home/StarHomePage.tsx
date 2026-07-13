@@ -60,7 +60,7 @@ export default function StarHomePage() {
       angle: -0.05,
     },
     {
-      id: 'scratch',
+      id: 'earth',
       label: '地球',
       desc: '我们的家园，目前已知唯一存在生命的行星',
       color: '#4a9eff',

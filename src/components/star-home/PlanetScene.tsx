@@ -162,9 +162,8 @@ function OrbitalSatellite({ data, planetPositionsRef }: {
 
   const parentPlanetId = useMemo(() => {
     const idLower = data.id.toLowerCase();
-    if (idLower.includes('moon')) return 'scratch';
     if (idLower.includes('mars') || idLower.includes('rover') || idLower === 'mro') return 'profile';
-    return 'scratch'; // 默认回退
+    return 'profile'; // 默认回退到火星
   }, [data.id]);
 
   useFrame((state) => {
@@ -228,13 +227,12 @@ function Stars() {
 function SceneSetup({ onCamChange }: { onCamChange?: (p: THREE.Vector3) => void }) {
   const {camera}=useThree();
   useEffect(()=>{
-    camera.position.set(10, 25, 0.1);
-    camera.lookAt(10,0,0);
+    camera.position.set(6.5, 0, 5);
   },[camera]);
   useFrame(() => {
     onCamChange?.(camera.position);
   });
-  return <OrbitControls enableDamping dampingFactor={0.05} minDistance={5} maxDistance={80} maxPolarAngle={Math.PI/2.1} target={[10,0,0]} />;
+  return <OrbitControls enableDamping dampingFactor={0.05} minDistance={5} maxDistance={80} maxPolarAngle={Math.PI/2.1} target={[6.5,0,0]} />;
 }
 
 function SceneLights() {
