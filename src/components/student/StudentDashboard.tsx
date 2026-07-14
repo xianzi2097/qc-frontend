@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BookOpen, NotebookText, Rocket, Award, Home, Star, Shield, Box, Mailbox, Settings as SettingsIcon,
+  BookOpen, NotebookText, Rocket, Award, Home, Star, Shield, Box, Mailbox, Settings as SettingsIcon, GraduationCap,
 } from 'lucide-react';
 import Notebook from './Notebook';
 import Messages from './Messages';
 import Settings from './Settings';
+import CoursePlaza from './CoursePlaza';
 import { StarsBackground } from '../ui/StarsBackground';
 import { FloatingDock } from '../ui/FloatingDock';
 import { SparklesCore } from '../ui/sparkles';
@@ -170,6 +171,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
                 { title: '文档', icon: <BookOpen size="2.4rem" className="text-neutral-400" />, onClick: () => { window.location.href = window.location.origin.replace(':5173', '') + '/docs/'; } },
                 { title: '笔记本', icon: <NotebookText size="2.4rem" style={activeModule === 'notebook' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'notebook' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('notebook'), isActive: activeModule === 'notebook', activeBg: 'bg-[var(--accent)]/10' },
                 { title: '邮箱', icon: <div className="relative"><Mailbox size="2.4rem" style={activeModule === 'messages' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'messages' ? '' : 'text-neutral-500'}`} />{unreadCount > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center shadow-[0_0_6px_rgba(244,63,94,0.6)]">{unreadCount > 9 ? '9+' : unreadCount}</span>}</div>, onClick: () => setActiveModule('messages'), isActive: activeModule === 'messages', activeBg: 'bg-[var(--accent)]/10' },
+                { title: '课程', icon: <GraduationCap size="2.4rem" style={activeModule === 'courses' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'courses' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('courses'), isActive: activeModule === 'courses', activeBg: 'bg-[var(--accent)]/10' },
                 { title: '作品仓', icon: <Rocket size="2.4rem" style={activeModule === 'projects' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'projects' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('projects'), isActive: activeModule === 'projects', activeBg: 'bg-[var(--accent)]/10' },
                 { title: '勋章', icon: <Award size="2.4rem" style={activeModule === 'badges' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'badges' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('badges'), isActive: activeModule === 'badges', activeBg: 'bg-[var(--accent)]/10' },
                 { title: '设置', icon: <SettingsIcon size="2.4rem" style={activeModule === 'settings' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'settings' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('settings'), isActive: activeModule === 'settings', activeBg: 'bg-[var(--accent)]/10' },
@@ -196,6 +198,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
               <div className={`flex-1 rounded-2xl border ${moduleBorder[activeModule] || 'border-white/25'} bg-slate-900/80 backdrop-blur-sm overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.3)]`}>
                 {activeModule === 'notebook' && <Notebook username={username} />}
                 {activeModule === 'messages' && <Messages username={username} onMsgRead={refreshUnread} />}
+                {activeModule === 'courses' && <CoursePlaza />}
                 {activeModule === 'settings' && <Settings username={username} />}
                 {activeModule === 'projects' && (
                   <div className="h-full flex items-center justify-center">
