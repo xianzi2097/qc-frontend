@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Users, Pencil, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Users, Pencil, RotateCcw, CalendarDays } from 'lucide-react';
 
 // ── 类型 ──
 
@@ -7,10 +7,18 @@ interface Student {
   id: string;
   name: string;
   remark?: string;
+  schedule?: { days: string[] } | null;  // 个人上课日，null=跟随班级
+}
+
+interface ClassSchedule {
+  days: string[];
+  time?: string;
+  location?: string;
 }
 
 interface ClassData {
   name: string;
+  schedule?: ClassSchedule;
   students: Student[];
 }
 
@@ -21,6 +29,7 @@ interface SessionStudent {
   status: string;
   content: string;
   next_plan: string;
+  excludedToday?: boolean;  // 今日非上课日
 }
 
 interface SessionRecord {
@@ -32,6 +41,12 @@ interface SessionRecord {
 
 function fmt(name: string, remark?: string): string {
   return remark ? `${name} (${remark})` : name;
+}
+
+const CHINESE_WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+function getTodayWeekday(): string {
+  return CHINESE_WEEKDAYS[new Date().getDay()];
 }
 
 function getToday(): string {
@@ -60,16 +75,24 @@ const MONTH_NAMES: Record<string, string> = {
   '09': '九月', '10': '十月', '11': '十一月', '12': '十二月',
 };
 
+// ── 从日期获取星期几 ──
+function dateToWeekday(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  return CHINESE_WEEKDAYS[d.getDay()];
+}
+
 // ── 编辑弹窗 ──
 
 function EditSessionModal({
-  date, students, onSave, onClose, saving,
+  date, students, onSave, onClose, saving, classSchedule, studentSchedules,
 }: {
   date: string;
   students: SessionStudent[];
   onSave: (date: string, students: SessionStudent[]) => void;
   onClose: () => void;
   saving: boolean;
+  classSchedule?: ClassSchedule;
+  studentSchedules?: Record<string, { days: string[] } | null>;
 }) {
   const [editDate, setEditDate] = useState(date);
   const [editStudents, setEditStudents] = useState<SessionStudent[]>(students);
@@ -77,6 +100,24 @@ function EditSessionModal({
   const [lessonContent, setLessonContent] = useState('');
   const [nextPlanContent, setNextPlanContent] = useState('');
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
+
+  // 日期改变时重新计算非上课日
+  useEffect(() => {
+    const weekday = dateToWeekday(editDate);
+    setEditStudents(prev => prev.map(s => {
+      if (s.remark === '临时') return s;  // 临时学生不判断
+      const sched = studentSchedules?.[s.id] ?? classSchedule;
+      const excluded = sched?.days && sched.days.length > 0 && !sched.days.includes(weekday);
+      if (!excluded && s.excludedToday) {
+        // 从非上课日回到上课日 → 恢复为出勤
+        return { ...s, excludedToday: false, status: 'present' };
+      }
+      if (excluded) {
+        return { ...s, excludedToday: true, status: 'leave' };
+      }
+      return s;
+    }));
+  }, [editDate, classSchedule, studentSchedules]);
 
   const showToast = (msg: string) => {
     setToast({ msg, show: true });
@@ -99,14 +140,12 @@ function EditSessionModal({
   };
 
   const toggleStatus = (idx: number) => {
-    setEditStudents(prev => prev.map((s, i) =>
-      i === idx ? {
-        ...s,
-        status: s.status === 'present' ? 'absent' : 'present',
-        content: s.status === 'present' ? '' : s.content,
-        next_plan: s.status === 'present' ? '' : s.next_plan,
-      } : s
-    ));
+    setEditStudents(prev => prev.map((s, i) => {
+      if (i !== idx) return s;
+      if (s.excludedToday) return s;  // 非上课日不可手动切换
+      const next: Record<string, string> = { present: 'leave', leave: 'absent', absent: 'present' };
+      return { ...s, status: next[s.status] || 'present' };
+    }));
   };
 
   const updateField = (idx: number, field: 'content' | 'next_plan', val: string) => {
@@ -147,9 +186,9 @@ function EditSessionModal({
           <div className="flex items-center gap-2">
             <div className="flex-1"></div>
             <button onClick={() => {
-              setEditStudents(prev => prev.map(s => ({
-                ...s, status: 'present', content: lessonContent || s.content, next_plan: nextPlanContent || s.next_plan,
-              })));
+              setEditStudents(prev => prev.map(s =>
+                s.excludedToday ? s : { ...s, status: 'present', content: lessonContent || s.content, next_plan: nextPlanContent || s.next_plan }
+              ));
             }}
               className="text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 hover:bg-slate-700 flex items-center gap-1">
               <Check size={14} /> 全部正常推进
@@ -184,41 +223,55 @@ function EditSessionModal({
           {/* 每学生一行 */}
           {editStudents.map((s, idx) => (
             <div key={s.id}
-              className="grid grid-cols-[auto_auto_1fr_1fr] gap-2 items-start rounded px-2 py-1">
+              className={`grid grid-cols-[auto_auto_1fr_1fr] gap-2 items-start rounded px-2 py-1 ${
+                s.excludedToday ? 'bg-slate-800/30 opacity-60' : ''
+              }`}>
               {/* 名字 + 独立正常推进 */}
               <div className="flex items-center gap-1 w-28 xl:w-40">
-                <span className="text-sm text-white font-medium truncate">{fmt(s.name, s.remark)}</span>
-                <button onClick={() => {
-                  setEditStudents(prev => prev.map((x, i) =>
-                    i === idx ? { ...x, status: 'present', content: '正常推进', next_plan: '正常推进' } : x
-                  ));
-                }}
-                  className="text-[10px] text-green-400/60 hover:text-green-400 ml-0.5 shrink-0" title="正常推进">
-                  推
-                </button>
+                <span className={`text-sm font-medium truncate ${s.excludedToday ? 'text-slate-500' : 'text-white'}`}>
+                  {fmt(s.name, s.remark)}
+                </span>
+                {s.excludedToday ? (
+                  <span className="text-[10px] text-slate-500 ml-1 shrink-0">非上课日</span>
+                ) : (
+                  <button onClick={() => {
+                    setEditStudents(prev => prev.map((x, i) =>
+                      i === idx ? { ...x, status: 'present', content: '正常推进', next_plan: '正常推进' } : x
+                    ));
+                  }}
+                    className="text-[10px] text-green-400/60 hover:text-green-400 ml-0.5 shrink-0" title="正常推进">
+                    推
+                  </button>
+                )}
               </div>
-              {/* 出勤切换 */}
+              {/* 出勤切换（三态） */}
               <div className="w-10 flex items-center">
                 <button onClick={() => toggleStatus(idx)}
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                    s.status === 'present'
-                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                      : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
+                    s.excludedToday
+                      ? 'bg-slate-700/30 text-slate-500 cursor-not-allowed'
+                      : s.status === 'present'
+                        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                        : s.status === 'leave'
+                          ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                          : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
                   }`}>
-                  {s.status === 'present' ? <Check size={14} /> : <X size={14} />}
+                  {s.excludedToday ? '—' : s.status === 'present' ? <Check size={14} /> : s.status === 'leave' ? '休' : <X size={14} />}
                 </button>
               </div>
               {/* 本节课内容 */}
               <textarea rows={1} value={s.content}
                 onChange={e => updateField(idx, 'content', e.target.value)}
                 onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
-                placeholder="学了什么…"
+                placeholder={s.excludedToday ? '非上课日' : '学了什么…'}
+                readOnly={s.excludedToday}
                 className="bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200 outline-none resize-none placeholder-slate-500 overflow-hidden" />
               {/* 下节课计划 */}
               <textarea rows={1} value={s.next_plan}
                 onChange={e => updateField(idx, 'next_plan', e.target.value)}
                 onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
-                placeholder="下节课计划…"
+                placeholder={s.excludedToday ? '非上课日' : '下节课计划…'}
+                readOnly={s.excludedToday}
                 className="bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200 outline-none resize-none placeholder-slate-500 overflow-hidden" />
             </div>
           ))}
@@ -283,6 +336,23 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
   const [showAddClass, setShowAddClass] = useState(false);
   const [newClassName, setNewClassName] = useState('');
+  const [newClassDays, setNewClassDays] = useState<string[]>([]);
+  const [newClassTime, setNewClassTime] = useState('');
+  const [newClassLocation, setNewClassLocation] = useState('');
+
+  // 编辑班级排课
+  const [showEditClass, setShowEditClass] = useState(false);
+  const [editClassName, setEditClassName] = useState('');
+  const [editClassDays, setEditClassDays] = useState<string[]>([]);
+  const [editClassTime, setEditClassTime] = useState('');
+  const [editClassLocation, setEditClassLocation] = useState('');
+
+  // 学生上课日编辑
+  const [editStudentSchedule, setEditStudentSchedule] = useState<{
+    studentId: string;
+    studentName: string;
+    days: string[];
+  } | null>(null);
 
   // 课堂记录
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
@@ -347,11 +417,12 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     if (data.status === 'success') {
       const transformed = data.classes.map((c: any) => ({
         name: c.name,
-        schedule: c.schedule || [],
+        schedule: c.schedule || { days: [], time: '', location: '' },
         students: (c.students || []).map((s: any) => ({
           id: String(s.user_id || ''),
           name: s.name || s.username || '',
           remark: '',
+          schedule: s.schedule || null,  // 个人上课日设置
         })),
       }));
       setClasses(transformed);
@@ -373,15 +444,54 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   }, [selectedClass, currentMonth, username]);
 
   // ── 创建班级 ──
+  const ALL_DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
   const handleCreateClass = async () => {
     if (!newClassName.trim()) return;
+    const schedule = {
+      days: newClassDays.length > 0 ? newClassDays : [],
+      time: newClassTime,
+      location: newClassLocation,
+    };
     await fetch(`/api/classes?username=${username}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newClassName, schedule: [] }),
+      body: JSON.stringify({ name: newClassName, schedule }),
     });
     setNewClassName('');
+    setNewClassDays([]);
+    setNewClassTime('');
+    setNewClassLocation('');
     setShowAddClass(false);
     loadClasses();
+  };
+
+  // ── 编辑班级排课 ──
+  const handleUpdateClass = async () => {
+    if (!editClassName.trim()) return;
+    const schedule = {
+      days: editClassDays.length > 0 ? editClassDays : [],
+      time: editClassTime,
+      location: editClassLocation,
+    };
+    await fetch(`/api/classes/${encodeURIComponent(editClassName)}?username=${username}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: editClassName, schedule }),
+    });
+    setShowEditClass(false);
+    loadClasses();
+    // 更新选中班级
+    if (selectedClass?.name === editClassName) {
+      setSelectedClass(prev => prev ? { ...prev, schedule } : prev);
+    }
+  };
+
+  // ── 打开班级排课编辑 ──
+  const openEditClassSchedule = (c: ClassData) => {
+    setEditClassName(c.name);
+    setEditClassDays(c.schedule?.days || []);
+    setEditClassTime(c.schedule?.time || '');
+    setEditClassLocation(c.schedule?.location || '');
+    setShowEditClass(true);
   };
 
   // ── 删除班级 ──
@@ -393,23 +503,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   };
 
   // ── 改名班级 ──
-  const handleRenameClass = async (oldName: string) => {
-    const newName = prompt('请输入新名称：', oldName);
-    if (!newName || newName === oldName) return;
-    const res = await fetch(`/api/classes/${encodeURIComponent(oldName)}?username=${username}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName, schedule: [] }),
-    });
-    const data = await res.json();
-    if (data.status === 'success') {
-      if (selectedClass?.name === oldName) {
-        setSelectedClass({ ...selectedClass, name: newName });
-      }
-      loadClasses();
-    } else {
-      alert(data.detail || '改名失败');
-    }
-  };
+
 
   // ── 添加学生（含重名检测） ──
   const [addError, setAddError] = useState('');
@@ -521,16 +615,11 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     setSessions(prev => prev.filter(s => s.date !== date));
   };
 
-  // ── 打开新建弹窗 ──
   const openNewSession = () => {
     if (!selectedClass) return;
     const students: SessionStudent[] = selectedClass.students.map(s => ({
-      id: s.id,
-      name: s.name,
-      remark: s.remark || '',
-      status: 'present',
-      content: '',
-      next_plan: '',
+      id: s.id, name: s.name, remark: s.remark || '',
+      status: 'present', content: '', next_plan: '',
     }));
     setEditModal({ date: getToday(), students });
   };
@@ -540,14 +629,26 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     setEditModal({ date: session.date, students: [...session.students] });
   };
 
-  // ── 获取出席摘要 ──
+  // ── 获取出席摘要（含请假） ──
   const attendanceSummary = (students: SessionStudent[]) => {
     return students.map(s => {
       const label = fmt(s.name, s.remark);
-      return s.status === 'present'
-        ? <span key={s.id} className="text-green-400">{label}✅ </span>
-        : <span key={s.id} className="text-rose-400">{label}❌ </span>;
+      if (s.status === 'present')
+        return <span key={s.id} className="text-green-400">{label}✅ </span>;
+      if (s.status === 'leave')
+        return <span key={s.id} className="text-amber-400">{label}💤 </span>;
+      return <span key={s.id} className="text-rose-400">{label}❌ </span>;
     });
+  };
+
+  // ── 编辑学生上课日 ──
+  const handleUpdateStudentSchedule = async (studentId: string, days: string[] | null) => {
+    await fetch(`/api/classes/${encodeURIComponent(selectedClass!.name)}/students/${studentId}/schedule?username=${username}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ schedule: days ? { days } : null }),
+    });
+    setEditStudentSchedule(null);
+    await loadClasses();
   };
 
   // ── 渲染 ──
@@ -566,13 +667,36 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
         </div>
 
         {showAddClass && (
-          <div className="px-3 py-2 border-b border-slate-600 space-y-1">
+          <div className="px-3 py-2 border-b border-slate-600 space-y-1.5">
             <input autoFocus value={newClassName} onChange={e => setNewClassName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleCreateClass(); if (e.key === 'Escape') setShowAddClass(false); }}
               placeholder="班级名称"
               className="w-full bg-slate-800 text-sm text-slate-200 px-2 py-1.5 rounded outline-none border border-cyan-400" />
+            {/* 上课日 */}
+            <div>
+              <span className="text-[10px] text-slate-500 block mb-1">上课日</span>
+              <div className="flex flex-wrap gap-1">
+                {ALL_DAYS.map(d => (
+                  <button key={d} onClick={() => {
+                    setNewClassDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+                  }}
+                    className={`text-xs px-2 py-1 rounded ${newClassDays.includes(d) ? 'bg-cyan-400 text-black font-bold' : 'bg-slate-700 text-slate-300'}`}>
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* 上课时间 + 地点 */}
+            <div className="flex gap-2">
+              <input value={newClassTime} onChange={e => setNewClassTime(e.target.value)}
+                placeholder="时间（如 14:00-15:30）"
+                className="flex-1 bg-slate-800 text-xs text-slate-200 px-2 py-1.5 rounded outline-none border border-slate-700 placeholder-slate-500" />
+              <input value={newClassLocation} onChange={e => setNewClassLocation(e.target.value)}
+                placeholder="地点（如 301教室）"
+                className="flex-1 bg-slate-800 text-xs text-slate-200 px-2 py-1.5 rounded outline-none border border-slate-700 placeholder-slate-500" />
+            </div>
             <button onClick={handleCreateClass}
-              className="w-full text-xs text-black px-2 py-1.5 rounded font-bold bg-cyan-400">确定</button>
+              className="w-full text-xs text-black px-2 py-1.5 rounded font-bold bg-cyan-400">确定创建</button>
           </div>
         )}
 
@@ -594,11 +718,14 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-sm truncate">{c.name}</span>
                 <span className="text-xs text-slate-400">{c.students.length}人</span>
+                {c.schedule?.days && c.schedule.days.length > 0 && (
+                  <span className="text-[10px] text-slate-500 hidden xl:inline">{c.schedule.days.join('/')}</span>
+                )}
               </div>
               <div className="flex items-center gap-0.5">
-                <button onClick={(e) => { e.stopPropagation(); handleRenameClass(c.name); }}
-                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-cyan-400 p-0.5" title="改名">
-                  <Pencil size={14} />
+                <button onClick={(e) => { e.stopPropagation(); openEditClassSchedule(c); }}
+                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-cyan-400 p-0.5" title="排课">
+                  <CalendarDays size={14} />
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); handleDeleteClass(c.name); }}
                   className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-400 p-0.5" title="删除">
@@ -626,12 +753,22 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
             <div className="h-12 border-b border-slate-600 flex items-center justify-between px-4 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-300 font-mono">{selectedClass.name}</span>
+                {selectedClass.schedule?.days && selectedClass.schedule.days.length > 0 && (
+                  <span className="text-[10px] text-slate-500">
+                    {selectedClass.schedule.days.join('/')}
+                    {selectedClass.schedule.time ? ` ${selectedClass.schedule.time}` : ''}
+                    {selectedClass.schedule.location ? ` · ${selectedClass.schedule.location}` : ''}
+                  </span>
+                )}
                 <button onClick={() => setShowStudentList(!showStudentList)}
                   className="text-xs text-slate-500 hover:text-cyan-400">
                   {selectedClass.students.length}名学生 ▾
                 </button>
               </div>
               <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-500 bg-slate-800 rounded px-2 py-1">
+                  今日 {getTodayWeekday()}
+                </span>
                 <button onClick={openNewSession}
                   className="text-xs text-black px-4 py-1.5 rounded-lg font-bold flex items-center gap-1 bg-cyan-400">
                   <Check size={14} /> 点名
@@ -673,9 +810,21 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                 <div className="space-y-1 max-h-48 overflow-y-auto">
                   {selectedClass.students.map(s => (
                     <div key={s.id} className="flex items-center justify-between bg-slate-800/40 rounded-lg px-3 py-1.5">
-                      <span className="text-xs text-slate-300">{s.name}{s.remark ? ` (${s.remark})` : ''}</span>
-                      <button onClick={() => handleRemoveStudent(s.id)}
-                        className="text-rose-400/60 hover:text-rose-400 text-xs">移除</button>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs text-slate-300 truncate">{s.name}{s.remark ? ` (${s.remark})` : ''}</span>
+                        {s.schedule?.days && (
+                          <span className="text-[10px] text-cyan-400/60 shrink-0">{s.schedule.days.join('/')}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => setEditStudentSchedule({
+                          studentId: s.id, studentName: s.name,
+                          days: s.schedule?.days ? [...s.schedule.days] : [],
+                        })}
+                          className="text-cyan-400/60 hover:text-cyan-400 text-[10px]">上课日</button>
+                        <button onClick={() => handleRemoveStudent(s.id)}
+                          className="text-rose-400/60 hover:text-rose-400 text-xs">移除</button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -749,31 +898,42 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
               {/* 本月统计 */}
               {sessions.length > 0 && (
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-4 gap-3 mb-4">
                   <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-cyan-400/30 hover:translate-y-[-2px]">
                     <div className="text-2xl text-cyan-400 font-bold font-mono">{sessions.length}</div>
                     <div className="text-xs text-slate-400 mt-1">本月课时</div>
                   </div>
-                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-geek-green/30 hover:translate-y-[-2px]">
+                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-green-400/30 hover:translate-y-[-2px]">
                     {(() => {
-                      const total = sessions.reduce((sum, s) => sum + s.students.length, 0);
                       const present = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status === 'present').length, 0);
-                      const rate = total > 0 ? Math.round(present / total * 100) : 0;
+                      const absent = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status === 'absent').length, 0);
+                      const effective = present + absent;
+                      const rate = effective > 0 ? Math.round(present / effective * 100) : 0;
                       return (
                         <>
                           <div className="text-2xl text-green-400 font-bold font-mono">{rate}%</div>
-                          <div className="text-xs text-slate-400 mt-1">平均出勤率</div>
+                          <div className="text-xs text-slate-400 mt-1">出勤率</div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-amber-400/30 hover:translate-y-[-2px]">
+                    {(() => {
+                      const leave = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status === 'leave').length, 0);
+                      return (
+                        <>
+                          <div className="text-2xl text-amber-400 font-bold font-mono">{leave}</div>
+                          <div className="text-xs text-slate-400 mt-1">请假人次</div>
                         </>
                       );
                     })()}
                   </div>
                   <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-rose-400/30 hover:translate-y-[-2px]">
                     {(() => {
-                      const total = sessions.reduce((sum, s) => sum + s.students.length, 0);
-                      const absent = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status !== 'present').length, 0);
+                      const absent = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status === 'absent').length, 0);
                       return (
                         <>
-                          <div className="text-2xl text-rose-400 font-bold font-mono">{absent}/{total}</div>
+                          <div className="text-2xl text-rose-400 font-bold font-mono">{absent}</div>
                           <div className="text-xs text-slate-400 mt-1">缺勤人次</div>
                         </>
                       );
@@ -840,13 +1000,19 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
       </div>
 
       {/* 编辑弹窗 */}
-      {editModal && (
+      {editModal && selectedClass && (
         <EditSessionModal
           date={editModal.date}
           students={editModal.students}
           onSave={handleSaveSession}
           onClose={() => setEditModal(null)}
           saving={saving}
+          classSchedule={selectedClass.schedule}
+          studentSchedules={Object.fromEntries(
+            selectedClass.students
+              .filter(s => s.schedule?.days)
+              .map(s => [s.id, s.schedule!])
+          )}
         />
       )}
 
@@ -886,6 +1052,91 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 班级排课编辑弹窗 ── */}
+      {showEditClass && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={e => { if (e.target === e.currentTarget) setShowEditClass(false); }}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[420px] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-sm text-white font-bold mb-4 flex items-center gap-2">
+              <CalendarDays size={16} className="text-cyan-400" /> 排课 - {editClassName}
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <span className="text-[10px] text-slate-500 block mb-1">上课日</span>
+                <div className="flex flex-wrap gap-1">
+                  {ALL_DAYS.map(d => (
+                    <button key={d} onClick={() => {
+                      setEditClassDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+                    }}
+                      className={`text-xs px-2.5 py-1 rounded ${editClassDays.includes(d) ? 'bg-cyan-400 text-black font-bold' : 'bg-slate-700 text-slate-300'}`}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <input value={editClassTime} onChange={e => setEditClassTime(e.target.value)}
+                  placeholder="上课时间（如 14:00-15:30）"
+                  className="flex-1 bg-slate-800 text-xs text-slate-200 px-3 py-2 rounded outline-none border border-slate-700 placeholder-slate-500" />
+                <input value={editClassLocation} onChange={e => setEditClassLocation(e.target.value)}
+                  placeholder="上课地点（如 301教室）"
+                  className="flex-1 bg-slate-800 text-xs text-slate-200 px-3 py-2 rounded outline-none border border-slate-700 placeholder-slate-500" />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => setShowEditClass(false)}
+                  className="flex-1 text-xs text-slate-400 bg-slate-800 rounded-lg py-2 hover:bg-slate-700">取消</button>
+                <button onClick={handleUpdateClass}
+                  className="flex-1 text-xs text-black bg-cyan-400 rounded-lg py-2 font-bold hover:bg-cyan-500">保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 学生上课日编辑弹窗 ── */}
+      {editStudentSchedule && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={e => { if (e.target === e.currentTarget) setEditStudentSchedule(null); }}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[380px] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-sm text-white font-bold mb-4">
+              编辑上课日 - {editStudentSchedule.studentName}
+            </h3>
+            <p className="text-[10px] text-slate-500 mb-3">不选则跟随班级默认上课日</p>
+            <div className="flex flex-wrap gap-1 mb-4">
+              {ALL_DAYS.map(d => (
+                <button key={d} onClick={() => {
+                  setEditStudentSchedule(prev => {
+                    if (!prev) return prev;
+                    const newDays = prev.days.includes(d)
+                      ? prev.days.filter(x => x !== d)
+                      : [...prev.days, d];
+                    return { ...prev, days: newDays };
+                  });
+                }}
+                  className={`text-xs px-2.5 py-1 rounded ${editStudentSchedule.days.includes(d) ? 'bg-cyan-400 text-black font-bold' : 'bg-slate-700 text-slate-300'}`}>
+                  {d}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setEditStudentSchedule(null)}
+                className="flex-1 text-xs text-slate-400 bg-slate-800 rounded-lg py-2 hover:bg-slate-700">取消</button>
+              <button onClick={() => {
+                handleUpdateStudentSchedule(
+                  editStudentSchedule.studentId,
+                  editStudentSchedule.days.length > 0 ? editStudentSchedule.days : null
+                );
+              }}
+                className="flex-1 text-xs text-black bg-cyan-400 rounded-lg py-2 font-bold hover:bg-cyan-500">保存</button>
+              <button onClick={() => {
+                handleUpdateStudentSchedule(editStudentSchedule.studentId, null);
+              }}
+                className="text-xs text-slate-400 bg-slate-800 rounded-lg py-2 px-3 hover:bg-slate-700">恢复默认</button>
             </div>
           </div>
         </div>
