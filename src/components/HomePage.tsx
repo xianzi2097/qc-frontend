@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, GraduationCap, Award, Puzzle, Orbit } from 'lucide-react';
+import { BookOpen, GraduationCap, Award, Puzzle, Orbit, Code2 } from 'lucide-react';
 import { useLoading } from '../lib/useLoading';
 import { StarsBackground } from './ui/StarsBackground';
 import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
@@ -82,35 +82,39 @@ export default function HomePage({ onLogin, onSwitchHome }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center relative bg-cyber-bg px-6 pt-6">
+    <div className="min-h-screen flex flex-col items-center relative bg-cyber-bg">
       <StarsBackground />
 
-      {/* 主内容区 */}
-      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center">
-
-        {/* Header */}
-        <div className="flex items-center gap-5 mb-10">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-orange via-purple-500 to-cyan-400 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-            <span className="text-3xl">🍊</span>
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-black text-white flex items-center gap-2">
-              QC-Studio
-              <span className="text-xs bg-brand-orange/20 text-brand-orange px-2.5 py-0.5 rounded-full">Beta</span>
-            </h1>
-            <p className="text-sm text-slate-400">少儿编程学习平台</p>
+      {/* ════════ 顶端栏 ════════ */}
+      <header className="relative z-50 w-full bg-slate-900/80 backdrop-blur-sm border-b border-slate-800/50">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-orange via-purple-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(249,115,22,0.25)]">
+              <Code2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-white font-bold text-sm tracking-tight flex items-center gap-2">
+                QC-Studio
+                <span className="text-[10px] bg-brand-orange/15 text-brand-orange/80 px-2 py-0.5 rounded-full font-medium">Beta</span>
+              </h1>
+              <p className="text-[11px] text-slate-500">少儿编程学习平台</p>
+            </div>
           </div>
           <button
             onClick={onSwitchHome}
-            className="flex items-center gap-1.5 text-xs bg-slate-800/60 hover:bg-slate-700/60 text-slate-400 hover:text-slate-200 px-3 py-1.5 rounded-xl transition-all"
+            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
             title="切换到星球主页"
           >
-            <Orbit size={14} /> 星球
+            <Orbit size={13} /> 星球
           </button>
         </div>
+      </header>
+
+      {/* 主内容区 */}
+      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center px-6 pt-4">
 
         {/* 英雄卡布局：Scratch 全宽 + 下方三张小卡 */}
-        <div className="flex flex-col gap-5 w-full max-w-6xl px-8">
+        <div className="flex flex-col gap-5 w-full max-w-6xl">
 
           {/* ════ 英雄卡：Scratch 课堂 — 全宽 ════ */}
           <div className="bg-slate-900/60 border border-green-500/20 rounded-2xl p-8 flex flex-col items-center text-center gap-4 hover:border-green-500/40 transition-all duration-300 group hover:translate-y-[-2px]">
