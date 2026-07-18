@@ -2,22 +2,13 @@ import { useState } from 'react';
 import {
   Terminal, Users, Cpu, LogOut, Mail, Calendar, BookOpen, Home,
 } from 'lucide-react';
-import { AVATARS } from '../ui/AvatarPicker';
+import { getAvatarCfg } from '../ui/AvatarPicker';
 import TeacherDashboard from './TeacherDashboard';
 
 interface Props {
   username: string;
   role: string;
   logout: () => void;
-}
-
-function getAvatarCfg() {
-  try {
-    const raw = localStorage.getItem('user');
-    const user = raw ? JSON.parse(raw) : null;
-    const idx = parseInt((user?.avatar_path || '').replace('avatar_', ''), 10);
-    return AVATARS[isNaN(idx) ? 0 : idx % AVATARS.length];
-  } catch { return AVATARS[0]; }
 }
 
 export default function TeacherDashboardWithSidebar({ username, role, logout }: Props) {

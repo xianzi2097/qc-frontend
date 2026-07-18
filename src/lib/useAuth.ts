@@ -21,7 +21,9 @@ function readToken(): string | null {
   return localStorage.getItem('auth_token');
 }
 
-// ── 劫持全局 fetch，自动带 token ──
+// ── ponytail: 劫持全局 fetch，自动带 token ──
+// 为什么放模块顶层：所有页面都需要带 token，import 即生效，不需要每个组件单独 wrap。
+// 缺点：副作用隐蔽，import useAuth 就会触发。项目小，可接受。
 const origFetch = window.fetch.bind(window);
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   // 登录/注册接口不需要 token
