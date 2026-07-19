@@ -6,6 +6,7 @@
   --color-brand-orange: #f97316;   /* 青橙专属橙 */
   --color-geek-green: #10b981;     /* 极客高亮绿 */
   --color-cyber-bg: #020617;       /* 深邃极客夜空底 */
+  --font-chalk: 'Patrick Hand', 'Ma Shan Zheng', cursive; /* 粉笔手写体 */
 }
 
 /* 全局基础样式 — 以 1366×768（14"笔记本）为基准 */
