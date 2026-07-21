@@ -99,6 +99,10 @@ export function useAuth() {
   }, []);
 
   const logout = useCallback(() => {
+    fetch('/api/logout', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+    }).catch(() => {});
     localStorage.removeItem('user');
     localStorage.removeItem('auth_token');
     setUser(null);

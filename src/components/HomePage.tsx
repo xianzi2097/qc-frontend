@@ -45,6 +45,10 @@ export default function HomePage({ onLogin, onSwitchHome }: Props) {
   const loggedInAvatar = storedUser?.avatar_path || '0';
 
   const handleLogout = () => {
+    fetch('/api/logout', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+    }).catch(() => {});
     localStorage.removeItem('user');
     localStorage.removeItem('auth_token');
     window.location.reload();
