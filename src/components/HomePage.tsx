@@ -77,7 +77,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               className="flex items-center gap-1.5 mt-1"
               style={{ color: '#5f6c7a', fontWeight: 500 }}
             >
-              <MapPin className="w-3.5 h-3.5" style={{ color: '#4a5c6c' }} /> 开源 · 少儿编程学习平台
+            开源少儿编程学习平台
             </div>
           </div>
 
@@ -245,7 +245,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         >
           <div className="neo-modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-[1.8rem] font-bold mb-4 text-center" style={{ color: '#1e2b38' }}>
-              <LogIn className="w-6 h-6 inline-block mr-2" style={{ color: '#5f6c7a' }} />CodeNova
+              CodeNova
             </h3>
             <p className="mb-6 text-center" style={{ color: '#4a5b6b' }}>
               记录你的成长路线，同步创作进度
@@ -282,6 +282,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 </button>
                 <button type="button" onClick={() => setShowLogin(false)} className="neo-btn">
                   <X className="w-3.5 h-3.5" />
+                  关闭
                 </button>
               </div>
             </form>
