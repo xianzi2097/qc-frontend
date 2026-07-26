@@ -80,8 +80,8 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </div>
           </div>
 
-          <a href="/docs/guide/" className="neo-btn no-underline w-16 h-16 rounded-full" style={{ justifyContent: 'center', padding: 0 }}>
-            <HelpCircle className="w-9 h-9" style={{ color: '#4a5c6c' }} />
+          <a href="/docs/guide/" className="neo-btn no-underline w-10 h-10 rounded-full" style={{ justifyContent: 'center', padding: 0 }}>
+            <HelpCircle className="w-5 h-5" style={{ color: '#4a5c6c' }} />
           </a>
         </div>
 
@@ -107,7 +107,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </p>
             <div className="flex justify-end">
               <a href="/courses" className="neo-btn">
-                <GraduationCap className="w-3.5 h-3.5 ico-green" /> 学习
+                <GraduationCap className="w-4 h-4 ico-green" /> 学习
               </a>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </p>
             <div className="flex justify-end">
               <button onClick={() => setShowDocPicker(true)} className="neo-btn">
-                <BookOpen className="w-3.5 h-3.5 ico-purple" /> 浏览
+                <BookOpen className="w-4 h-4 ico-purple" /> 浏览
               </button>
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </p>
             <div className="flex justify-end">
               <a href="/Scratch/index.html" className="neo-btn">
-                <Play className="w-3.5 h-3.5 ico-blue" /> 创作
+                <Play className="w-4 h-4 ico-blue" /> 创作
               </a>
             </div>
           </div>
@@ -183,15 +183,15 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               {storedUser ? (
                 <>
                   <a href="/dashboard" className="neo-btn">
-                    <LogIn className="w-3.5 h-3.5 ico-orange" /> 后台
+                    <LogIn className="w-4 h-4 ico-orange" /> 后台
                   </a>
                   <button onClick={handleLogout} className="neo-btn">
-                    <X className="w-3.5 h-3.5" /> 退出
+                    <X className="w-4 h-4" /> 退出
                   </button>
                 </>
               ) : (
                 <button onClick={() => setShowLogin(true)} className="neo-btn">
-                  <LogIn className="w-3.5 h-3.5 ico-orange" /> 登录
+                  <LogIn className="w-4 h-4 ico-orange" /> 登录
                 </button>
               )}
             </div>
@@ -201,7 +201,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
         {/* ════ 分割线 + 备案 ════ */}
         <hr className="neo-hr" />
-        <p className="text-xs text-center" style={{ color: '#5f6c7a' }}>
+        <p className="text-xs text-center mb-2" style={{ color: '#5f6c7a' }}>
           粤ICP备2026057743号-1 · Arin | 青橙
         </p>
       </div>
@@ -216,7 +216,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           <div className="neo-modal relative" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setShowDocPicker(false)}
-              className="neo-btn absolute top-3 right-3 w-10 h-10 rounded-full"
+              className="neo-btn absolute top-3 right-3 w-6 h-6 rounded-full"
               style={{ justifyContent: 'center', padding: 0 }}
             >
               <X className="w-4 h-4" />
