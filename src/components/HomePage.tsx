@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   BookOpen, Award, Puzzle, Code2,
-  Star, MapPin, LogIn, Play, X, HelpCircle,
+  Star, LogIn, Play, X, HelpCircle,
   Library, ArrowRight, Search
 } from 'lucide-react';
 
