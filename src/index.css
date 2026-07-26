@@ -109,3 +109,151 @@ body {
 }
 
 /* ── 整体缩放：修改 html font-size 即可等比缩放所有 rem 单位（卡片、图标、间距）── */
+
+/* ══════════════════════════════════════
+   新拟态风格（Neumorphism）
+   参考原型 CSS 改写
+   ══════════════════════════════════════ */
+
+:root {
+  --neo-bg: #e8edf2;
+  --neo-shadow-dark: #bcc3c9;
+  --neo-shadow-light: #ffffff;
+  --neo-text-primary: #1e2b38;
+  --neo-text-secondary: #4a5b6b;
+  --neo-text-muted: #5f6c7a;
+}
+
+/* 大容器 */
+.neo-wrap {
+  background: var(--neo-bg);
+  border-radius: 3.5rem;
+  padding: 2.5rem 2rem;
+  box-shadow:
+    20px 20px 40px var(--neo-shadow-dark),
+    -20px -20px 40px var(--neo-shadow-light);
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+/* 卡片 */
+.neo-card {
+  background: var(--neo-bg);
+  border-radius: 2.5rem;
+  padding: 2rem 1.5rem;
+  box-shadow:
+    12px 12px 24px var(--neo-shadow-dark),
+    -12px -12px 24px var(--neo-shadow-light);
+  border: 1px solid rgba(255,255,255,0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 按钮 */
+.neo-btn {
+  background: var(--neo-bg);
+  border: 1px solid rgba(255,255,255,0.5);
+  padding: 0.5rem 0.9rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--neo-text-primary);
+  box-shadow:
+    4px 4px 8px var(--neo-shadow-dark),
+    -4px -4px 8px var(--neo-shadow-light);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+}
+.neo-btn:active {
+  box-shadow:
+    inset 3px 3px 6px var(--neo-shadow-dark),
+    inset -3px -3px 6px var(--neo-shadow-light);
+  transform: translateY(1px);
+  background: #e0e5ea;
+  border-color: rgba(255,255,255,0.2);
+}
+.neo-btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+.neo-btn.fixed-w {
+  width: 6.8rem;
+  justify-content: flex-start;
+}
+
+/* 圆形头像 */
+.neo-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  background: var(--neo-bg);
+  box-shadow:
+    8px 8px 16px var(--neo-shadow-dark),
+    -8px -8px 16px var(--neo-shadow-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #4a5c6c;
+}
+
+/* 内凹输入框 */
+.neo-input-wrap {
+  background: var(--neo-bg);
+  border-radius: 2rem;
+  padding: 0.8rem;
+  box-shadow:
+    inset 6px 6px 12px var(--neo-shadow-dark),
+    inset -6px -6px 12px var(--neo-shadow-light);
+}
+.neo-input-wrap input {
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  padding: 0.5rem;
+  color: var(--neo-text-primary);
+  font-weight: 500;
+}
+.neo-input-wrap input::placeholder {
+  color: var(--neo-text-muted);
+}
+
+/* 弹窗 */
+.neo-modal {
+  background: var(--neo-bg);
+  border-radius: 3rem;
+  padding: 2.5rem;
+  max-width: 380px;
+  width: 90%;
+  box-shadow:
+    25px 25px 50px var(--neo-shadow-dark),
+    -25px -25px 50px var(--neo-shadow-light);
+  animation: neoFloatIn 0.3s ease;
+}
+
+@keyframes neoFloatIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* 分割线 */
+.neo-hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neo-shadow-dark), transparent);
+  margin: 0.5rem 0 1.5rem;
+}
+
+/* 图标颜色 */
+.ico-green  { color: #2e8b57; }
+.ico-purple { color: #7b4b9e; }
+.ico-blue   { color: #2d6ea0; }
+.ico-orange { color: #c96a2c; }
