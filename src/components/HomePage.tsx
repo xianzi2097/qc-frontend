@@ -3,7 +3,6 @@ import {
   BookOpen, GraduationCap, Award, Puzzle, Code2,
   Star, MapPin, LogIn, Play, X, HelpCircle
 } from 'lucide-react';
-import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
 
 import type { PortalUser } from '../lib/useAuth';
 
@@ -14,7 +13,7 @@ interface Props {
 
 export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props) {
   const [showLogin, setShowLogin] = useState(false);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showDocPicker, setShowDocPicker] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,7 +27,6 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
   })();
   const loggedInUsername = storedUser?.username || '';
   const loggedInRole = storedUser?.role || '';
-  const loggedInAvatar = storedUser?.avatar_path || '0';
 
   const handleLogout = () => {
     fetch('/api/logout', {
@@ -38,22 +36,6 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
     localStorage.removeItem('user');
     localStorage.removeItem('auth_token');
     window.location.reload();
-  };
-
-  const handleAvatarSelect = async (avatarId: string) => {
-    try {
-      await fetch('/api/update-avatar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: storedUser.username, avatar_path: `avatar_${avatarId}` }),
-      });
-      storedUser.avatar_path = `avatar_${avatarId}`;
-      localStorage.setItem('user', JSON.stringify(storedUser));
-      setShowAvatarPicker(false);
-      window.location.reload();
-    } catch {
-      // ignore
-    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -88,18 +70,18 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 textShadow: '2px 2px 4px rgba(255,255,255,0.7), -2px -2px 4px rgba(188,195,201,0.4)'
               }}
             >
-              <Star size={32} style={{ color: '#2c3e50' }} /> CodeNova
+              <Star className="w-8 h-8" style={{ color: '#2c3e50' }} /> CodeNova
             </h1>
             <div
               className="flex items-center gap-1.5 mt-1"
               style={{ color: '#5f6c7a', fontWeight: 500 }}
             >
-              <MapPin size={14} style={{ color: '#4a5c6c' }} /> 新拟态 · 统一风格
+              <MapPin className="w-3.5 h-3.5" style={{ color: '#4a5c6c' }} /> 开源 · 少儿编程学习平台
             </div>
           </div>
 
           <a href="/docs/guide/" className="neo-btn no-underline w-16 h-16 rounded-full" style={{ justifyContent: 'center', padding: 0 }}>
-            <HelpCircle size={36} style={{ color: '#4a5c6c' }} />
+            <HelpCircle className="w-9 h-9" style={{ color: '#4a5c6c' }} />
           </a>
         </div>
 
@@ -109,7 +91,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           {/* ─── 在线课程 ─── */}
           <div className="neo-card">
             <div className="mb-5">
-              <GraduationCap size={44} className="ico-green" />
+              <GraduationCap className="w-11 h-11 ico-green" />
             </div>
             <h2
               className="text-[1.7rem] font-[650] mb-2"
@@ -118,28 +100,22 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               在线课程
             </h2>
             <p
-              className="text-sm mb-4 flex-1"
+              className="text-sm mb-10 flex-1"
               style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}
             >
-              查看全部课程
+              进入课堂，获取素材与案例
             </p>
-            <div className="flex flex-wrap gap-2">
-              <a href="/courses?type=scratch" className="neo-btn fixed-w">
-                <Puzzle size={14} className="ico-green" /> Scratch
-              </a>
-              <a href="/courses?type=python" className="neo-btn fixed-w">
-                <Code2 size={14} className="ico-blue" /> Python
-              </a>
-              <a href="/courses?type=cpp" className="neo-btn fixed-w">
-                <Code2 size={14} className="ico-orange" /> C++
+            <div className="flex justify-end">
+              <a href="/courses" className="neo-btn">
+                <GraduationCap className="w-3.5 h-3.5 ico-green" /> 学习
               </a>
             </div>
           </div>
 
-          {/* ─── 学习文档 ─── */}
+          {/* ─── 学习文档 ─── */} 
           <div className="neo-card">
             <div className="mb-5">
-              <BookOpen size={44} className="ico-purple" />
+              <BookOpen className="w-11 h-11 ico-purple" />
             </div>
             <h2
               className="text-[1.7rem] font-[650] mb-2"
@@ -148,28 +124,22 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               学习文档
             </h2>
             <p
-              className="text-sm mb-4 flex-1"
+              className="text-sm mb-10 flex-1"
               style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}
             >
               Python / C++ / Scratch
             </p>
-            <div className="flex flex-wrap gap-2">
-              <a href="/docs/scratch_course/" className="neo-btn fixed-w">
-                <Puzzle size={14} className="ico-green" /> Scratch
-              </a>
-              <a href="/docs/python_course/" className="neo-btn fixed-w">
-                <Code2 size={14} className="ico-blue" /> Python
-              </a>
-              <a href="/docs/cpp_course/" className="neo-btn fixed-w">
-                <Code2 size={14} className="ico-orange" /> C++
-              </a>
+            <div className="flex justify-end">
+              <button onClick={() => setShowDocPicker(true)} className="neo-btn">
+                <BookOpen className="w-3.5 h-3.5 ico-purple" /> 浏览
+              </button>
             </div>
           </div>
 
           {/* ─── 自由创作 ─── */}
           <div className="neo-card">
             <div className="mb-5">
-              <Puzzle size={44} className="ico-blue" />
+              <Puzzle className="w-11 h-11 ico-blue" />
             </div>
             <h2
               className="text-[1.7rem] font-[650] mb-2"
@@ -185,7 +155,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </p>
             <div className="flex justify-end">
               <a href="/Scratch/index.html" className="neo-btn">
-                <Play size={14} className="ico-blue" /> 创作
+                <Play className="w-3.5 h-3.5 ico-blue" /> 创作
               </a>
             </div>
           </div>
@@ -193,23 +163,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           {/* ─── 个人中心 ─── */}
           <div className="neo-card">
             <div className="mb-5">
-              {storedUser ? (
-                (() => {
-                  const idx = parseInt((loggedInAvatar || '').replace('avatar_', ''), 10);
-                  const a = AVATARS[isNaN(idx) ? 0 : idx % AVATARS.length];
-                  return (
-                    <button
-                      onClick={() => setShowAvatarPicker(true)}
-                      className="neo-btn text-4xl w-16 h-16 rounded-full"
-                      style={{ justifyContent: 'center', padding: 0 }}
-                    >
-                      {a.icon}
-                    </button>
-                  );
-                })()
-              ) : (
-                <Award size={44} className="ico-orange" />
-              )}
+              <Award className="w-11 h-11 ico-orange" />
             </div>
             <h2
               className="text-[1.7rem] font-[650] mb-2"
@@ -225,19 +179,19 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 ? (loggedInRole === 'teacher' ? '教师' : loggedInRole === 'student' ? '学生' : '')
                 : '记录你的成长路线'}
             </p>
-            <div className={storedUser ? 'flex gap-2' : 'flex justify-end'}>
+            <div className='flex flex-col items-end gap-2'>
               {storedUser ? (
                 <>
                   <a href="/dashboard" className="neo-btn">
-                    <LogIn size={14} className="ico-orange" /> 后台
+                    <LogIn className="w-3.5 h-3.5 ico-orange" /> 后台
                   </a>
                   <button onClick={handleLogout} className="neo-btn">
-                    <X size={14} /> 退出
+                    <X className="w-3.5 h-3.5" /> 退出
                   </button>
                 </>
               ) : (
                 <button onClick={() => setShowLogin(true)} className="neo-btn">
-                  <LogIn size={14} className="ico-orange" /> 登录
+                  <LogIn className="w-3.5 h-3.5 ico-orange" /> 登录
                 </button>
               )}
             </div>
@@ -252,13 +206,34 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         </p>
       </div>
 
-      {/* Avatar Picker */}
-      {showAvatarPicker && (
-        <AvatarPicker
-          currentAvatar={loggedInAvatar}
-          onSelect={handleAvatarSelect}
-          onClose={() => setShowAvatarPicker(false)}
-        />
+      {/* Doc Picker Modal */}
+      {showDocPicker && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{ background: 'rgba(232,237,242,0.7)', backdropFilter: 'blur(6px)' }}
+          onClick={() => setShowDocPicker(false)}
+        >
+          <div className="neo-modal relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setShowDocPicker(false)}
+              className="neo-btn absolute top-3 right-3 w-10 h-10 rounded-full"
+              style={{ justifyContent: 'center', padding: 0 }}
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex flex-col items-center gap-3 pt-4">
+              <a href="/docs/scratch_course/" className="neo-btn fixed-w justify-center py-3">
+                <Puzzle className="w-4 h-4 ico-green" /> Scratch
+              </a>
+              <a href="/docs/python_course/" className="neo-btn fixed-w justify-center py-3">
+                <Code2 className="w-4 h-4 ico-blue" /> Python
+              </a>
+              <a href="/docs/cpp_course/" className="neo-btn fixed-w justify-center py-3">
+                <Code2 className="w-4 h-4 ico-orange" /> C++
+              </a>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Login Modal */}
@@ -269,7 +244,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         >
           <div className="neo-modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-[1.8rem] font-bold mb-4 text-center" style={{ color: '#1e2b38' }}>
-              <LogIn size={24} style={{ color: '#5f6c7a' }} className="inline-block mr-2" /> 登录
+              <LogIn className="w-6 h-6 inline-block mr-2" style={{ color: '#5f6c7a' }} /> 登录
             </h3>
             <p className="mb-6 text-center" style={{ color: '#4a5b6b' }}>
               记录你的成长路线，同步创作进度
@@ -302,10 +277,10 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               </div>
               <div className="flex gap-4 justify-center pt-2">
                 <button type="submit" disabled={loading} className="neo-btn">
-                  <LogIn size={14} /> {loading ? '登录中...' : '登录'}
+                  <LogIn className="w-3.5 h-3.5" /> {loading ? '登录中...' : '登录'}
                 </button>
                 <button type="button" onClick={() => setShowLogin(false)} className="neo-btn">
-                  <X size={14} /> 取消
+                  <X className="w-3.5 h-3.5" /> 取消
                 </button>
               </div>
             </form>
