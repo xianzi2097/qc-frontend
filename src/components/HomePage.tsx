@@ -13,6 +13,7 @@ interface Props {
 }
 
 export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props) {
+  const [flipped, setFlipped] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showDocPicker, setShowDocPicker] = useState(false);
   const [username, setUsername] = useState('');
@@ -59,7 +60,12 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
       className="min-h-screen flex items-center justify-center p-6"
       style={{ background: '#e8edf2' }}
     >
-      <div className="neo-wrap w-full max-w-6xl">
+      <div className="flip-container max-w-6xl">
+        <div className={`flip-inner ${flipped ? 'flipped' : ''}`}>
+
+        {/* ════ 正面：主页 ════ */}
+        <div className="flip-front">
+        <div className="neo-wrap w-full">
 
         {/* ════ 欢迎区 ════ */}
         <div className="flex justify-between items-center flex-wrap gap-4 px-2">
@@ -107,9 +113,9 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               进入课堂，获取素材与案例
             </p>
             <div className="flex justify-end">
-              <a href="/courses" className="neo-btn">
+              <button onClick={() => setFlipped(true)} className="neo-btn">
                 <ArrowRight className="w-4 h-4 ico-green" /> 学习
-              </a>
+              </button>
             </div>
           </div>
 
@@ -206,6 +212,31 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           粤ICP备2026057743号-1 · Arin | 青橙
         </p>
       </div>
+      </div>{/* flip-front end */}
+
+      {/* ════ 背面：课程广场 ════ */}
+      <div className="flip-back">
+        <div className="neo-wrap w-full">
+          <button onClick={() => setFlipped(false)} className="neo-btn">
+            <ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回主页
+          </button>
+          <div className="text-center">
+            <h1 className="text-[2.2rem] font-semibold tracking-tight"
+              style={{
+                color: '#2c3e50',
+                textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)'
+              }}>
+              📚 课程广场
+            </h1>
+          </div>
+          <p className="text-xs text-center" style={{ color: '#5f6c7a' }}>
+            课程广场内容
+          </p>
+        </div>
+      </div>
+
+      </div>{/* flip-inner end */}
+      </div>{/* flip-container end */}
 
       {/* Doc Picker Modal */}
       {showDocPicker && (

@@ -127,8 +127,8 @@ body {
 /* 大容器 */
 .neo-wrap {
   background: var(--neo-bg);
-  border-radius: 3.5rem;
-  padding: 2.2rem 2.5rem 0.5rem;
+  border-radius: 1.5rem;
+  padding: 1.8rem 2.5rem 0.5rem;
   box-shadow:
     20px 20px 40px var(--neo-shadow-dark),
     -20px -20px 40px var(--neo-shadow-light);
@@ -239,3 +239,28 @@ body {
 .ico-purple { color: #7b4b9e; }
 .ico-blue   { color: #2d6ea0; }
 .ico-orange { color: #c96a2c; }
+
+/* ══ 卡片翻转 3D ══ */
+.flip-container {
+  perspective: 1500px;
+  width: 100%;
+}
+.flip-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+.flip-front,
+.flip-back {
+  backface-visibility: hidden;
+  width: 100%;
+}
+.flip-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotateY(180deg);
+}
