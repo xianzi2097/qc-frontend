@@ -68,7 +68,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               className="text-[2.2rem] font-semibold tracking-tight flex items-center gap-2"
               style={{
                 color: '#2c3e50',
-                textShadow: '2px 2px 4px rgba(255,255,255,0.7), -2px -2px 4px rgba(188,195,201,0.4)'
+                textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)'
               }}
             >
               <Star className="w-8 h-8" style={{ color: '#2c3e50' }} /> CodeNova
@@ -245,7 +245,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         >
           <div className="neo-modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-[1.8rem] font-bold mb-4 text-center" style={{ color: '#1e2b38' }}>
-              <LogIn className="w-6 h-6 inline-block mr-2" style={{ color: '#5f6c7a' }} /> 登录
+              <LogIn className="w-6 h-6 inline-block mr-2" style={{ color: '#5f6c7a' }} />CodeNova
             </h3>
             <p className="mb-6 text-center" style={{ color: '#4a5b6b' }}>
               记录你的成长路线，同步创作进度
@@ -281,7 +281,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                   <LogIn className="w-3.5 h-3.5" /> {loading ? '登录中...' : '登录'}
                 </button>
                 <button type="button" onClick={() => setShowLogin(false)} className="neo-btn">
-                  <X className="w-3.5 h-3.5" /> 取消
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </form>

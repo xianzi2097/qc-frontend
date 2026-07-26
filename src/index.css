@@ -179,11 +179,7 @@ body {
   background: #e0e5ea;
   border-color: rgba(255,255,255,0.2);
 }
-.neo-btn svg {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-}
+
 .neo-btn.fixed-w {
   width: 6.8rem;
   justify-content: flex-start;
@@ -217,7 +213,7 @@ body {
   background: var(--neo-bg);
   border-radius: 1.0rem;
   padding: 2.5rem;
-  max-width: 14rem;
+  max-width: 20rem;
   width: 90%;
   box-shadow:
     25px 25px 50px var(--neo-shadow-dark),
