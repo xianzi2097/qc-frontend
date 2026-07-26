@@ -14,6 +14,7 @@ interface Props {
 
 export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props) {
   const [flipped, setFlipped] = useState(false);
+  const [showLoginFlip, setShowLoginFlip] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showDocPicker, setShowDocPicker] = useState(false);
   const [username, setUsername] = useState('');
@@ -168,39 +169,63 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           </div>
 
           {/* ─── 个人中心 ─── */}
-          <div className="neo-card">
-            <div className="mb-5">
-              <Award className="w-11 h-11 ico-orange" />
-            </div>
-            <h2
-              className="text-[1.7rem] font-[650] mb-2"
-              style={{ color: '#1e2b38', letterSpacing: '-0.2px' }}
-            >
-              {storedUser ? loggedInUsername : '个人中心'}
-            </h2>
-            <p
-              className="text-sm mb-4 flex-1"
-              style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}
-            >
-              {storedUser
-                ? (loggedInRole === 'teacher' ? '教师' : loggedInRole === 'student' ? '学生' : '')
-                : '记录你的成长路线'}
-            </p>
-            <div className='flex flex-col items-end gap-2'>
-              {storedUser ? (
-                <>
-                  <a href="/dashboard" className="neo-btn">
-                    <LogIn className="w-4 h-4 ico-orange" /> 后台
-                  </a>
-                  <button onClick={handleLogout} className="neo-btn">
-                    <X className="w-4 h-4" /> 退出
-                  </button>
-                </>
-              ) : (
-                <button onClick={() => setShowLogin(true)} className="neo-btn">
-                  <LogIn className="w-4 h-4 ico-orange" /> 登录
-                </button>
-              )}
+          <div className="col-span-1">
+            <div className="flip-container" style={{ height: '100%' }}>
+              <div className={`flip-inner ${showLoginFlip ? 'flipped' : ''}`}>
+                <div className="flip-front neo-card h-full min-h-[22rem]">
+                  <div className="mb-5">
+                    <Award className="w-11 h-11 ico-orange" />
+                  </div>
+                  <h2 className="text-[1.7rem] font-[650] mb-2" style={{ color: '#1e2b38', letterSpacing: '-0.2px' }}>
+                    {storedUser ? loggedInUsername : '个人中心'}
+                  </h2>
+                  <p className="text-sm mb-4 flex-1" style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}>
+                    {storedUser
+                      ? (loggedInRole === 'teacher' ? '教师' : loggedInRole === 'student' ? '学生' : '')
+                      : '记录你的成长路线'}
+                  </p>
+                  <div className='flex flex-col items-end gap-2'>
+                    {storedUser ? (
+                      <>
+                        <a href="/dashboard" className="neo-btn">
+                          <LogIn className="w-4 h-4 ico-orange" /> 后台
+                        </a>
+                        <button onClick={handleLogout} className="neo-btn">
+                          <X className="w-4 h-4" /> 退出
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => setShowLoginFlip(true)} className="neo-btn">
+                        <LogIn className="w-4 h-4 ico-orange" /> 登录
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flip-back neo-card" style={{ minHeight: '22rem', justifyContent: 'flex-start', gap: '0.75rem' }}>
+                  <h3 className="text-[1.5rem] font-bold text-center" style={{ color: '#1e2b38' }}>登录</h3>
+                  {error && (
+                    <p className="text-sm text-center py-2 rounded-lg" style={{ color: '#c96a2c', background: 'rgba(201,106,44,0.1)' }}>
+                      {error}
+                    </p>
+                  )}
+                  <form onSubmit={handleLogin} className="flex flex-col gap-3">
+                    <div className="neo-input-wrap">
+                      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="用户名" />
+                    </div>
+                    <div className="neo-input-wrap">
+                      <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="密码" />
+                    </div>
+                    <div className="flex gap-2 justify-center pt-1">
+                      <button type="submit" disabled={loading} className="neo-btn">
+                        <LogIn className="w-4 h-4" /> {loading ? '登录中...' : '登录'}
+                      </button>
+                      <button type="button" onClick={() => setShowLoginFlip(false)} className="neo-btn">
+                        <X className="w-4 h-4" /> 取消
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
 
