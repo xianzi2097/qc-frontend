@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import {
-  BookOpen, GraduationCap, Award, Puzzle, Code2,
-  Star, MapPin, LogIn, Play, X, HelpCircle
+  BookOpen, Award, Puzzle, Code2,
+  Star, MapPin, LogIn, Play, X, HelpCircle,
+  Library, ArrowRight, Search
 } from 'lucide-react';
 
 import type { PortalUser } from '../lib/useAuth';
@@ -91,7 +92,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           {/* ─── 在线课程 ─── */}
           <div className="neo-card">
             <div className="mb-5">
-              <GraduationCap className="w-11 h-11 ico-green" />
+              <Library className="w-11 h-11 ico-green" />
             </div>
             <h2
               className="text-[1.7rem] font-[650] mb-2"
@@ -107,7 +108,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </p>
             <div className="flex justify-end">
               <a href="/courses" className="neo-btn">
-                <GraduationCap className="w-4 h-4 ico-green" /> 学习
+                <ArrowRight className="w-4 h-4 ico-green" /> 学习
               </a>
             </div>
           </div>
@@ -131,7 +132,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </p>
             <div className="flex justify-end">
               <button onClick={() => setShowDocPicker(true)} className="neo-btn">
-                <BookOpen className="w-4 h-4 ico-purple" /> 浏览
+                <Search className="w-4 h-4 ico-purple" /> 浏览
               </button>
             </div>
           </div>
