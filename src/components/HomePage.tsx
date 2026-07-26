@@ -98,8 +98,8 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </div>
           </div>
 
-          <a href="/docs/guide/" className="neo-btn no-underline" style={{ width: 60, height: 60, borderRadius: 30, justifyContent: 'center', padding: 0 }}>
-            <HelpCircle size={24} style={{ color: '#4a5c6c' }} />
+          <a href="/docs/guide/" className="neo-btn no-underline" style={{ width: 90, height: 90, borderRadius: 45, justifyContent: 'center', padding: 0 }}>
+            <HelpCircle size={36} style={{ color: '#4a5c6c' }} />
           </a>
         </div>
 
@@ -200,8 +200,8 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                   return (
                     <button
                       onClick={() => setShowAvatarPicker(true)}
-                      className="neo-btn text-2xl"
-                      style={{ width: 60, height: 60, borderRadius: 30, justifyContent: 'center', padding: 0 }}
+                      className="neo-btn text-4xl"
+                      style={{ width: 90, height: 90, borderRadius: 45, justifyContent: 'center', padding: 0 }}
                     >
                       {a.icon}
                     </button>
