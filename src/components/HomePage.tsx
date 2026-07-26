@@ -76,7 +76,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
       className="min-h-screen flex items-center justify-center p-6"
       style={{ background: '#e8edf2' }}
     >
-      <div className="neo-wrap w-full max-w-[1100px]">
+      <div className="neo-wrap w-full max-w-6xl">
 
         {/* ════ 欢迎区 ════ */}
         <div className="flex justify-between items-center flex-wrap gap-4 px-2">
@@ -88,7 +88,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 textShadow: '2px 2px 4px rgba(255,255,255,0.7), -2px -2px 4px rgba(188,195,201,0.4)'
               }}
             >
-              <Star size={32} style={{ color: '#2c3e50' }} /> 我的创作空间
+              <Star size={32} style={{ color: '#2c3e50' }} /> CodeNova
             </h1>
             <div
               className="flex items-center gap-1.5 mt-1"
@@ -98,7 +98,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </div>
           </div>
 
-          <a href="/docs/guide/" className="neo-btn no-underline" style={{ width: 90, height: 90, borderRadius: 45, justifyContent: 'center', padding: 0 }}>
+          <a href="/docs/guide/" className="neo-btn no-underline w-16 h-16 rounded-full" style={{ justifyContent: 'center', padding: 0 }}>
             <HelpCircle size={36} style={{ color: '#4a5c6c' }} />
           </a>
         </div>
@@ -200,8 +200,8 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                   return (
                     <button
                       onClick={() => setShowAvatarPicker(true)}
-                      className="neo-btn text-4xl"
-                      style={{ width: 90, height: 90, borderRadius: 45, justifyContent: 'center', padding: 0 }}
+                      className="neo-btn text-4xl w-16 h-16 rounded-full"
+                      style={{ justifyContent: 'center', padding: 0 }}
                     >
                       {a.icon}
                     </button>
@@ -222,7 +222,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}
             >
               {storedUser
-                ? (loggedInRole === 'teacher' ? '老师' : loggedInRole === 'student' ? '学生' : '')
+                ? (loggedInRole === 'teacher' ? '教师' : loggedInRole === 'student' ? '学生' : '')
                 : '记录你的成长路线'}
             </p>
             <div className={storedUser ? 'flex gap-2' : 'flex justify-end'}>
