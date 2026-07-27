@@ -15,8 +15,8 @@ interface Props {
 export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props) {
   const [flipped, setFlipped] = useState(false);
   const [showLoginFlip, setShowLoginFlip] = useState(false);
+  const [showDocFlip, setShowDocFlip] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [showDocPicker, setShowDocPicker] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -121,26 +121,45 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           </div>
 
           {/* ─── 学习文档 ─── */} 
-          <div className="neo-card">
-            <div className="mb-5">
-              <BookOpen className="w-11 h-11 ico-purple" />
-            </div>
-            <h2
-              className="text-[1.7rem] font-[650] mb-2"
-              style={{ color: '#1e2b38', letterSpacing: '-0.2px' }}
-            >
-              学习文档
-            </h2>
-            <p
-              className="text-sm mb-10 flex-1"
-              style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}
-            >
-              Python / C++ / Scratch
-            </p>
-            <div className="flex justify-end">
-              <button onClick={() => setShowDocPicker(true)} className="neo-btn">
-                <Search className="w-4 h-4 ico-purple" /> 浏览
-              </button>
+          <div className="col-span-1">
+            <div className="flip-container" style={{ height: '100%' }}>
+              <div className={`flip-inner ${showDocFlip ? 'flipped' : ''}`}>
+                <div className="flip-front neo-card h-full min-h-[22rem]">
+                  <div className="mb-5">
+                    <BookOpen className="w-11 h-11 ico-purple" />
+                  </div>
+                  <h2 className="text-[1.7rem] font-[650] mb-2" style={{ color: '#1e2b38', letterSpacing: '-0.2px' }}>
+                    学习文档
+                  </h2>
+                  <p className="text-sm mb-10 flex-1" style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}>
+                    Python / C++ / Scratch
+                  </p>
+                  <div className="flex justify-end">
+                    <button onClick={() => setShowDocFlip(true)} className="neo-btn">
+                      <Search className="w-4 h-4 ico-purple" /> 浏览
+                    </button>
+                  </div>
+                </div>
+                <div className="flip-back neo-card" style={{ minHeight: '22rem' }}>
+                  <h3 className="text-[1.5rem] font-bold text-center" style={{ color: '#1e2b38' }}>选择文档</h3>
+                  <div className="flex flex-col items-center gap-2 mt-auto mb-4">
+                    <a href="/docs/scratch_course/" className="neo-btn fixed-w justify-center py-3">
+                      <Puzzle className="w-4 h-4 ico-green" /> Scratch
+                    </a>
+                    <a href="/docs/python_course/" className="neo-btn fixed-w justify-center py-3">
+                      <Code2 className="w-4 h-4 ico-blue" /> Python
+                    </a>
+                    <a href="/docs/cpp_course/" className="neo-btn fixed-w justify-center py-3">
+                      <Code2 className="w-4 h-4 ico-orange" /> C++
+                    </a>
+                  </div>
+                  <div className="flex justify-end">
+                    <button onClick={() => setShowDocFlip(false)} className="neo-btn">
+                      <ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -262,36 +281,6 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
       </div>{/* flip-inner end */}
       </div>{/* flip-container end */}
-
-      {/* Doc Picker Modal */}
-      {showDocPicker && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50"
-          style={{ background: 'rgba(232,237,242,0.7)', backdropFilter: 'blur(6px)' }}
-          onClick={() => setShowDocPicker(false)}
-        >
-          <div className="neo-modal relative" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => setShowDocPicker(false)}
-              className="neo-btn absolute top-3 right-3 w-6 h-6 rounded-full"
-              style={{ justifyContent: 'center', padding: 0 }}
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="flex flex-col items-center gap-3 pt-4">
-              <a href="/docs/scratch_course/" className="neo-btn fixed-w justify-center py-3">
-                <Puzzle className="w-4 h-4 ico-green" /> Scratch
-              </a>
-              <a href="/docs/python_course/" className="neo-btn fixed-w justify-center py-3">
-                <Code2 className="w-4 h-4 ico-blue" /> Python
-              </a>
-              <a href="/docs/cpp_course/" className="neo-btn fixed-w justify-center py-3">
-                <Code2 className="w-4 h-4 ico-orange" /> C++
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Login Modal */}
       {showLogin && (
