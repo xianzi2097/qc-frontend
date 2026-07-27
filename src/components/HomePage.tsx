@@ -191,45 +191,42 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           </div>
 
           {/* ─── 学习文档 ─── */} 
-          <div className="col-span-1">
-            <div className="flip-container" style={{ height: '100%' }}>
-              <div className={`flip-inner ${showDocFlip ? 'flipped' : ''}`}>
-                <div className="flip-front neo-card h-full min-h-[22rem]">
-                  <div className="mb-5">
-                    <BookOpen className="w-11 h-11 ico-purple" />
-                  </div>
-                  <h2 className="text-[1.7rem] font-[650] mb-2" style={{ color: '#1e2b38', letterSpacing: '-0.2px' }}>
-                    学习文档
-                  </h2>
-                  <p className="text-sm mb-10 flex-1" style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}>
+          <div className="neo-card">
+            <div className="mb-5">
+              <BookOpen className="w-11 h-11 ico-purple" />
+            </div>
+            <h2 className="text-[1.7rem] font-[650] mb-2" style={{ color: '#1e2b38', letterSpacing: '-0.2px' }}>
+              学习文档
+            </h2>
+            {/* 红色翻转区，替换原来的副标题+空白 */}
+            <div className="flip-container" style={{ flex: 1 }}>
+              <div className={`flip-inner ${showDocFlip ? 'flipped' : ''}`} style={{ height: '100%' }}>
+                <div className="flip-front" style={{ background: '#d64045', borderRadius: '1rem', width: '100%', height: '100%' }}>
+                  <p className="text-sm" style={{ color: '#fff', fontWeight: 500, lineHeight: 1.5 }}>
                     Python / C++ / Scratch
                   </p>
-                  <div className="flex justify-end">
-                    <button onClick={() => setShowDocFlip(true)} className="neo-btn">
-                      <Search className="w-4 h-4 ico-purple" /> 浏览
-                    </button>
-                  </div>
                 </div>
-                <div className="flip-back neo-card" style={{ minHeight: '22rem' }}>
-                  <h3 className="text-[1.5rem] font-bold text-center" style={{ color: '#1e2b38' }}>选择文档</h3>
-                  <div className="flex flex-col items-center gap-2 mt-auto mb-4">
-                    <a href="/docs/scratch_course/" className="neo-btn fixed-w justify-center py-3">
-                      <Puzzle className="w-4 h-4 ico-green" /> Scratch
-                    </a>
-                    <a href="/docs/python_course/" className="neo-btn fixed-w justify-center py-3">
-                      <Code2 className="w-4 h-4 ico-blue" /> Python
-                    </a>
-                    <a href="/docs/cpp_course/" className="neo-btn fixed-w justify-center py-3">
-                      <Code2 className="w-4 h-4 ico-orange" /> C++
-                    </a>
-                  </div>
-                  <div className="flex justify-end">
-                    <button onClick={() => setShowDocFlip(false)} className="neo-btn">
-                      <ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回
-                    </button>
-                  </div>
+                <div className="flip-back" onClick={() => setShowDocFlip(false)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#d64045', borderRadius: '1rem', width: '100%', height: '100%', cursor: 'pointer' }}>
+                  <a href="/docs/scratch_course/" className="neo-btn no-underline" style={{ minWidth: '5.5rem', justifyContent: 'center', padding: '0.3rem 0.6rem', fontSize: '0.75rem', boxShadow: '2px 2px 4px var(--neo-shadow-dark), -2px -2px 4px var(--neo-shadow-light)' }}>
+                    <Puzzle className="w-3.5 h-3.5 ico-green" /> Scratch
+                  </a>
+                  <a href="/docs/python_course/" className="neo-btn no-underline" style={{ minWidth: '5.5rem', justifyContent: 'center', padding: '0.3rem 0.6rem', fontSize: '0.75rem', boxShadow: '2px 2px 4px var(--neo-shadow-dark), -2px -2px 4px var(--neo-shadow-light)' }}>
+                    <Code2 className="w-3.5 h-3.5 ico-blue" /> Python
+                  </a>
+                  <a href="/docs/cpp_course/" className="neo-btn no-underline" style={{ minWidth: '5.5rem', justifyContent: 'center', padding: '0.3rem 0.6rem', fontSize: '0.75rem', boxShadow: '2px 2px 4px var(--neo-shadow-dark), -2px -2px 4px var(--neo-shadow-light)' }}>
+                    <Code2 className="w-3.5 h-3.5 ico-orange" /> C++
+                  </a>
                 </div>
               </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button onClick={() => setShowDocFlip(!showDocFlip)} className="neo-btn">
+                {showDocFlip ? (
+                  <><ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回</>
+                ) : (
+                  <><Search className="w-4 h-4 ico-purple" /> 浏览</>
+                )}
+              </button>
             </div>
           </div>
 
