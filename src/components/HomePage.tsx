@@ -291,20 +291,20 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                   </div>
                 </div>
                 <div className="flip-back neo-card" style={{ minHeight: '22rem' }}>
-                  <h3 className="text-[1.5rem] font-bold text-center" style={{ color: '#1e2b38' }}>登录</h3>
+                  <h3 className="text-[1.5rem] font-bold text-center mt-6" style={{ color: '#1e2b38' }}>登录</h3>
                   {error && (
                     <p className="text-sm text-center py-2 rounded-lg" style={{ color: '#c96a2c', background: 'rgba(201,106,44,0.1)' }}>
                       {error}
                     </p>
                   )}
-                  <form onSubmit={handleLogin} className="flex flex-col gap-3 flex-1">
-                    <div className="neo-input-wrap">
+                  <form onSubmit={handleLogin} className="flex flex-col gap-3 flex-1 mt-8">{/* 表单垂直排列，间距0.75rem，撑满剩余空间 */}
+                    <div className="neo-input-wrap">{/* 输入框外壳（内凹新拟态） */}
                       <input value={username} onChange={e => setUsername(e.target.value)} placeholder="用户名" />
                     </div>
-                    <div className="neo-input-wrap">
+                    <div className="neo-input-wrap">{/* 输入框外壳 */}
                       <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="密码" />
                     </div>
-                    <div className="flex justify-end gap-2 mt-auto">
+                    <div className="flex justify-end gap-2 mt-auto">{/* 按钮右对齐，间距0.5rem，顶部自动撑开 */}
                       <button type="submit" disabled={loading} className="neo-btn">
                         <LogIn className="w-4 h-4" /> {loading ? '登录中...' : '登录'}
                       </button>

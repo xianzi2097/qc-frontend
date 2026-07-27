@@ -188,24 +188,26 @@ body {
 
 /* 内凹输入框 */
 .neo-input-wrap {
-  background: var(--neo-bg);
-  border-radius: 2rem;
-  padding: 0.8rem;
+  background: var(--neo-bg);                /* 背景 = 页面底色 e8edf2 */
+  border-radius: 2rem;                      /* 圆角大小 */
+  padding: 0.4rem 0.8rem;                  /* 上下0.4rem（压缩高度）左右0.8rem */
   box-shadow:
-    inset 6px 6px 12px var(--neo-shadow-dark),
-    inset -6px -6px 12px var(--neo-shadow-light);
+    inset 3px 3px 6px var(--neo-shadow-dark),     /* 内凹阴影：暗面(右下) 配合窄输入框缩小 */
+    inset -3px -3px 6px var(--neo-shadow-light);  /* 内凹阴影：亮面(左上) */
 }
 .neo-input-wrap input {
-  background: transparent;
-  border: none;
-  outline: none;
-  width: 100%;
-  padding: 0.5rem;
-  color: var(--neo-text-primary);
-  font-weight: 500;
+  background: transparent;                  /* 透明底，让外壳的阴影透出 */
+  border: none;                             /* 无边框 */
+  outline: none;                            /* 无聚焦外框 */
+  width: 100%;                              /* 撑满外壳宽度 */
+  padding: 0.25rem 0;                      /* 文字上下0.25rem，左右归零（外壳管了） */
+  color: var(--neo-text-primary);           /* 输入文字颜色 #1e2b38 */
+  font-weight: 500;                         /* 字重 */
+  line-height: 1;                           /* 压缩行高 */
+  font-size: inherit;                       /* 继承字号 */
 }
 .neo-input-wrap input::placeholder {
-  color: var(--neo-text-muted);
+  color: var(--neo-text-muted);             /* 占位文字颜色 #5f6c7a */
 }
 
 /* 弹窗 */
