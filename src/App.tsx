@@ -5,7 +5,6 @@ import { LoadingProvider, useLoading } from './lib/useLoading';
 import LoadingOverlay from './components/ui/LoadingOverlay';
 import StarHomePage from './components/star-home/StarHomePage';
 import HomePage from './components/HomePage';
-import CourseSquare from './components/CourseSquare';
 import TeacherDashboardWithSidebar from './components/teacher/TeacherDashboardWithSidebar';
 import AdminDashboardWithSidebar from './components/admin/AdminDashboardWithSidebar';
 import StudentDashboard from './components/student/StudentDashboard';
@@ -63,7 +62,6 @@ export default function App() {
         <LoadingOverlay />
         <Routes>
           <Route path="/" element={<HomePageSwitch />} />
-          <Route path="/courses" element={<CourseSquare />} />
           <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </BrowserRouter>

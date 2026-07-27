@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   BookOpen, Award, Puzzle, Code2,
   Star, LogIn, Play, X, HelpCircle,
@@ -6,6 +6,20 @@ import {
 } from 'lucide-react';
 
 import type { PortalUser } from '../lib/useAuth';
+
+interface Course {
+  name: string;
+  type: string;
+  description: string;
+  material_count: number;
+}
+
+const TEACHER_ICONS = ['👨‍🏫', '👩‍💻', '👩‍🏫', '🧑‍🏫', '👨‍💻', '👩‍🔬'];
+const TYPE_ICON: Record<string, string> = {
+  scratch: '🧩',
+  python: '🐍',
+  cpp: '⚙️',
+};
 
 interface Props {
   onLogin: (user: PortalUser, token?: string) => void;
@@ -21,6 +35,62 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // ── 课程广场状态 ──
+  const [teachers, setTeachers] = useState<{ username: string }[]>([]);
+  const [courseTeacher, setCourseTeacher] = useState('');
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [materials, setMaterials] = useState<{ name: string; url: string; has_main?: boolean; has_student?: boolean; sb3_count?: number; file_count?: number; files?: { name: string; size: number }[] }[]>([]);
+  const [materialsLoading, setMaterialsLoading] = useState(false);
+
+  const loadMaterials = (course: Course) => {
+    setSelectedCourse(course);
+    setMaterialsLoading(true);
+    fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${courseTeacher}&t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        setMaterials(data.status === 'success' ? data.materials : []);
+      })
+      .catch(() => setMaterials([]))
+      .finally(() => setMaterialsLoading(false));
+  };
+
+  const backToCourses = () => {
+    setSelectedCourse(null);
+    setMaterials([]);
+  };
+
+  // ── 加载老师列表 ──
+  useEffect(() => {
+    if (!flipped) return;
+    fetch(`/api/users?t=${Date.now()}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          const ts = data.users.filter((u: any) => u.role === 'teacher');
+          setTeachers(ts);
+          if (ts.length > 0 && !courseTeacher) setCourseTeacher(ts[0].username);
+        }
+      })
+      .catch(() => {});
+  }, [flipped]);
+
+  // ── 加载课程列表 ──
+  const loadCourses = useCallback(() => {
+    if (!courseTeacher) return;
+    setCoursesLoading(true);
+    fetch(`/api/courses?teacher=${courseTeacher}&t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        setCourses(data.status === 'success' ? data.courses : []);
+      })
+      .catch(() => setCourses([]))
+      .finally(() => setCoursesLoading(false));
+  }, [courseTeacher]);
+
+  useEffect(() => { if (courseTeacher) loadCourses(); }, [loadCourses]);
 
   const storedUser = (() => {
     try {
@@ -260,22 +330,142 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
       {/* ════ 背面：课程广场 ════ */}
       <div className="flip-back">
-        <div className="neo-wrap w-full">
-          <button onClick={() => setFlipped(false)} className="neo-btn">
-            <ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回主页
-          </button>
-          <div className="text-center">
-            <h1 className="text-[2.2rem] font-semibold tracking-tight"
+        <div className="neo-wrap w-full h-full" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* 顶部导航 */}
+          <div className="flex justify-between items-center px-2 flex-shrink-0">
+            <h1
+              className="text-[1.5rem] font-semibold tracking-tight flex items-center gap-2"
               style={{
                 color: '#2c3e50',
                 textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)'
-              }}>
-              📚 课程广场
+              }}
+            >
+              <Library className="w-6 h-6 ico-green" /> 课程广场
             </h1>
+            <button onClick={() => setFlipped(false)} className="neo-btn">
+              <ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回
+            </button>
           </div>
-          <p className="text-xs text-center" style={{ color: '#5f6c7a' }}>
-            课程广场内容
-          </p>
+
+          {/* 老师选择 */}
+          {teachers.length > 0 && (
+            <div className="flex flex-wrap gap-3 justify-center px-2">
+              {teachers.map((t, i) => (
+                <button
+                  key={t.username}
+                  onClick={() => setCourseTeacher(t.username)}
+                  className="neo-btn"
+                  style={courseTeacher === t.username ? {
+                    boxShadow: 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)',
+                    background: '#e0e5ea'
+                  } : {}}
+                >
+                  {TEACHER_ICONS[i % TEACHER_ICONS.length]} {t.username}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 内容区域：课程列表 / 课件列表 */}
+          <div className="flex-1 overflow-y-auto px-2" style={{ minHeight: 0 }}>
+            {selectedCourse ? (
+              /* ── 课件视图 ── */
+              <div>
+                <button onClick={backToCourses} className="neo-btn mb-4">
+                  <ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回课程列表
+                </button>
+                {materialsLoading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <p style={{ color: '#4a5b6b' }}>加载中...</p>
+                  </div>
+                ) : materials.length === 0 ? (
+                  <div className="text-center py-12" style={{ color: '#5f6c7a' }}>
+                    该课程暂无课件
+                  </div>
+                ) : selectedCourse.type === 'scratch' ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {materials.map(m => (
+                      <a
+                        key={m.name}
+                        href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
+                        target="_blank"
+                        className="neo-card !min-h-0 !p-4 no-underline cursor-pointer hover:brightness-95 transition-all flex flex-col items-center text-center gap-2"
+                        style={{ borderRadius: '1.5rem' }}
+                      >
+                        <span className="text-3xl">📂</span>
+                        <div className="font-semibold text-sm truncate w-full" style={{ color: '#1e2b38' }}>
+                          {m.name}
+                        </div>
+                        <div className="text-xs" style={{ color: '#5f6c7a' }}>
+                          {m.has_main && m.has_student ? '👥 师生版' : m.has_main ? '📘 教师版' : `${m.sb3_count} 个 sb3`}
+                        </div>
+                        <div className="text-xs" style={{ color: '#2e8b57' }}>打开编辑器 ↗</div>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {materials.map(m => (
+                      <div key={m.name} className="neo-card !min-h-0 !p-4" style={{ borderRadius: '1.5rem' }}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xl">📁</span>
+                          <span className="font-semibold text-sm" style={{ color: '#1e2b38' }}>{m.name}</span>
+                          <span className="text-xs" style={{ color: '#5f6c7a' }}>{m.file_count} 个文件</span>
+                        </div>
+                        {m.files && m.files.length > 0 && (
+                          <div className="flex flex-col gap-1">
+                            {m.files.map(f => (
+                              <a key={f.name} href={`${m.url}${f.name}`} target="_blank"
+                                className="neo-btn justify-between text-sm no-underline">
+                                <span className="flex items-center gap-2 truncate">
+                                  <span>📄</span>
+                                  <span className="truncate">{f.name}</span>
+                                </span>
+                                <span className="text-xs" style={{ color: '#5f6c7a' }}>{(f.size / 1024).toFixed(1)} KB</span>
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : coursesLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <p style={{ color: '#4a5b6b' }}>加载中...</p>
+              </div>
+            ) : courses.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <p style={{ color: '#4a5b6b' }}>暂无课程</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                {courses.map(c => (
+                  <button
+                    key={c.name}
+                    onClick={() => loadMaterials(c)}
+                    className="neo-card !min-h-0 !p-4 cursor-pointer hover:brightness-95 transition-all text-left w-full"
+                    style={{ borderRadius: '1.5rem', border: 'none', fontFamily: 'inherit' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{TYPE_ICON[c.type] || '📁'}</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[1.1rem] font-semibold truncate" style={{ color: '#1e2b38' }}>
+                          {c.name}
+                        </h3>
+                        <p className="text-xs mt-0.5" style={{ color: '#5f6c7a' }}>
+                          {c.material_count} 个课件
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: '#4a5b6b' }} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
