@@ -71,7 +71,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         if (data.status === 'success') {
           const ts = data.users.filter((u: any) => u.role === 'teacher');
           setTeachers(ts);
-          if (ts.length > 0 && !courseTeacher) setCourseTeacher(ts[0].username);
+          if (ts.length > 0 && !courseTeacher) setCourseTeacher('全部');
         }
       })
       .catch(() => {});
@@ -81,14 +81,23 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
   const loadCourses = useCallback(() => {
     if (!courseTeacher) return;
     setCoursesLoading(true);
-    fetch(`/api/courses?teacher=${courseTeacher}&t=${Date.now()}`)
-      .then(res => res.json())
-      .then(data => {
-        setCourses(data.status === 'success' ? data.courses : []);
-      })
-      .catch(() => setCourses([]))
-      .finally(() => setCoursesLoading(false));
-  }, [courseTeacher]);
+    if (courseTeacher === '全部') {
+      Promise.all(
+        teachers.map(t => fetch(`/api/courses?teacher=${t.username}&t=${Date.now()}`).then(r => r.json()))
+      ).then(results => {
+        const all: Course[] = [];
+        results.forEach(r => { if (r.status === 'success') all.push(...r.courses); });
+        setCourses(all);
+      }).catch(() => setCourses([]))
+        .finally(() => setCoursesLoading(false));
+    } else {
+      fetch(`/api/courses?teacher=${courseTeacher}&t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => setCourses(data.status === 'success' ? data.courses : []))
+        .catch(() => setCourses([]))
+        .finally(() => setCoursesLoading(false));
+    }
+  }, [courseTeacher, teachers]);
 
   useEffect(() => { if (courseTeacher) loadCourses(); }, [loadCourses]);
 
@@ -344,27 +353,26 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </button>
           </div>
 
-          {/* 老师选择 */}
-          {teachers.length > 0 && (
-            <div className="flex flex-wrap gap-3 justify-center px-2">
+          {/* 老师选择 — 横向滑块 */}
+          <div className="flex items-center gap-0.5 px-2 flex-shrink-0">
+            <button onClick={() => setCourseTeacher('全部')}
+              className="neo-btn flex-shrink-0"
+              style={courseTeacher === '全部' ? { boxShadow: 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)', background: '#e0e5ea' } : {}}>
+              🌐 全部
+            </button>
+            <div className="flex gap-1.5 overflow-x-auto neo-scrollbar" style={{ flex: 1 }}>
               {teachers.map((t, i) => (
-                <button
-                  key={t.username}
-                  onClick={() => setCourseTeacher(t.username)}
-                  className="neo-btn"
-                  style={courseTeacher === t.username ? {
-                    boxShadow: 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)',
-                    background: '#e0e5ea'
-                  } : {}}
-                >
+                <button key={t.username} onClick={() => setCourseTeacher(t.username)}
+                  className="neo-btn flex-shrink-0"
+                  style={courseTeacher === t.username ? { boxShadow: 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)', background: '#e0e5ea' } : {}}>
                   {TEACHER_ICONS[i % TEACHER_ICONS.length]} {t.username}
                 </button>
               ))}
             </div>
-          )}
+          </div>
 
           {/* 内容区域：课程列表 / 课件列表 */}
-          <div className="flex-1 overflow-y-auto px-2" style={{ minHeight: 0 }}>
+          <div className="flex-1 overflow-y-auto px-2 neo-scrollbar" style={{ minHeight: 0 }}>
             {selectedCourse ? (
               /* ── 课件视图 ── */
               <div>

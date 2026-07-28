@@ -236,6 +236,19 @@ body {
   margin: 0.5rem 0 1.5rem;
 }
 
+/* ══ 新拟态滚动条 ══ */
+.neo-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+.neo-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.neo-scrollbar::-webkit-scrollbar-thumb {
+  background: #d5dbe2;
+  border-radius: 3px;
+  box-shadow:
+    inset 2px 2px 4px var(--neo-shadow-dark),
+    inset -2px -2px 4px var(--neo-shadow-light);
+}
+.neo-scrollbar::-webkit-scrollbar-thumb:hover { background: #c8cfd7; }
+.neo-scrollbar { scrollbar-color: #d5dbe2 transparent; }
+
 /* 图标颜色 */
 .ico-green  { color: #2e8b57; }
 .ico-purple { color: #7b4b9e; }
