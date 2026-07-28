@@ -198,15 +198,15 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             <h2 className="text-[1.7rem] font-[650] mb-2" style={{ color: '#1e2b38', letterSpacing: '-0.2px' }}>
               学习文档
             </h2>
-            {/* 红色翻转区，替换原来的副标题+空白 */}
+            {/* 翻转区，替换原来的副标题+空白 */}
             <div className="flip-container" style={{ flex: 1 }}>
               <div className={`flip-inner ${showDocFlip ? 'flipped' : ''}`} style={{ height: '100%' }}>
-                <div className="flip-front" style={{ background: '#d64045', borderRadius: '1rem', width: '100%', height: '100%' }}>
-                  <p className="text-sm" style={{ color: '#fff', fontWeight: 500, lineHeight: 1.5 }}>
+                <div className="flip-front" style={{ background: 'transparent', width: '100%', height: '100%' }}>
+                  <p className="text-sm" style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}>
                     Python / C++ / Scratch
                   </p>
                 </div>
-                <div className="flip-back" onClick={() => setShowDocFlip(false)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#d64045', borderRadius: '1rem', width: '100%', height: '100%', cursor: 'pointer' }}>
+                <div className="flip-back" onClick={() => setShowDocFlip(false)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'transparent', width: '100%', height: '100%', cursor: 'pointer' }}>
                   <a href="/docs/scratch_course/" className="neo-btn no-underline" style={{ minWidth: '5.5rem', justifyContent: 'center', padding: '0.3rem 0.6rem', fontSize: '0.75rem', boxShadow: '2px 2px 4px var(--neo-shadow-dark), -2px -2px 4px var(--neo-shadow-light)' }}>
                     <Puzzle className="w-3.5 h-3.5 ico-green" /> Scratch
                   </a>
