@@ -4,33 +4,8 @@ import {
   FolderOpen, FileCode2, FileText, FileImage,
 } from 'lucide-react';
 
-interface Teacher {
-  id: number;
-  username: string;
-}
-
-interface Course {
-  name: string;
-  type: string;
-  description: string;
-  material_count: number;
-}
-
-interface Material {
-  name: string;
-  has_main?: boolean;
-  has_student?: boolean;
-  sb3_count?: number;
-  files?: { name: string; size: number }[];
-  file_count?: number;
-  url: string;
-}
-
-const TYPE_ICON: Record<string, string> = {
-  scratch: '🧩',
-  python: '🍁',
-  cpp: '⚙️',
-};
+import type { Course, Material } from '../../types/course';
+import { TYPE_ICON, getFileExt, formatSize } from '../../types/course';
 
 const FILE_ICON: Record<string, React.ReactNode> = {
   html: <FileCode2 size={16} />, htm: <FileCode2 size={16} />,
@@ -40,16 +15,7 @@ const FILE_ICON: Record<string, React.ReactNode> = {
   png: <FileImage size={16} />, jpg: <FileImage size={16} />, jpeg: <FileImage size={16} />, gif: <FileImage size={16} />,
 };
 
-function getFileExt(name: string): string {
-  const i = name.lastIndexOf('.');
-  return i > 0 ? name.slice(i + 1).toLowerCase() : '';
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+interface Teacher { id: string; username: string; role: string; }
 
 export default function CoursePlaza() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);

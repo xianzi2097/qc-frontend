@@ -7,15 +7,8 @@ import {
 } from 'lucide-react';
 
 import type { PortalUser } from '../lib/useAuth';
-
-interface Course {
-  name: string;
-  type: string;
-  description: string;
-  material_count: number;
-  teacher?: string;
-}
-
+import type { Course, Material } from '../types/course';
+// HomePage 使用图标组件版本的 TYPE_ICON
 const TYPE_ICON: Record<string, (props: { className?: string }) => React.ReactNode> = {
   scratch: (cls) => <Puzzle className={cls?.className ? `${cls.className} ico-green` : 'w-6 h-6 ico-green'} />,
   python: (cls) => <Terminal className={cls?.className ? `${cls.className} ico-blue` : 'w-6 h-6 ico-blue'} />,
@@ -43,7 +36,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
   const [courses, setCourses] = useState<Course[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [materials, setMaterials] = useState<{ name: string; url: string; has_main?: boolean; has_student?: boolean; sb3_count?: number; file_count?: number; files?: { name: string; size: number }[] }[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [materialsLoading, setMaterialsLoading] = useState(false);
 
   const loadMaterials = (course: Course) => {
@@ -378,7 +371,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               <Users className="w-4 h-4" style={{ color: '#5f6c7a' }} /> 全部
             </button>
             <div className="flex gap-0 overflow-x-auto" style={{ flex: 1, scrollbarWidth: 'none' }}>
-              {teachers.map((t, i) => (
+              {teachers.map((t) => (
                 <button key={t.username} onClick={() => selectTeacher(t.username)}
                   className="flex-shrink-0"
                   style={{
@@ -395,7 +388,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           </div>
 
           {/* 内容区域：课程列表 / 课件列表 */}
-          <div className="flex-1 overflow-y-auto px-2 neo-scrollbar" style={{ minHeight: 0 }}>
+          <div className="flex-1 overflow-y-auto px-2 py-2 neo-scrollbar" style={{ minHeight: 0 }}>
             {selectedCourse ? (
               /* ── 课件视图 ── */
               <div>
@@ -465,7 +458,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 <p style={{ color: '#4a5b6b' }}>暂无课程</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {courses.map(c => (
                   <button
                     key={c.name}

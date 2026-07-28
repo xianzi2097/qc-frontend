@@ -3,34 +3,8 @@ import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw 
 import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
-interface Course {
-  name: string;
-  type: string;
-  description: string;
-  material_count: number;
-}
-
-interface Material {
-  name: string;
-  has_main?: boolean;
-  has_student?: boolean;
-  sb3_count?: number;
-  files?: { name: string; size: number }[];
-  file_count?: number;
-  url: string;
-}
-
-const TYPE_OPTIONS = [
-  { value: 'scratch', label: '🧩 Scratch' },
-  { value: 'python', label: '🍁 Python' },
-  { value: 'cpp', label: '⚙️ C++' },
-];
-
-const TYPE_ICON: Record<string, string> = {
-  scratch: '🧩',
-  python: '🍁',
-  cpp: '⚙️',
-};
+import type { Course, Material } from '../../types/course';
+import { TYPE_ICON, TYPE_OPTIONS } from '../../types/course';
 
 export default function CourseManager() {
   const { username } = useAuth();
