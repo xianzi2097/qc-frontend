@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   BookOpen, Award, Puzzle, Code2,
   Star, LogIn, Play, X, HelpCircle,
-  Library, ArrowRight, Search
+  Library, ArrowRight, Search,
+  Folder, FolderOpen, FileText, Braces, Terminal, Users, User
 } from 'lucide-react';
 
 import type { PortalUser } from '../lib/useAuth';
@@ -14,11 +15,10 @@ interface Course {
   material_count: number;
 }
 
-const TEACHER_ICONS = ['👨‍🏫', '👩‍💻', '👩‍🏫', '🧑‍🏫', '👨‍💻', '👩‍🔬'];
-const TYPE_ICON: Record<string, string> = {
-  scratch: '🧩',
-  python: '🐍',
-  cpp: '⚙️',
+const TYPE_ICON: Record<string, (props: { className?: string }) => React.ReactNode> = {
+  scratch: (cls) => <Puzzle className={cls?.className ? `${cls.className} ico-green` : 'w-6 h-6 ico-green'} />,
+  python: (cls) => <Terminal className={cls?.className ? `${cls.className} ico-blue` : 'w-6 h-6 ico-blue'} />,
+  cpp: (cls) => <Braces className={cls?.className ? `${cls.className} ico-orange` : 'w-6 h-6 ico-orange'} />,
 };
 
 interface Props {
@@ -353,19 +353,31 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </button>
           </div>
 
-          {/* 老师选择 — 横向滑块 */}
-          <div className="flex items-center gap-0.5 px-2 flex-shrink-0">
+          {/* 老师选择 — Tab 滑块 */}
+          <div className="flex items-center gap-0 px-2 flex-shrink-0" style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem' }}>
             <button onClick={() => setCourseTeacher('全部')}
-              className="neo-btn flex-shrink-0"
-              style={courseTeacher === '全部' ? { boxShadow: 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)', background: '#e0e5ea' } : {}}>
-              🌐 全部
+              className="flex-shrink-0"
+              style={{
+                border: 'none', background: 'transparent', cursor: 'pointer',
+                padding: '0.35rem 0.8rem', fontSize: '0.85rem', fontWeight: 600,
+                color: courseTeacher === '全部' ? '#2c3e50' : '#5f6c7a',
+                transition: 'all 0.15s', whiteSpace: 'nowrap',
+                display: 'flex', alignItems: 'center', gap: '0.25rem'
+              }}>
+              <Users className="w-4 h-4" style={{ color: '#5f6c7a' }} /> 全部
             </button>
-            <div className="flex gap-1.5 overflow-x-auto neo-scrollbar" style={{ flex: 1 }}>
+            <div className="flex gap-0 overflow-x-auto" style={{ flex: 1, scrollbarWidth: 'none' }}>
               {teachers.map((t, i) => (
                 <button key={t.username} onClick={() => setCourseTeacher(t.username)}
-                  className="neo-btn flex-shrink-0"
-                  style={courseTeacher === t.username ? { boxShadow: 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)', background: '#e0e5ea' } : {}}>
-                  {TEACHER_ICONS[i % TEACHER_ICONS.length]} {t.username}
+                  className="flex-shrink-0"
+                  style={{
+                    border: 'none', background: 'transparent', cursor: 'pointer',
+                    padding: '0.35rem 0.8rem', fontSize: '0.85rem', fontWeight: 600,
+                    color: courseTeacher === t.username ? '#2c3e50' : '#5f6c7a',
+                    transition: 'all 0.15s', whiteSpace: 'nowrap',
+                    display: 'flex', alignItems: 'center', gap: '0.25rem'
+                  }}>
+                  <User className="w-4 h-4" style={{ color: '#5f6c7a' }} /> {t.username}
                 </button>
               ))}
             </div>
@@ -395,9 +407,9 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                         href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
                         target="_blank"
                         className="neo-card !min-h-0 !p-4 no-underline cursor-pointer hover:brightness-95 transition-all flex flex-col items-center text-center gap-2"
-                        style={{ borderRadius: '1.5rem' }}
+                        style={{ borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.4)', boxShadow: '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)' }}
                       >
-                        <span className="text-3xl">📂</span>
+                        <FolderOpen className="w-8 h-8 ico-green" />
                         <div className="font-semibold text-sm truncate w-full" style={{ color: '#1e2b38' }}>
                           {m.name}
                         </div>
@@ -411,9 +423,9 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 ) : (
                   <div className="flex flex-col gap-3">
                     {materials.map(m => (
-                      <div key={m.name} className="neo-card !min-h-0 !p-4" style={{ borderRadius: '1.5rem' }}>
+                      <div key={m.name} className="neo-card !min-h-0 !p-4" style={{ borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.4)', boxShadow: '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)' }}>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xl">📁</span>
+                          <Folder className="w-5 h-5" style={{ color: '#5f6c7a' }} />
                           <span className="font-semibold text-sm" style={{ color: '#1e2b38' }}>{m.name}</span>
                           <span className="text-xs" style={{ color: '#5f6c7a' }}>{m.file_count} 个文件</span>
                         </div>
@@ -423,7 +435,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                               <a key={f.name} href={`${m.url}${f.name}`} target="_blank"
                                 className="neo-btn justify-between text-sm no-underline">
                                 <span className="flex items-center gap-2 truncate">
-                                  <span>📄</span>
+                                  <FileText className="w-4 h-4 flex-shrink-0" style={{ color: '#5f6c7a' }} />
                                   <span className="truncate">{f.name}</span>
                                 </span>
                                 <span className="text-xs" style={{ color: '#5f6c7a' }}>{(f.size / 1024).toFixed(1)} KB</span>
@@ -445,16 +457,16 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 <p style={{ color: '#4a5b6b' }}>暂无课程</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-2">
                 {courses.map(c => (
                   <button
                     key={c.name}
                     onClick={() => loadMaterials(c)}
                     className="neo-card !min-h-0 !p-4 cursor-pointer hover:brightness-95 transition-all text-left w-full"
-                    style={{ borderRadius: '1.5rem', border: 'none', fontFamily: 'inherit' }}
+                    style={{ borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.4)', fontFamily: 'inherit', boxShadow: '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)' }}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{TYPE_ICON[c.type] || '📁'}</span>
+                      {TYPE_ICON[c.type] ? TYPE_ICON[c.type]({ className: 'w-7 h-7' }) : <Folder className="w-7 h-7" style={{ color: '#5f6c7a' }} />}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-[1.1rem] font-semibold truncate" style={{ color: '#1e2b38' }}>
                           {c.name}

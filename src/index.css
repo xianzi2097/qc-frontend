@@ -237,7 +237,7 @@ body {
 }
 
 /* ══ 新拟态滚动条 ══ */
-.neo-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+.neo-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
 .neo-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .neo-scrollbar::-webkit-scrollbar-thumb {
   background: #d5dbe2;
