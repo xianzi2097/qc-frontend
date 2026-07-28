@@ -88,7 +88,11 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         teachers.map(t => fetch(`/api/courses?teacher=${t.username}&t=${Date.now()}`).then(r => r.json()))
       ).then(results => {
         const all: Course[] = [];
-        results.forEach(r => { if (r.status === 'success') all.push(...r.courses); });
+        results.forEach((r, idx) => {
+          if (r.status === 'success') {
+            r.courses.forEach((c: any) => all.push({ ...c, teacher: teachers[idx].username }));
+          }
+        });
         setCourses(all);
       }).catch(() => setCourses([]))
         .finally(() => setCoursesLoading(false));
