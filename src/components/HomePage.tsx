@@ -13,6 +13,7 @@ interface Course {
   type: string;
   description: string;
   material_count: number;
+  teacher?: string;
 }
 
 const TYPE_ICON: Record<string, (props: { className?: string }) => React.ReactNode> = {
@@ -47,8 +48,9 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
   const loadMaterials = (course: Course) => {
     setSelectedCourse(course);
+    const teacher = course.teacher || courseTeacher;
     setMaterialsLoading(true);
-    fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${courseTeacher}&t=${Date.now()}`)
+    fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${teacher}&t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
         setMaterials(data.status === 'success' ? data.materials : []);
