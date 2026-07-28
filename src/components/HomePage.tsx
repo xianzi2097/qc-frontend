@@ -64,6 +64,11 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
     setMaterials([]);
   };
 
+  const selectTeacher = (name: string) => {
+    setCourseTeacher(name);
+    backToCourses();
+  };
+
   // ── 加载老师列表 ──
   useEffect(() => {
     if (!flipped) return;
@@ -361,7 +366,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
           {/* 老师选择 — Tab 滑块 */}
           <div className="flex items-center gap-0 px-2 flex-shrink-0" style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem' }}>
-            <button onClick={() => setCourseTeacher('全部')}
+            <button onClick={() => selectTeacher('全部')}
               className="flex-shrink-0"
               style={{
                 border: 'none', background: 'transparent', cursor: 'pointer',
@@ -374,7 +379,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </button>
             <div className="flex gap-0 overflow-x-auto" style={{ flex: 1, scrollbarWidth: 'none' }}>
               {teachers.map((t, i) => (
-                <button key={t.username} onClick={() => setCourseTeacher(t.username)}
+                <button key={t.username} onClick={() => selectTeacher(t.username)}
                   className="flex-shrink-0"
                   style={{
                     border: 'none', background: 'transparent', cursor: 'pointer',
@@ -394,9 +399,6 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             {selectedCourse ? (
               /* ── 课件视图 ── */
               <div>
-                <button onClick={backToCourses} className="neo-btn mb-4">
-                  <ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回课程列表
-                </button>
                 {materialsLoading ? (
                   <div className="flex items-center justify-center h-32">
                     <p style={{ color: '#4a5b6b' }}>加载中...</p>
