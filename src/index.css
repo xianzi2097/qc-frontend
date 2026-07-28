@@ -190,17 +190,17 @@ body {
 .neo-input-wrap {
   background: var(--neo-bg);                /* 背景 = 页面底色 e8edf2 */
   border-radius: 2rem;                      /* 圆角大小 */
-  padding: 0.4rem 0.8rem;                  /* 上下0.4rem（压缩高度）左右0.8rem */
+  padding: 0.26rem 0.8rem;                /* 上下0.26rem（0.6×1.1）左右0.8rem */
   box-shadow:
-    inset 3px 3px 6px var(--neo-shadow-dark),     /* 内凹阴影：暗面(右下) 配合窄输入框缩小 */
-    inset -3px -3px 6px var(--neo-shadow-light);  /* 内凹阴影：亮面(左上) */
+    inset 2px 2px 4px var(--neo-shadow-dark),     /* 阴影缩小匹配窄输入框 */
+    inset -2px -2px 4px var(--neo-shadow-light);
 }
 .neo-input-wrap input {
   background: transparent;                  /* 透明底，让外壳的阴影透出 */
   border: none;                             /* 无边框 */
   outline: none;                            /* 无聚焦外框 */
   width: 100%;                              /* 撑满外壳宽度 */
-  padding: 0.25rem 0;                      /* 文字上下0.25rem，左右归零（外壳管了） */
+  padding: 0.17rem 0;                     /* 文字上下0.17rem（1.1倍），左右归零 */
   color: var(--neo-text-primary);           /* 输入文字颜色 #1e2b38 */
   font-weight: 500;                         /* 字重 */
   line-height: 1;                           /* 压缩行高 */
