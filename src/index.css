@@ -10,7 +10,7 @@
 }
 
 /* 全局基础样式 — 以 1366×768（14"笔记本）为基准 */
-html { font-size: 93%; } /* 16px × 0.93 ≈ 14.9px，卡片略缩但文字舒适 */
+html { font-size: 88%; } /* 16px × 0.88 ≈ 14.1px */
 
 body {
   background-color: var(--color-cyber-bg);
@@ -18,8 +18,8 @@ body {
 }
 
 /* 大屏自动放大 rem — 全部等比缩放 */
-@media (min-width: 1920px) { html { font-size: 20px; } }  /* 1.25× */
-@media (min-width: 2560px) { html { font-size: 24px; } }  /* 1.5× — 2K 不用调系统缩放 */
+@media (min-width: 1920px) { html { font-size: 125%; } }  /* 1.25× */
+@media (min-width: 2560px) { html { font-size: 150%; } }  /* 1.5× — 2K 不用调系统缩放 */
 
 /* 自定义入场动画（v4 直接用 CSS 写，不需要 @layer） */
 @keyframes fadeIn {

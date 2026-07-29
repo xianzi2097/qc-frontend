@@ -8,6 +8,7 @@ import {
 
 import type { PortalUser } from '../lib/useAuth';
 import type { Course, Material } from '../types/course';
+import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
 // HomePage 使用图标组件版本的 TYPE_ICON
 const TYPE_ICON: Record<string, (props: { className?: string }) => React.ReactNode> = {
   scratch: (cls) => <Puzzle className={cls?.className ? `${cls.className} ico-green` : 'w-6 h-6 ico-green'} />,
@@ -29,6 +30,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   // ── 课程广场状态 ──
   const [teachers, setTeachers] = useState<{ username: string }[]>([]);
@@ -113,6 +115,31 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
   })();
   const loggedInUsername = storedUser?.username || '';
   const loggedInRole = storedUser?.role || '';
+
+  const currentAvatarIdx = (() => {
+    try {
+      const idx = parseInt((storedUser?.avatar_path || '').replace('avatar_', ''), 10);
+      return isNaN(idx) ? 0 : idx % AVATARS.length;
+    } catch { return 0; }
+  })();
+
+  const handleAvatarSelect = async (avatarId: string) => {
+    const avatarPath = `avatar_${avatarId}`;
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        u.avatar_path = avatarPath;
+        localStorage.setItem('user', JSON.stringify(u));
+      }
+      await fetch('/api/update-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: loggedInUsername, avatar_path: avatarPath }),
+      });
+    } catch {}
+    setShowAvatarPicker(false);
+  };
 
   const handleLogout = () => {
     fetch('/api/logout', {
@@ -283,7 +310,20 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                       ? (loggedInRole === 'teacher' ? '教师' : loggedInRole === 'student' ? '学生' : '')
                       : '记录你的成长路线'}
                   </p>
-                  <div className='flex flex-col items-end gap-2'>
+                  {storedUser ? (
+                    <div className="flex-1 flex items-center justify-center mb-4">
+                      <div
+                        className={`w-14 h-14 rounded-full bg-gradient-to-br ${AVATARS[currentAvatarIdx].bg} flex items-center justify-center text-2xl cursor-pointer select-none transition-transform hover:scale-110`}
+                        onClick={() => setShowAvatarPicker(true)}
+                        title="点击更换头像"
+                      >
+                        {AVATARS[currentAvatarIdx].icon}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-1" />
+                  )}
+                  <div className='flex justify-center gap-2'>
                     {storedUser ? (
                       <>
                         <a href="/dashboard" className="neo-btn">
@@ -337,6 +377,14 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         </p>
       </div>
       </div>{/* flip-front end */}
+
+      {showAvatarPicker && (
+        <AvatarPicker
+          currentAvatar={String(currentAvatarIdx)}
+          onSelect={handleAvatarSelect}
+          onClose={() => setShowAvatarPicker(false)}
+        />
+      )}
 
       {/* ════ 背面：课程广场 ════ */}
       <div className="flip-back">
