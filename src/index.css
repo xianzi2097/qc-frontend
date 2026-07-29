@@ -17,6 +17,12 @@ body {
   color: var(--color-white);
 }
 
+/* 主页文本隐藏 I 形光标，保持可选中 */
+.cursor-default,
+.cursor-default * {
+  cursor: default !important;
+}
+
 /* 大屏自动放大 rem — 全部等比缩放 */
 @media (min-width: 1920px) { html { font-size: 125%; } }  /* 1.25× */
 @media (min-width: 2560px) { html { font-size: 150%; } }  /* 1.5× — 2K 不用调系统缩放 */

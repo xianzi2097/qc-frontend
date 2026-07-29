@@ -298,32 +298,28 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           <div className="col-span-1">
             <div className="flip-container" style={{ height: '100%' }}>
               <div className={`flip-inner ${showLoginFlip ? 'flipped' : ''}`}>
-                <div className="flip-front neo-card h-full min-h-[22rem]">
+                <div className="flip-front neo-card h-full min-h-[22rem] relative">
                   <div className="mb-5">
                     <Award className="w-11 h-11 ico-orange" />
                   </div>
                   <h2 className="text-[1.7rem] font-[650] mb-2" style={{ color: '#1e2b38', letterSpacing: '-0.2px' }}>
                     {storedUser ? loggedInUsername : '个人中心'}
                   </h2>
-                  <p className="text-sm mb-4 flex-1" style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}>
+                  <p className="text-sm flex-1" style={{ color: '#4a5b6b', fontWeight: 500, lineHeight: 1.5 }}>
                     {storedUser
                       ? (loggedInRole === 'teacher' ? '教师' : loggedInRole === 'student' ? '学生' : '')
                       : '记录你的成长路线'}
                   </p>
                   {storedUser ? (
-                    <div className="flex-1 flex items-center justify-center mb-4">
-                      <div
-                        className={`w-14 h-14 rounded-full bg-gradient-to-br ${AVATARS[currentAvatarIdx].bg} flex items-center justify-center text-2xl cursor-pointer select-none transition-transform hover:scale-110`}
-                        onClick={() => setShowAvatarPicker(true)}
-                        title="点击更换头像"
-                      >
-                        {AVATARS[currentAvatarIdx].icon}
-                      </div>
+                    <div
+                      className={`absolute left-1/2 top-29/50 -translate-x-1/2 -translate-y-1/2 w-[4.2rem] h-[4.2rem] rounded-full bg-gradient-to-br ${AVATARS[currentAvatarIdx].bg} flex items-center justify-center text-[1.65rem] cursor-pointer select-none transition-transform hover:scale-110 z-10`}
+                      onClick={() => setShowAvatarPicker(true)}
+                      title="点击更换头像"
+                    >
+                      {AVATARS[currentAvatarIdx].icon}
                     </div>
-                  ) : (
-                    <div className="flex-1" />
-                  )}
-                  <div className='flex justify-center gap-2'>
+                  ) : null}
+                  <div className='flex justify-center gap-2 mt-4'>
                     {storedUser ? (
                       <>
                         <a href="/dashboard" className="neo-btn">
