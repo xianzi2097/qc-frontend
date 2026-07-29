@@ -21,7 +21,7 @@ export const FloatingDock = ({
   dividerAfter?: number;
 }) => {
   return (
-    <div className={cn("mx-auto flex items-center gap-1 rounded-xl px-2 py-1", className)}>
+    <div className={cn("mx-auto flex items-center gap-1 rounded-xl px-0 py-1", className)}>
       {items.map((item, idx) => (
         <div key={item.title} className="flex items-center gap-1">
           <button

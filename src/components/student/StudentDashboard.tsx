@@ -33,10 +33,10 @@ interface ProfileData {
 
 function StudentCard({ nickname, isDev, profile }: { nickname: string; isDev: boolean; profile: ProfileData }) {
   return (
-    <div className="flex items-center justify-end gap-8 w-full">
+    <div className="flex items-center gap-8">
       
       {/* 左边：统计数据 */}
-      <div className="flex flex-col gap-2 flex-shrink-0 text-right border-r border-white/10 pr-6">
+      <div className="flex flex-col gap-2 flex-shrink-0 text-right border-r border-white/10 pr-6 ml-4">
         <div className="flex items-center gap-2 justify-end">
           <span className="text-xs text-slate-400">积分</span>
           <span className="text-sm font-black text-white font-mono">{profile.points}</span>
@@ -144,7 +144,8 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
     <div className="h-full flex flex-col relative overflow-hidden">
       <StarsBackground />
 
-      <div className="relative z-10 flex-1 flex flex-col min-h-0" style={{ '--accent': moduleColor[activeModule] } as React.CSSProperties}>
+      <div className="relative z-10 flex-1 flex flex-col min-h-0">
+        <div className="flex flex-col min-h-0 flex-1 w-[95%] self-center" style={{ '--accent': moduleColor[activeModule] } as React.CSSProperties}>
 
         {/* 顶部：Dock（左）+ 信息卡（右） */}
         <div className="px-8 pt-8 pb-4 flex-shrink-0 relative">
@@ -177,7 +178,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
                 { title: '设置', icon: <SettingsIcon size="2.4rem" style={activeModule === 'settings' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'settings' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('settings'), isActive: activeModule === 'settings', activeBg: 'bg-[var(--accent)]/10' },
                 ]}
               />
-              <div className="flex-1">
+              <div className="flex-1 flex justify-end pr-2">
                 <StudentCard nickname={nickname} isDev={isDev} profile={profile} />
               </div>
             </div>
@@ -185,7 +186,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
         </div>
 
         {/* 内容区 */}
-        <div className="w-[70%] mx-auto overflow-auto px-8 pb-6 accent-scrollbar">
+        <div className="overflow-auto px-8 pb-6 accent-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeModule}
@@ -223,6 +224,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
           </AnimatePresence>
         </div>
 
+        </div>
       </div>
     </div>
   );
