@@ -25,7 +25,7 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
               <span className="text-3xl">🍊</span>
             </div>
             <div>
-              <h1 className="font-bold text-base tracking-wider text-white">青橙 Studio</h1>
+              <h1 className="font-bold text-base tracking-wider text-white">CodeNova</h1>
               <span className="text-xs text-slate-500 flex items-center gap-1">
                 <Cpu size={12} className="text-geek-green" />
                 数字化教师后台

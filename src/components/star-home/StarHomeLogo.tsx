@@ -7,7 +7,7 @@ export default function StarHomeLogo() {
         border border-orange-500/25 leading-tight"
     >
       <div className="text-white text-xl font-black tracking-wide">
-        QC-Studio
+        CodeNova
         <span
           className="text-[10px] font-semibold text-orange-500
             bg-orange-500/15 px-1.5 py-px rounded-lg ml-1.5 align-middle"
@@ -16,7 +16,7 @@ export default function StarHomeLogo() {
         </span>
       </div>
       <div className="text-white/40 text-xs font-normal mt-0.5">
-        青橙少儿编程学习平台
+        少儿编程教学平台
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ export default function AdminDashboardWithSidebar({ username, role, logout }: Pr
               <span className="text-3xl">🍊</span>
             </div>
             <div>
-              <h1 className="font-bold text-base tracking-wider text-white">青橙 Studio</h1>
+              <h1 className="font-bold text-base tracking-wider text-white">CodeNova</h1>
               <span className="text-xs text-slate-500 flex items-center gap-1">
                 <Shield size={12} className="text-purple-400" />
                 管理后台

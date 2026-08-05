@@ -369,7 +369,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         {/* ════ 分割线 + 备案 ════ */}
         <hr className="neo-hr" />
         <p className="text-xs text-center mb-2" style={{ color: '#5f6c7a' }}>
-          粤ICP备2026057743号-1 · Arin | 青橙
+          粤ICP备2026057743号-1 · Arin | QC-Studio
         </p>
       </div>
       </div>{/* flip-front end */}
