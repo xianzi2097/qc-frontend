@@ -127,9 +127,11 @@ export default function StudentListPanel({ classes, loading, error, attrKeys, us
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs text-cyan-400 font-mono">{s.date}</span>
                           <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            s.status === 'present' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                            s.status === 'present' ? 'bg-green-500/20 text-green-400'
+                            : s.status === 'off' || s.status === 'leave' ? 'bg-slate-500/20 text-slate-400'
+                            : 'bg-red-500/20 text-red-400'
                           }`}>
-                            {s.status === 'present' ? '出勤' : '缺勤'}
+                            {s.status === 'present' ? '出勤' : (s.status === 'off' || s.status === 'leave') ? '非上课日' : '缺勤'}
                           </span>
                           <span className="text-xs text-slate-500 ml-auto">
                             {s.class}{isOwn ? '' : <span className="text-amber-400">（{s.teacher}）</span>}

@@ -113,7 +113,7 @@ function EditSessionModal({
         return { ...s, excludedToday: false, status: 'present' };
       }
       if (excluded) {
-        return { ...s, excludedToday: true, status: 'leave' };
+        return { ...s, excludedToday: true, status: 'off' };
       }
       return s;
     }));
@@ -143,8 +143,7 @@ function EditSessionModal({
     setEditStudents(prev => prev.map((s, i) => {
       if (i !== idx) return s;
       if (s.excludedToday) return s;  // 非上课日不可手动切换
-      const next: Record<string, string> = { present: 'leave', leave: 'absent', absent: 'present' };
-      return { ...s, status: next[s.status] || 'present' };
+      return { ...s, status: s.status === 'present' ? 'absent' : 'present' };
     }));
   };
 
@@ -244,7 +243,7 @@ function EditSessionModal({
                   </button>
                 )}
               </div>
-              {/* 出勤切换（三态） */}
+              {/* 出勤切换（出勤/缺勤） */}
               <div className="w-10 flex items-center">
                 <button onClick={() => toggleStatus(idx)}
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
@@ -252,11 +251,9 @@ function EditSessionModal({
                       ? 'bg-slate-700/30 text-slate-500 cursor-not-allowed'
                       : s.status === 'present'
                         ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                        : s.status === 'leave'
-                          ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
-                          : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
+                        : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
                   }`}>
-                  {s.excludedToday ? '—' : s.status === 'present' ? <Check size={14} /> : s.status === 'leave' ? '休' : <X size={14} />}
+                  {s.excludedToday ? '—' : s.status === 'present' ? <Check size={14} /> : <X size={14} />}
                 </button>
               </div>
               {/* 本节课内容 */}
@@ -629,14 +626,14 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     setEditModal({ date: session.date, students: [...session.students] });
   };
 
-  // ── 获取出席摘要（含请假） ──
+  // ── 获取出席摘要 ──
   const attendanceSummary = (students: SessionStudent[]) => {
     return students.map(s => {
       const label = fmt(s.name, s.remark);
       if (s.status === 'present')
         return <span key={s.id} className="text-green-400">{label}✅ </span>;
-      if (s.status === 'leave')
-        return <span key={s.id} className="text-amber-400">{label}💤 </span>;
+      if (s.excludedToday || s.status === 'off')
+        return <span key={s.id} className="text-slate-500">{label}— </span>;
       return <span key={s.id} className="text-rose-400">{label}❌ </span>;
     });
   };
@@ -898,7 +895,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
               {/* 本月统计 */}
               {sessions.length > 0 && (
-                <div className="grid grid-cols-4 gap-3 mb-4">
+                <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-cyan-400/30 hover:translate-y-[-2px]">
                     <div className="text-2xl text-cyan-400 font-bold font-mono">{sessions.length}</div>
                     <div className="text-xs text-slate-400 mt-1">本月课时</div>
@@ -913,17 +910,6 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                         <>
                           <div className="text-2xl text-green-400 font-bold font-mono">{rate}%</div>
                           <div className="text-xs text-slate-400 mt-1">出勤率</div>
-                        </>
-                      );
-                    })()}
-                  </div>
-                  <div className="bg-slate-900/60 border border-slate-600 rounded-xl p-4 text-center transition-all duration-300 hover:border-amber-400/30 hover:translate-y-[-2px]">
-                    {(() => {
-                      const leave = sessions.reduce((sum, s) => sum + s.students.filter(x => x.status === 'leave').length, 0);
-                      return (
-                        <>
-                          <div className="text-2xl text-amber-400 font-bold font-mono">{leave}</div>
-                          <div className="text-xs text-slate-400 mt-1">请假人次</div>
                         </>
                       );
                     })()}
@@ -963,7 +949,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm text-white font-mono">{s.date}</span>
                             <span className="text-xs text-cyan-400">
-                              {s.students.filter(x => x.status === 'present').length}/{s.students.length} 出勤
+                              {s.students.filter(x => x.status === 'present').length}/{s.students.filter(x => x.status !== 'off' && !x.excludedToday).length} 出勤
                             </span>
                           </div>
                           <div className="text-xs text-slate-300 flex flex-wrap gap-x-3 gap-y-1">
