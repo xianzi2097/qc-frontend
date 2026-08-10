@@ -149,18 +149,24 @@ export default function CourseManager() {
 
   const handleCreateFolder = async () => {
     if (!selectedCourse || !newFolderName.trim()) return;
-    // 创建文件夹只需上传一个空操作——直接用 upload API 创建
-    const formData = new FormData();
-    const blob = new Blob([''], { type: 'text/plain' });
-    formData.append('file', blob, '.keep');
-    await fetch(
-      `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(newFolderName.trim())}/upload?teacher=${username}`,
-      { method: 'POST', body: formData }
-    );
-    setShowNewFolder(false);
-    setNewFolderName('');
-    loadMaterials(selectedCourse);
-    loadCourses();
+    // 直接调后端「新建文件夹」接口创建空目录，不再上传 .keep 占位文件
+    try {
+      const res = await fetch(
+        `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(newFolderName.trim())}/folder?teacher=${username}`,
+        { method: 'POST' }
+      );
+      const data = await res.json().catch(() => null);
+      if (data?.status !== 'success') {
+        alert(data?.detail || '创建文件夹失败');
+        return;
+      }
+      setShowNewFolder(false);
+      setNewFolderName('');
+      loadMaterials(selectedCourse);
+      loadCourses();
+    } catch {
+      alert('无法连接服务器');
+    }
   };
 
   // ── 删除单个文件 ──
