@@ -85,7 +85,7 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
                   boxShadow: isSel
                     ? '0 0 0 3px var(--neo-bg), 0 0 0 6px rgba(46,139,87,0.85), 4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)'
                     : '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)',
-                  transform: 'scale(0.95)',
+                  transform: 'scale(0.85)',
                   cursor: 'pointer',
                 }}
               >
