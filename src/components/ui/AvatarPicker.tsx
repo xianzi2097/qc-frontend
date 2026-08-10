@@ -17,6 +17,15 @@ const AVATARS = [
   { bg: 'from-amber-500 to-orange-400', icon: '🐶' },
   { bg: 'from-slate-400 to-gray-500', icon: '🐰' },
   { bg: 'from-orange-500 to-amber-600', icon: '🐹' },
+  { bg: 'from-stone-500 to-stone-600', icon: '🦉' },
+  { bg: 'from-fuchsia-500 to-pink-500', icon: '🦋' },
+  { bg: 'from-sky-500 to-blue-600', icon: '🐬' },
+  { bg: 'from-slate-500 to-slate-600', icon: '🐘' },
+  { bg: 'from-yellow-400 to-amber-600', icon: '🦒' },
+  { bg: 'from-zinc-400 to-gray-500', icon: '🐨' },
+  { bg: 'from-rose-400 to-pink-500', icon: '🦩' },
+  { bg: 'from-blue-600 to-indigo-500', icon: '🦸' },
+  { bg: 'from-gray-600 to-slate-700', icon: '🤖' },
 ];
 
 interface Props {
@@ -44,14 +53,7 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
           <button
             onClick={onClose}
             title="关闭"
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150"
-            style={{
-              background: 'var(--neo-bg)',
-              border: '1px solid rgba(255,255,255,0.5)',
-              boxShadow: '3px 3px 6px var(--neo-shadow-dark), -3px -3px 6px var(--neo-shadow-light)',
-              color: '#5f6c7a',
-              cursor: 'pointer',
-            }}
+            className="neo-close w-9 h-9"
           >
             <X className="w-4 h-4" />
           </button>
@@ -72,7 +74,7 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
           选择头像
         </h3>
 
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-5 gap-3 neo-scrollbar" style={{ maxHeight: '17rem', overflowY: 'auto' }}>
           {AVATARS.map((a, i) => {
             const isSel = selected === String(i);
             return (

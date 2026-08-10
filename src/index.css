@@ -191,6 +191,29 @@ body {
   justify-content: flex-start;
 }
 
+/* 圆形关闭按钮 */
+.neo-close {
+  background: var(--neo-bg);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neo-text-muted);
+  box-shadow:
+    3px 3px 6px var(--neo-shadow-dark),
+    -3px -3px 6px var(--neo-shadow-light);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.neo-close:active {
+  box-shadow:
+    inset 2px 2px 4px var(--neo-shadow-dark),
+    inset -2px -2px 4px var(--neo-shadow-light);
+  background: #e0e5ea;
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(1px);
+}
 
 /* 内凹输入框 */
 .neo-input-wrap {
