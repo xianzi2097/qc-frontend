@@ -385,7 +385,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
       {/* ════ 背面：课程广场 ════ */}
       <div className="flip-back">
-        <div className="neo-wrap w-full h-full" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="neo-wrap w-full h-full" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: '0.75rem' }}>
           {/* 顶部导航 */}
           <div className="flex justify-between items-center px-2 flex-shrink-0">
             <h1
@@ -436,9 +436,9 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           <div className="flex items-center gap-0 px-2 flex-shrink-0" style={{ paddingBottom: '0.25rem' }}>
             {([
               ['全部', '全部'],
-              ['scratch', '🧩 Scratch'],
-              ['python', '🍁 Python'],
-              ['cpp', '⚙️ C++'],
+              ['scratch', 'Scratch'],
+              ['python', 'Python'],
+              ['cpp', 'C++'],
             ] as [string, string][]).map(([val, label]) => (
               <button
                 key={val}
@@ -449,9 +449,10 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                   padding: '0.25rem 0.7rem', fontSize: '0.8rem', fontWeight: 600,
                   color: courseType === val ? '#2c3e50' : '#5f6c7a',
                   transition: 'all 0.15s', whiteSpace: 'nowrap',
-                  display: 'flex', alignItems: 'center', gap: '0.25rem'
+                  display: 'flex', alignItems: 'center', gap: '0.3rem'
                 }}
               >
+                {val !== '全部' && TYPE_ICON[val]({ className: 'w-3.5 h-3.5' })}
                 {label}
               </button>
             ))}
