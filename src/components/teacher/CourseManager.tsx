@@ -180,56 +180,80 @@ export default function CourseManager() {
     loadCourses();
   };
 
-  // ── 重命名 ──
-  const handleRenameCourse = async (course: Course) => {
-    const newName = window.prompt('输入新的课程名称', course.name)?.trim();
-    if (!newName || newName === course.name) return;
-    try {
-      const res = await fetch(`/api/courses/${encodeURIComponent(course.name)}/rename`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_name: newName }),
-      });
-      const data = await res.json().catch(() => null);
-      if (data?.status !== 'success') return alert(data?.detail || '课程重命名失败');
-      // 若正在查看该课程，同步更新选中态后重新加载
-      if (selectedCourse?.name === course.name) {
-        const updated = { ...selectedCourse, name: newName };
-        setSelectedCourse(updated);
-        await loadMaterials(updated);
-      }
-      loadCourses();
-    } catch { alert('无法连接服务器'); }
+  // ── 重命名（自定义弹窗，不用原生 prompt） ──
+  const [rename, setRename] = useState<{ kind: string; current: string; run: (newName: string) => Promise<void> } | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+
+  const openRenameCourse = (course: Course) => {
+    setRenameValue(course.name);
+    setRename({
+      kind: '课程',
+      current: course.name,
+      run: async (newName: string) => {
+        const res = await fetch(`/api/courses/${encodeURIComponent(course.name)}/rename`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_name: newName }),
+        });
+        const data = await res.json().catch(() => null);
+        if (data?.status !== 'success') return alert(data?.detail || '课程重命名失败');
+        // 若正在查看该课程，同步更新选中态后重新加载
+        if (selectedCourse?.name === course.name) {
+          const updated = { ...selectedCourse, name: newName };
+          setSelectedCourse(updated);
+          await loadMaterials(updated);
+        }
+        loadCourses();
+      },
+    });
   };
 
-  const handleRenameMaterial = async (m: Material) => {
+  const openRenameMaterial = (m: Material) => {
     if (!selectedCourse) return;
-    const newName = window.prompt('输入新的课件名称', m.name)?.trim();
-    if (!newName || newName === m.name) return;
-    try {
-      const res = await fetch(
-        `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(m.name)}/rename`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }
-      );
-      const data = await res.json().catch(() => null);
-      if (data?.status !== 'success') return alert(data?.detail || '课件重命名失败');
-      loadMaterials(selectedCourse);
-      loadCourses();
-    } catch { alert('无法连接服务器'); }
+    setRenameValue(m.name);
+    setRename({
+      kind: '课件',
+      current: m.name,
+      run: async (newName: string) => {
+        const res = await fetch(
+          `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(m.name)}/rename`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }
+        );
+        const data = await res.json().catch(() => null);
+        if (data?.status !== 'success') return alert(data?.detail || '课件重命名失败');
+        loadMaterials(selectedCourse);
+        loadCourses();
+      },
+    });
   };
 
-  const handleRenameFile = async (lessonName: string, fileName: string) => {
+  const openRenameFile = (lessonName: string, fileName: string) => {
     if (!selectedCourse) return;
-    const newName = window.prompt('输入新的文件名', fileName)?.trim();
-    if (!newName || newName === fileName) return;
+    setRenameValue(fileName);
+    setRename({
+      kind: '文件',
+      current: fileName,
+      run: async (newName: string) => {
+        const res = await fetch(
+          `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(lessonName)}/${encodeURIComponent(fileName)}/rename`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }
+        );
+        const data = await res.json().catch(() => null);
+        if (data?.status !== 'success') return alert(data?.detail || '文件重命名失败');
+        loadMaterials(selectedCourse);
+      },
+    });
+  };
+
+  const handleRenameConfirm = async () => {
+    if (!rename) return;
+    const newName = renameValue.trim();
+    if (!newName || newName === rename.current) { setRename(null); return; }
     try {
-      const res = await fetch(
-        `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(lessonName)}/${encodeURIComponent(fileName)}/rename`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }
-      );
-      const data = await res.json().catch(() => null);
-      if (data?.status !== 'success') return alert(data?.detail || '文件重命名失败');
-      loadMaterials(selectedCourse);
-    } catch { alert('无法连接服务器'); }
+      await rename.run(newName);
+    } catch {
+      alert('无法连接服务器');
+    }
+    setRename(null);
   };
 
   // ── 课程回收站 ──
@@ -361,7 +385,7 @@ export default function CourseManager() {
                 </div>
                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                   <button
-                    onClick={() => handleRenameCourse(course)}
+                    onClick={() => openRenameCourse(course)}
                     className="text-slate-600 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-all p-1"
                     title="重命名课程"
                   >
@@ -425,7 +449,7 @@ export default function CourseManager() {
                     </a>
                     <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRenameMaterial(m); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openRenameMaterial(m); }}
                         className="text-slate-600 hover:text-brand-orange transition-colors"
                         title="重命名课件"
                       >
@@ -484,7 +508,7 @@ export default function CourseManager() {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleRenameMaterial(m)}
+                          onClick={() => openRenameMaterial(m)}
                           className="text-slate-600 hover:text-brand-orange transition-colors"
                           title="重命名文件夹"
                         >
@@ -520,7 +544,7 @@ export default function CourseManager() {
                             </a>
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => handleRenameFile(m.name, f.name)}
+                                onClick={() => openRenameFile(m.name, f.name)}
                                 className="text-slate-600 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-all"
                                 title="重命名文件"
                               >
@@ -580,6 +604,46 @@ export default function CourseManager() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 重命名弹窗 */}
+      {rename && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={e => { if (e.target === e.currentTarget) setRename(null); }}
+        >
+          <div
+            className="bg-slate-900 border border-slate-700 rounded-2xl w-[380px] max-w-[90vw] p-6 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-bold text-white mb-4">重命名{rename.kind}</h3>
+            <input
+              value={renameValue}
+              onChange={e => setRenameValue(e.target.value)}
+              placeholder={`输入新的${rename.kind}名称`}
+              autoFocus
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleRenameConfirm();
+                if (e.key === 'Escape') setRename(null);
+              }}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
+            />
+            <div className="flex gap-2 justify-end pt-4">
+              <button
+                onClick={() => setRename(null)}
+                className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleRenameConfirm}
+                className="text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-4 py-2 rounded-lg"
+              >
+                确定
+              </button>
             </div>
           </div>
         </div>
