@@ -35,6 +35,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
   // ── 课程广场状态 ──
   const [teachers, setTeachers] = useState<{ username: string }[]>([]);
   const [courseTeacher, setCourseTeacher] = useState('');
+  const [courseType, setCourseType] = useState('全部');
   const [courses, setCourses] = useState<Course[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -431,6 +432,31 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </div>
           </div>
 
+          {/* 课程类型筛选 — 全部 / Scratch / Python / C++ */}
+          <div className="flex items-center gap-0 px-2 flex-shrink-0" style={{ paddingBottom: '0.25rem' }}>
+            {([
+              ['全部', '全部'],
+              ['scratch', '🧩 Scratch'],
+              ['python', '🍁 Python'],
+              ['cpp', '⚙️ C++'],
+            ] as [string, string][]).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => { setCourseType(val); backToCourses(); }}
+                className="flex-shrink-0"
+                style={{
+                  border: 'none', background: 'transparent', cursor: 'pointer',
+                  padding: '0.25rem 0.7rem', fontSize: '0.8rem', fontWeight: 600,
+                  color: courseType === val ? '#2c3e50' : '#5f6c7a',
+                  transition: 'all 0.15s', whiteSpace: 'nowrap',
+                  display: 'flex', alignItems: 'center', gap: '0.25rem'
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           {/* 内容区域：课程列表 / 课件列表 */}
           <div className="flex-1 overflow-y-auto px-2 py-2 neo-scrollbar" style={{ minHeight: 0 }}>
             {selectedCourse ? (
@@ -501,9 +527,13 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               <div className="flex items-center justify-center h-full">
                 <p style={{ color: '#4a5b6b' }}>暂无课程</p>
               </div>
+            ) : courses.filter(c => courseType === '全部' || c.type === courseType).length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <p style={{ color: '#4a5b6b' }}>该类型暂无课程</p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {courses.map(c => (
+                {courses.filter(c => courseType === '全部' || c.type === courseType).map(c => (
                   <button
                     key={c.name}
                     onClick={() => loadMaterials(c)}
