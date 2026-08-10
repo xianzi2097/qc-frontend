@@ -26,41 +26,71 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+      className="fixed inset-0 flex items-center justify-center z-50"
+      style={{ background: 'rgba(232,237,242,0.7)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
       <div
-        className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md"
+        className="neo-modal"
+        style={{ width: '26rem', maxWidth: '90vw', padding: '2rem 1.8rem 1.6rem' }}
         onClick={e => e.stopPropagation()}
       >
-        <h3 className="text-white text-lg font-bold mb-4 text-center">选择头像</h3>
+        <h3 className="text-[1.5rem] font-bold text-center mb-1" style={{ color: '#1e2b38' }}>
+          选择头像
+        </h3>
+        <p className="text-xs text-center mb-6" style={{ color: '#5f6c7a' }}>
+          轻点一块，选择喜欢的头像
+        </p>
 
-        <div className="grid grid-cols-4 gap-3 mb-6">
-          {AVATARS.map((a, i) => (
-            <button
-              key={i}
-              onClick={() => setSelected(String(i))}
-              className={`w-full aspect-square rounded-2xl bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl transition-all ${
-                selected === String(i)
-                  ? 'ring-2 ring-white scale-110 shadow-lg'
-                  : 'opacity-70 hover:opacity-100'
-              }`}
-            >
-              {a.icon}
-            </button>
-          ))}
+        <div className="grid grid-cols-4 gap-4 mb-7">
+          {AVATARS.map((a, i) => {
+            const isSel = selected === String(i);
+            return (
+              <button
+                key={i}
+                onClick={() => setSelected(String(i))}
+                title={a.icon}
+                className="aspect-square rounded-2xl flex items-center justify-center transition-all duration-150"
+                style={{
+                  background: 'var(--neo-bg)',
+                  border: '1px solid rgba(255,255,255,0.5)',
+                  boxShadow: isSel
+                    ? 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)'
+                    : '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)',
+                  transform: isSel ? 'scale(0.94)' : 'scale(1)',
+                  cursor: 'pointer',
+                }}
+              >
+                <span
+                  className={`w-11 h-11 rounded-full bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl select-none`}
+                  style={
+                    isSel
+                      ? { boxShadow: '0 0 0 3px var(--neo-bg), 0 0 0 6px rgba(46,139,87,0.85)' }
+                      : {
+                          boxShadow:
+                            '0 3px 6px rgba(0,0,0,0.25), inset -2px -3px 4px rgba(0,0,0,0.18), inset 2px 3px 4px rgba(255,255,255,0.25)',
+                        }
+                  }
+                >
+                  {a.icon}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="flex gap-2 justify-center">
-          <button
-            onClick={onClose}
-            className="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-2 rounded-lg transition-colors"
-          >
+        <div className="flex gap-3 justify-center">
+          <button onClick={onClose} className="neo-btn">
             取消
           </button>
           <button
             onClick={() => onSelect(selected)}
-            className="text-sm bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-5 py-2 rounded-lg transition-colors"
+            className="neo-btn font-bold"
+            style={{
+              background: 'linear-gradient(145deg, #f7c08b, #e8914a)',
+              color: '#fff',
+              borderColor: 'rgba(255,255,255,0.55)',
+            }}
           >
             保存
           </button>

@@ -445,7 +445,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                     该课程暂无课件
                   </div>
                 ) : selectedCourse.type === 'scratch' ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {materials.map(m => (
                       <a
                         key={m.name}
