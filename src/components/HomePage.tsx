@@ -319,7 +319,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                       {AVATARS[currentAvatarIdx].icon}
                     </div>
                   ) : null}
-                  <div className='flex justify-end gap-2 mt-4'>
+                  <div className='flex gap-2 mt-4' style={{ justifyContent: storedUser ? 'center' : 'flex-end' }}>
                     {storedUser ? (
                       <>
                         <a href="/dashboard" className="neo-btn">
