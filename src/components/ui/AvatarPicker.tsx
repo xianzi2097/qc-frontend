@@ -70,10 +70,6 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
           </button>
         </div>
 
-        <h3 className="text-[1.4rem] font-bold text-center mb-5" style={{ color: '#1e2b38' }}>
-          选择头像
-        </h3>
-
         <div className="grid grid-cols-5 gap-3 neo-scrollbar" style={{ maxHeight: '17rem', overflowY: 'auto' }}>
           {AVATARS.map((a, i) => {
             const isSel = selected === String(i);
@@ -87,22 +83,17 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
                   background: 'var(--neo-bg)',
                   border: '1px solid rgba(255,255,255,0.5)',
                   boxShadow: isSel
-                    ? 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)'
+                    ? '0 0 0 3px var(--neo-bg), 0 0 0 6px rgba(46,139,87,0.85), 4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)'
                     : '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)',
-                  transform: isSel ? 'scale(0.94)' : 'scale(1)',
                   cursor: 'pointer',
                 }}
               >
                 <span
                   className={`w-12 h-12 rounded-full bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl select-none`}
-                  style={
-                    isSel
-                      ? { boxShadow: '0 0 0 3px var(--neo-bg), 0 0 0 6px rgba(46,139,87,0.85)' }
-                      : {
-                          boxShadow:
-                            '0 3px 6px rgba(0,0,0,0.25), inset -2px -3px 4px rgba(0,0,0,0.18), inset 2px 3px 4px rgba(255,255,255,0.25)',
-                        }
-                  }
+                  style={{
+                    boxShadow:
+                      '0 3px 6px rgba(0,0,0,0.25), inset -2px -3px 4px rgba(0,0,0,0.18), inset 2px 3px 4px rgba(255,255,255,0.25)',
+                  }}
                 >
                   {a.icon}
                 </span>
