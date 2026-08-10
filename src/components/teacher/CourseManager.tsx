@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil } from 'lucide-react';
 import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
@@ -180,6 +180,58 @@ export default function CourseManager() {
     loadCourses();
   };
 
+  // ── 重命名 ──
+  const handleRenameCourse = async (course: Course) => {
+    const newName = window.prompt('输入新的课程名称', course.name)?.trim();
+    if (!newName || newName === course.name) return;
+    try {
+      const res = await fetch(`/api/courses/${encodeURIComponent(course.name)}/rename`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_name: newName }),
+      });
+      const data = await res.json().catch(() => null);
+      if (data?.status !== 'success') return alert(data?.detail || '课程重命名失败');
+      // 若正在查看该课程，同步更新选中态后重新加载
+      if (selectedCourse?.name === course.name) {
+        const updated = { ...selectedCourse, name: newName };
+        setSelectedCourse(updated);
+        await loadMaterials(updated);
+      }
+      loadCourses();
+    } catch { alert('无法连接服务器'); }
+  };
+
+  const handleRenameMaterial = async (m: Material) => {
+    if (!selectedCourse) return;
+    const newName = window.prompt('输入新的课件名称', m.name)?.trim();
+    if (!newName || newName === m.name) return;
+    try {
+      const res = await fetch(
+        `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(m.name)}/rename`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }
+      );
+      const data = await res.json().catch(() => null);
+      if (data?.status !== 'success') return alert(data?.detail || '课件重命名失败');
+      loadMaterials(selectedCourse);
+      loadCourses();
+    } catch { alert('无法连接服务器'); }
+  };
+
+  const handleRenameFile = async (lessonName: string, fileName: string) => {
+    if (!selectedCourse) return;
+    const newName = window.prompt('输入新的文件名', fileName)?.trim();
+    if (!newName || newName === fileName) return;
+    try {
+      const res = await fetch(
+        `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(lessonName)}/${encodeURIComponent(fileName)}/rename`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }
+      );
+      const data = await res.json().catch(() => null);
+      if (data?.status !== 'success') return alert(data?.detail || '文件重命名失败');
+      loadMaterials(selectedCourse);
+    } catch { alert('无法连接服务器'); }
+  };
+
   // ── 课程回收站 ──
   const [trashItems, setTrashItems] = useState<any[]>([]);
   const [showTrash, setShowTrash] = useState(false);
@@ -307,13 +359,22 @@ export default function CourseManager() {
                     {course.material_count} 个课件
                   </p>
                 </div>
-                <button
-                  onClick={e => { e.stopPropagation(); handleDelete(course.name); }}
-                  className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all p-1"
-                  title="删除课程"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={() => handleRenameCourse(course)}
+                    className="text-slate-600 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-all p-1"
+                    title="重命名课程"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(course.name)}
+                    className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all p-1"
+                    title="删除课程"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -362,13 +423,22 @@ export default function CourseManager() {
                         </span>
                       </div>
                     </a>
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteMaterial(m.name); }}
-                      className="absolute top-2 right-2 text-slate-600 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
-                      title="删除课件"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRenameMaterial(m); }}
+                        className="text-slate-600 hover:text-brand-orange transition-colors"
+                        title="重命名课件"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteMaterial(m.name); }}
+                        className="text-slate-600 hover:text-rose-400 transition-colors"
+                        title="删除课件"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -414,6 +484,13 @@ export default function CourseManager() {
                       </div>
                       <div className="flex gap-2">
                         <button
+                          onClick={() => handleRenameMaterial(m)}
+                          className="text-slate-600 hover:text-brand-orange transition-colors"
+                          title="重命名文件夹"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
                           onClick={() => handleUploadFile(m.name)}
                           className="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded"
                         >
@@ -441,13 +518,22 @@ export default function CourseManager() {
                               <span className="truncate">{f.name}</span>
                               <span className="text-[10px] text-slate-600">({(f.size / 1024).toFixed(1)} KB)</span>
                             </a>
-                            <button
-                              onClick={() => handleDeleteFile(m.name, f.name)}
-                              className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"
-                              title="删除文件"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleRenameFile(m.name, f.name)}
+                                className="text-slate-600 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-all"
+                                title="重命名文件"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteFile(m.name, f.name)}
+                                className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"
+                                title="删除文件"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
