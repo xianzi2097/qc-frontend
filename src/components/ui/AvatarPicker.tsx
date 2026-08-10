@@ -89,7 +89,7 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
                 }}
               >
                 <span
-                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl select-none`}
+                  className={`w-[2.85rem] h-[2.85rem] rounded-full bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl select-none`}
                   style={{
                     boxShadow:
                       '0 3px 6px rgba(0,0,0,0.25), inset -2px -3px 4px rgba(0,0,0,0.18), inset 2px 3px 4px rgba(255,255,255,0.25)',
