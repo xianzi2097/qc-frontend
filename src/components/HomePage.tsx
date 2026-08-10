@@ -57,19 +57,34 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
     setTeacherInd({ left: r.left - wrapRect.left, width: r.width });
   }, [courseTeacher]);
 
+  // ── 类型胶囊滑动指示器 ──
+  const typeWrapRef = useRef<HTMLDivElement>(null);
+  const [typeInd, setTypeInd] = useState({ left: 0, width: 0 });
+
+  const updateTypeInd = useCallback(() => {
+    const wrap = typeWrapRef.current;
+    if (!wrap) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const active = wrap.querySelector<HTMLElement>(`[data-type="${courseType}"]`);
+    if (!active) return;
+    const r = active.getBoundingClientRect();
+    setTypeInd({ left: r.left - wrapRect.left, width: r.width });
+  }, [courseType]);
+
   // 翻转后等过渡结束再测量（避免拿到过渡中的坐标），并监听窗口缩放
   useEffect(() => {
     if (!flipped) { setPlazaReady(false); return; }
     const t = setTimeout(() => {
       requestAnimationFrame(() => {
         updateTeacherInd();
+        updateTypeInd();
         setPlazaReady(true);
       });
     }, 900);
-    const onResize = () => updateTeacherInd();
+    const onResize = () => { updateTeacherInd(); updateTypeInd(); };
     window.addEventListener('resize', onResize);
     return () => { clearTimeout(t); window.removeEventListener('resize', onResize); };
-  }, [flipped, updateTeacherInd]);
+  }, [flipped, updateTeacherInd, updateTypeInd]);
 
   // 老师列表变化（按钮出现/布局变化）时重新测量
   useEffect(() => {
@@ -82,6 +97,12 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
     if (!flipped || !plazaReady) return;
     updateTeacherInd();
   }, [courseTeacher, plazaReady, flipped]);
+
+  // 切换类型时立即测量，让胶囊平滑滑动
+  useEffect(() => {
+    if (!flipped || !plazaReady) return;
+    updateTypeInd();
+  }, [courseType, plazaReady, flipped]);
 
   const loadMaterials = (course: Course) => {
     setSelectedCourse(course);
@@ -439,8 +460,21 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               >
                 <Library className="w-6 h-6 ico-green" /> 课程广场
               </h1>
-              {/* 类型筛选 — 选中变绿色（无滑块） */}
-              <div className="flex items-center gap-0">
+              {/* 类型筛选 — 凹陷胶囊滑动切换 */}
+              <div ref={typeWrapRef} className="relative flex items-center gap-0 flex-shrink-0" style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem' }}>
+                {/* 滑动凹陷胶囊 */}
+                <div
+                  className="absolute rounded-full transition-all duration-300 pointer-events-none"
+                  style={{
+                    left: typeInd.left,
+                    width: typeInd.width,
+                    top: '0.25rem',
+                    bottom: '0.25rem',
+                    background: 'var(--neo-bg)',
+                    boxShadow: 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)',
+                    zIndex: 0,
+                  }}
+                />
                 {([
                   ['全部', '全部'],
                   ['scratch', 'Scratch'],
@@ -449,16 +483,18 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 ] as [string, string][]).map(([val, label]) => (
                   <button
                     key={val}
+                    data-type={val}
                     onClick={() => { setCourseType(val); backToCourses(); }}
                     className="flex-shrink-0 flex items-center gap-1"
                     style={{
                       border: 'none', cursor: 'pointer',
-                      padding: '0.3rem 0.7rem', fontSize: '0.8rem',
+                      padding: '0.15rem 0.7rem', fontSize: '0.8rem',
                       fontWeight: courseType === val ? 700 : 600,
                       borderRadius: '1rem', whiteSpace: 'nowrap',
-                      color: courseType === val ? '#2e8b57' : '#5f6c7a',
+                      color: courseType === val ? '#1e2b38' : '#5f6c7a',
                       background: 'transparent',
                       transition: 'color 0.15s',
+                      zIndex: 1,
                     }}
                   >
                     {val !== '全部' && TYPE_ICON[val]({ className: 'w-3.5 h-3.5' })}
