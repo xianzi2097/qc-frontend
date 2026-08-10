@@ -85,11 +85,12 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
                   boxShadow: isSel
                     ? '0 0 0 3px var(--neo-bg), 0 0 0 6px rgba(46,139,87,0.85), 4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)'
                     : '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)',
+                  transform: 'scale(0.95)',
                   cursor: 'pointer',
                 }}
               >
                 <span
-                  className={`w-[2.85rem] h-[2.85rem] rounded-full bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl select-none`}
+                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl select-none`}
                   style={{
                     boxShadow:
                       '0 3px 6px rgba(0,0,0,0.25), inset -2px -3px 4px rgba(0,0,0,0.18), inset 2px 3px 4px rgba(255,255,255,0.25)',
