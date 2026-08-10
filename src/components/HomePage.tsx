@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   BookOpen, Award, Puzzle, Code2,
   Star, LogIn, Play, X, HelpCircle,
@@ -41,39 +41,6 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [materialsLoading, setMaterialsLoading] = useState(false);
-
-  // ── 类型橙色胶囊指示器 ──
-  const typeWrapRef = useRef<HTMLDivElement>(null);
-  const [typeInd, setTypeInd] = useState({ left: 0, width: 0 });
-  const [plazaReady, setPlazaReady] = useState(false); // 翻转过渡结束后才允许测量
-
-  const updateTypeInd = useCallback(() => {
-    const wrap = typeWrapRef.current;
-    if (!wrap) return;
-    const wrapRect = wrap.getBoundingClientRect();
-    const active = wrap.querySelector<HTMLElement>(`[data-type="${courseType}"]`);
-    if (!active) return;
-    const r = active.getBoundingClientRect();
-    setTypeInd({ left: r.left - wrapRect.left, width: r.width });
-  }, [courseType]);
-
-  // 翻转后等待 0.6s 过渡结束再测量（避免拿到过渡中的坐标），并监听窗口缩放
-  useEffect(() => {
-    if (!flipped) { setPlazaReady(false); return; }
-    const t = setTimeout(() => {
-      updateTypeInd();
-      setPlazaReady(true);
-    }, 700);
-    const onResize = () => updateTypeInd();
-    window.addEventListener('resize', onResize);
-    return () => { clearTimeout(t); window.removeEventListener('resize', onResize); };
-  }, [flipped, updateTypeInd]);
-
-  // 类型切换时立即测量，让胶囊平滑滑动
-  useEffect(() => {
-    if (!flipped || !plazaReady) return;
-    updateTypeInd();
-  }, [courseType, plazaReady, flipped]);
 
   const loadMaterials = (course: Course) => {
     setSelectedCourse(course);
@@ -420,8 +387,8 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
       <div className="flip-back">
         <div className="neo-wrap w-full h-full" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: '0.75rem' }}>
           {/* 顶部导航 + 课程类型筛选 */}
-          <div className="flex justify-between items-center px-2 flex-shrink-0">
-            <div className="flex items-center gap-3 min-w-0">
+          <div className="flex justify-between items-end px-2 flex-shrink-0">
+            <div className="flex items-end gap-3 min-w-0">
               <h1
                 className="text-[1.5rem] font-semibold tracking-tight flex items-center gap-2 flex-shrink-0"
                 style={{
@@ -431,19 +398,8 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               >
                 <Library className="w-6 h-6 ico-green" /> 课程广场
               </h1>
-              <div ref={typeWrapRef} className="relative flex items-center gap-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                {/* 橙色滑动胶囊 */}
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 rounded-full transition-all duration-300 pointer-events-none"
-                  style={{
-                    left: typeInd.left,
-                    width: typeInd.width,
-                    height: '1.7rem',
-                    background: 'linear-gradient(145deg, #f7c08b, #e8914a)',
-                    boxShadow: '2px 2px 6px rgba(201,106,44,0.4), -2px -2px 5px rgba(255,255,255,0.7)',
-                    zIndex: 0,
-                  }}
-                />
+              {/* 类型筛选 — 选中变绿色（无滑块） */}
+              <div className="flex items-center gap-0">
                 {([
                   ['全部', '全部'],
                   ['scratch', 'Scratch'],
@@ -452,24 +408,19 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 ] as [string, string][]).map(([val, label]) => (
                   <button
                     key={val}
-                    data-type={val}
                     onClick={() => { setCourseType(val); backToCourses(); }}
-                    className="relative flex-shrink-0 flex items-center gap-1"
+                    className="flex-shrink-0 flex items-center gap-1"
                     style={{
                       border: 'none', cursor: 'pointer',
-                      padding: '0.3rem 0.75rem', fontSize: '0.8rem', fontWeight: 700,
+                      padding: '0.3rem 0.7rem', fontSize: '0.8rem',
+                      fontWeight: courseType === val ? 700 : 600,
                       borderRadius: '1rem', whiteSpace: 'nowrap',
-                      color: courseType === val ? '#fff' : '#5f6c7a',
+                      color: courseType === val ? '#2e8b57' : '#5f6c7a',
                       background: 'transparent',
-                      transition: 'color 0.2s',
-                      zIndex: 1,
+                      transition: 'color 0.15s',
                     }}
                   >
-                    {val !== '全部' && (
-                      <span className="inline-flex" style={courseType === val ? { filter: 'brightness(0) invert(1)' } : undefined}>
-                        {TYPE_ICON[val]({ className: 'w-3.5 h-3.5' })}
-                      </span>
-                    )}
+                    {val !== '全部' && TYPE_ICON[val]({ className: 'w-3.5 h-3.5' })}
                     {label}
                   </button>
                 ))}
@@ -480,33 +431,41 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             </button>
           </div>
 
-          {/* 老师选择 — Tab 滑块（未选浅灰 / 选中深色） */}
+          {/* 老师选择 — 选中下凹胶囊 */}
           <div className="flex items-center gap-0 px-2 flex-shrink-0" style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem' }}>
             <button onClick={() => selectTeacher('全部')}
               className="flex-shrink-0"
               style={{
-                border: 'none', background: 'transparent', cursor: 'pointer',
-                padding: '0.35rem 0.8rem', fontSize: '0.85rem',
-                fontWeight: courseTeacher === '全部' ? 700 : 600,
-                color: courseTeacher === '全部' ? '#2c3e50' : '#5f6c7a',
-                transition: 'all 0.15s', whiteSpace: 'nowrap',
+                border: 'none', cursor: 'pointer',
+                padding: '0.3rem 0.85rem', fontSize: '0.85rem', fontWeight: 600,
+                borderRadius: '1.2rem', whiteSpace: 'nowrap',
+                color: courseTeacher === '全部' ? '#1e2b38' : '#5f6c7a',
+                background: courseTeacher === '全部' ? 'var(--neo-bg)' : 'transparent',
+                boxShadow: courseTeacher === '全部'
+                  ? 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)'
+                  : 'none',
+                transition: 'all 0.15s',
                 display: 'flex', alignItems: 'center', gap: '0.25rem'
               }}>
-              <Users className="w-4 h-4" style={{ color: courseTeacher === '全部' ? '#2c3e50' : '#5f6c7a' }} /> 全部
+              <Users className="w-4 h-4" style={{ color: courseTeacher === '全部' ? '#1e2b38' : '#5f6c7a' }} /> 全部
             </button>
             <div className="flex gap-0 overflow-x-auto" style={{ flex: 1, scrollbarWidth: 'none' }}>
               {teachers.map((t) => (
                 <button key={t.username} onClick={() => selectTeacher(t.username)}
                   className="flex-shrink-0"
                   style={{
-                    border: 'none', background: 'transparent', cursor: 'pointer',
-                    padding: '0.35rem 0.8rem', fontSize: '0.85rem',
-                    fontWeight: courseTeacher === t.username ? 700 : 600,
-                    color: courseTeacher === t.username ? '#2c3e50' : '#5f6c7a',
-                    transition: 'all 0.15s', whiteSpace: 'nowrap',
+                    border: 'none', cursor: 'pointer',
+                    padding: '0.3rem 0.85rem', fontSize: '0.85rem', fontWeight: 600,
+                    borderRadius: '1.2rem', whiteSpace: 'nowrap',
+                    color: courseTeacher === t.username ? '#1e2b38' : '#5f6c7a',
+                    background: courseTeacher === t.username ? 'var(--neo-bg)' : 'transparent',
+                    boxShadow: courseTeacher === t.username
+                      ? 'inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light)'
+                      : 'none',
+                    transition: 'all 0.15s',
                     display: 'flex', alignItems: 'center', gap: '0.25rem'
                   }}>
-                  <User className="w-4 h-4" style={{ color: courseTeacher === t.username ? '#2c3e50' : '#5f6c7a' }} /> {t.username}
+                  <User className="w-4 h-4" style={{ color: courseTeacher === t.username ? '#1e2b38' : '#5f6c7a' }} /> {t.username}
                 </button>
               ))}
             </div>
