@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 
 const AVATARS = [
   { bg: 'from-brand-orange to-amber-500', icon: '🦊' },
@@ -16,15 +17,6 @@ const AVATARS = [
   { bg: 'from-amber-500 to-orange-400', icon: '🐶' },
   { bg: 'from-slate-400 to-gray-500', icon: '🐰' },
   { bg: 'from-orange-500 to-amber-600', icon: '🐹' },
-  { bg: 'from-stone-500 to-stone-600', icon: '🦉' },
-  { bg: 'from-fuchsia-500 to-pink-500', icon: '🦋' },
-  { bg: 'from-sky-500 to-blue-600', icon: '🐬' },
-  { bg: 'from-slate-500 to-slate-600', icon: '🐘' },
-  { bg: 'from-yellow-400 to-amber-600', icon: '🦒' },
-  { bg: 'from-zinc-400 to-gray-500', icon: '🐨' },
-  { bg: 'from-rose-400 to-pink-500', icon: '🦩' },
-  { bg: 'from-blue-600 to-indigo-500', icon: '🦸' },
-  { bg: 'from-gray-600 to-slate-700', icon: '🤖' },
 ];
 
 interface Props {
@@ -44,17 +36,43 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
     >
       <div
         className="neo-modal"
-        style={{ width: '28rem', maxWidth: '90vw', padding: '2rem 1.8rem 1.6rem', maxHeight: '85vh', overflowY: 'auto' }}
+        style={{ width: '28rem', maxWidth: '90vw', padding: '1.4rem 1.5rem 1.6rem' }}
         onClick={e => e.stopPropagation()}
       >
-        <h3 className="text-[1.5rem] font-bold text-center mb-1" style={{ color: '#1e2b38' }}>
+        {/* 顶部：左上方圆形关闭 + 右上保存 */}
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={onClose}
+            title="关闭"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150"
+            style={{
+              background: 'var(--neo-bg)',
+              border: '1px solid rgba(255,255,255,0.5)',
+              boxShadow: '3px 3px 6px var(--neo-shadow-dark), -3px -3px 6px var(--neo-shadow-light)',
+              color: '#5f6c7a',
+              cursor: 'pointer',
+            }}
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onSelect(selected)}
+            className="neo-btn font-bold"
+            style={{
+              background: 'linear-gradient(145deg, #f7c08b, #e8914a)',
+              color: '#fff',
+              borderColor: 'rgba(255,255,255,0.55)',
+            }}
+          >
+            保存
+          </button>
+        </div>
+
+        <h3 className="text-[1.4rem] font-bold text-center mb-5" style={{ color: '#1e2b38' }}>
           选择头像
         </h3>
-        <p className="text-xs text-center mb-6" style={{ color: '#5f6c7a' }}>
-          轻点一块，选择喜欢的头像
-        </p>
 
-        <div className="grid grid-cols-4 gap-3.5 mb-7">
+        <div className="grid grid-cols-5 gap-3">
           {AVATARS.map((a, i) => {
             const isSel = selected === String(i);
             return (
@@ -74,7 +92,7 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
                 }}
               >
                 <span
-                  className={`w-14 h-14 rounded-full bg-gradient-to-br ${a.bg} flex items-center justify-center text-3xl select-none`}
+                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${a.bg} flex items-center justify-center text-2xl select-none`}
                   style={
                     isSel
                       ? { boxShadow: '0 0 0 3px var(--neo-bg), 0 0 0 6px rgba(46,139,87,0.85)' }
@@ -89,23 +107,6 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }: Props
               </button>
             );
           })}
-        </div>
-
-        <div className="flex gap-3 justify-center">
-          <button onClick={onClose} className="neo-btn">
-            取消
-          </button>
-          <button
-            onClick={() => onSelect(selected)}
-            className="neo-btn font-bold"
-            style={{
-              background: 'linear-gradient(145deg, #f7c08b, #e8914a)',
-              color: '#fff',
-              borderColor: 'rgba(255,255,255,0.55)',
-            }}
-          >
-            保存
-          </button>
         </div>
       </div>
     </div>
