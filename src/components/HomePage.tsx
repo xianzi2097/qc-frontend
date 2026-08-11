@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BookOpen, Award, Puzzle, Code2,
   Star, LogIn, Play, X, HelpCircle,
-  Library, ArrowRight, Search,
+  Library, ArrowRight, Search, LayoutGrid,
   Folder, FolderOpen, FileText, Braces, Terminal, Users, User
 } from 'lucide-react';
 
@@ -234,22 +234,60 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
       className="min-h-screen flex items-center justify-center pt-6 px-6 pb-[3.8rem] overflow-hidden cursor-default relative"
       style={{ background: '#e8edf2' }}
     >
-      {/* ════ CodeNova 标题 — 背景层左上角（翻转容器之外，翻转时始终保留） ════ */}
-      <div className="absolute top-8 left-10 z-10">
-        <h1
-          className="text-[2.2rem] font-semibold tracking-tight flex items-center gap-2"
-          style={{
-            color: '#2c3e50',
-            textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)'
-          }}
-        >
-          <Star className="w-8 h-8" style={{ color: '#2c3e50' }} /> CodeNova
-        </h1>
-        <div
-          className="flex items-center gap-1.5 mt-1"
-          style={{ color: '#5f6c7a', fontWeight: 500 }}
-        >
-          开源的少儿编程学习平台
+      {/* ════ CodeNova 卡片 — 背景层左上角，翻转联动：正面 CodeNova / 背面 课程广场 ════ */}
+      <div className="absolute top-1 left-1 z-10">
+        <div className="relative" style={{ perspective: '1200px' }}>
+          <div
+            className="relative"
+            style={{
+              transformStyle: 'preserve-3d',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+              willChange: 'transform',
+            }}
+          >
+            {/* 正面：CodeNova + 副标题 */}
+            <div
+              className="neo-card flat"
+              style={{ backfaceVisibility: 'hidden', minHeight: 0, padding: '0.9rem 1.5rem', borderRadius: '1.4rem' }}
+            >
+              <h1
+                className="text-[2.2rem] font-semibold tracking-tight flex items-center gap-2"
+                style={{
+                  color: '#2c3e50',
+                  textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)'
+                }}
+              >
+                <Star className="w-8 h-8" style={{ color: '#2c3e50' }} /> CodeNova
+              </h1>
+              <div
+                className="flex items-center gap-1.5 mt-1"
+                style={{ color: '#5f6c7a', fontWeight: 500, whiteSpace: 'nowrap' }}
+              >
+                开源的少儿编程学习平台
+              </div>
+            </div>
+            {/* 背面：课程广场 + 图标 */}
+            <div
+              className="neo-card flat"
+              style={{
+                backfaceVisibility: 'hidden',
+                position: 'absolute',
+                inset: 0,
+                transform: 'rotateY(180deg)',
+                minHeight: 0,
+                padding: '0.9rem 1.5rem',
+                borderRadius: '1.4rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div className="flex items-center gap-2" style={{ color: '#2c3e50', fontWeight: 600, fontSize: '1.5rem', whiteSpace: 'nowrap', textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)' }}>
+                <Library className="w-8 h-8 ico-green" /> 课程广场
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -445,19 +483,9 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
       <div className="flip-back">
         <div className="neo-wrap flat w-full h-full" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: '0.75rem' }}>
           {/* 顶部导航 + 课程类型筛选 */}
-          <div className="flex justify-between items-end px-2 flex-shrink-0">
-            <div className="flex items-end gap-3 min-w-0">
-              <h1
-                className="text-[1.5rem] font-semibold tracking-tight flex items-center gap-2 flex-shrink-0"
-                style={{
-                  color: '#2c3e50',
-                  textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)'
-                }}
-              >
-                <Library className="w-6 h-6 ico-green" /> 课程广场
-              </h1>
-              {/* 类型筛选 — 凹陷胶囊滑动切换 */}
-              <div ref={typeWrapRef} className="relative flex items-center gap-0 flex-shrink-0" style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem' }}>
+          <div className="flex justify-between items-center px-2 flex-shrink-0">
+            {/* 类型筛选 — 凹陷胶囊滑动切换（课程广场标题已移到左上角小卡背面） */}
+            <div ref={typeWrapRef} className="relative flex items-center gap-0 flex-shrink-0" style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem' }}>
                 {/* 滑动凹陷胶囊 */}
                 <div
                   className="absolute rounded-full transition-all duration-300 pointer-events-none"
@@ -484,7 +512,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                     className="flex-shrink-0 flex items-center gap-1"
                     style={{
                       border: 'none', cursor: 'pointer',
-                      padding: '0.15rem 0.7rem', fontSize: '0.8rem',
+                      padding: '0.15rem 0.7rem', fontSize: '0.85rem',
                       fontWeight: courseType === val ? 700 : 600,
                       borderRadius: '1rem', whiteSpace: 'nowrap',
                       color: courseType === val ? '#1e2b38' : '#5f6c7a',
@@ -493,12 +521,11 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                       zIndex: 1,
                     }}
                   >
-                    {val !== '全部' && TYPE_ICON[val]({ className: 'w-3.5 h-3.5' })}
+                    {val === '全部' ? <LayoutGrid className="w-3.5 h-3.5" style={{ color: '#5f6c7a' }} /> : TYPE_ICON[val]({ className: 'w-3.5 h-3.5' })}
                     {label}
                   </button>
                 ))}
               </div>
-            </div>
             <button onClick={() => setFlipped(false)} className="neo-btn flex-shrink-0">
               <ArrowRight className="w-4 h-4" style={{ transform: 'rotate(180deg)' }} /> 返回
             </button>
@@ -524,7 +551,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 className="flex-shrink-0"
                 style={{
                   border: 'none', cursor: 'pointer',
-                  padding: '0.3rem 0.85rem', fontSize: '0.85rem', fontWeight: 600,
+                  padding: '0.3rem 0.85rem', fontSize: '0.75rem', fontWeight: 600,
                   borderRadius: '1.2rem', whiteSpace: 'nowrap',
                   color: courseTeacher === '全部' ? '#1e2b38' : '#5f6c7a',
                   background: 'transparent',
@@ -540,7 +567,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                     className="flex-shrink-0"
                     style={{
                       border: 'none', cursor: 'pointer',
-                      padding: '0.3rem 0.85rem', fontSize: '0.85rem', fontWeight: 600,
+                      padding: '0.3rem 0.85rem', fontSize: '0.75rem', fontWeight: 600,
                       borderRadius: '1.2rem', whiteSpace: 'nowrap',
                       color: courseTeacher === t.username ? '#1e2b38' : '#5f6c7a',
                       background: 'transparent',

@@ -148,6 +148,13 @@ body {
   box-shadow: none;
 }
 
+/* 平卡片：去掉高光和阴影（和母卡一致，看起来是平的） */
+.neo-card.flat {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
 /* 卡片 */
 .neo-card {
   background: var(--neo-bg);
