@@ -231,7 +231,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-6 cursor-default"
+      className="min-h-screen flex items-center justify-center pt-6 px-6 pb-[3.8rem] cursor-default"
       style={{ background: '#e8edf2' }}
     >
       <div className="flip-container max-w-6xl">
@@ -257,7 +257,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               className="flex items-center gap-1.5 mt-1"
               style={{ color: '#5f6c7a', fontWeight: 500 }}
             >
-            开源的轻量少儿编程学习环境
+            开源的少儿编程学习平台
             </div>
           </div>
 
