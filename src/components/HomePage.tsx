@@ -680,8 +680,8 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           pointerEvents: 'none',
         }}
       >
-        <div>粤ICP备2026057743号-1 · QC-Studio</div>
-        <div>Copyright © 2025-present Arin</div>
+        <div>Copyright © 2025-present Arin|QC-Studio</div>
+        <div>粤ICP备2026057743号-1</div>
       </div>
 
       {/* Login Modal */}
