@@ -231,7 +231,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center pt-6 px-6 pb-[3.8rem] cursor-default"
+      className="min-h-screen flex items-center justify-center pt-6 px-6 pb-[3.8rem] overflow-hidden cursor-default"
       style={{ background: '#e8edf2' }}
     >
       <div className="flip-container max-w-6xl">
