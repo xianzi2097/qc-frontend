@@ -143,6 +143,11 @@ body {
   gap: 1.4rem;
 }
 
+/* 平母卡：对象保留，只去掉凸起阴影 */
+.neo-wrap.flat {
+  box-shadow: none;
+}
+
 /* 卡片 */
 .neo-card {
   background: var(--neo-bg);

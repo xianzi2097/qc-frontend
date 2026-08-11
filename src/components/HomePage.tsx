@@ -239,7 +239,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
         {/* ════ 正面：主页 ════ */}
         <div className="flip-front">
-        <div className="neo-wrap w-full">
+        <div className="neo-wrap flat w-full">
 
         {/* ════ 欢迎区 ════ */}
         <div className="flex justify-between items-center flex-wrap gap-4 px-2">
