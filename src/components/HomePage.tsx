@@ -231,9 +231,28 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center pt-6 px-6 pb-[3.8rem] overflow-hidden cursor-default"
+      className="min-h-screen flex items-center justify-center pt-6 px-6 pb-[3.8rem] overflow-hidden cursor-default relative"
       style={{ background: '#e8edf2' }}
     >
+      {/* ════ CodeNova 标题 — 背景层左上角（翻转容器之外，翻转时始终保留） ════ */}
+      <div className="absolute top-8 left-10 z-10">
+        <h1
+          className="text-[2.2rem] font-semibold tracking-tight flex items-center gap-2"
+          style={{
+            color: '#2c3e50',
+            textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)'
+          }}
+        >
+          <Star className="w-8 h-8" style={{ color: '#2c3e50' }} /> CodeNova
+        </h1>
+        <div
+          className="flex items-center gap-1.5 mt-1"
+          style={{ color: '#5f6c7a', fontWeight: 500 }}
+        >
+          开源的少儿编程学习平台
+        </div>
+      </div>
+
       <div className="flip-container max-w-6xl">
         <div className={`flip-inner ${flipped ? 'flipped' : ''}`}>
 
@@ -241,26 +260,8 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         <div className="flip-front">
         <div className="neo-wrap flat w-full">
 
-        {/* ════ 欢迎区 ════ */}
-        <div className="flex justify-between items-center flex-wrap gap-4 px-2">
-          <div>
-            <h1
-              className="text-[2.2rem] font-semibold tracking-tight flex items-center gap-2"
-              style={{
-                color: '#2c3e50',
-                textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)'
-              }}
-            >
-              <Star className="w-8 h-8" style={{ color: '#2c3e50' }} /> CodeNova
-            </h1>
-            <div
-              className="flex items-center gap-1.5 mt-1"
-              style={{ color: '#5f6c7a', fontWeight: 500 }}
-            >
-            开源的少儿编程学习平台
-            </div>
-          </div>
-
+        {/* ? 帮助按钮 — 母卡右上角（原位置） */}
+        <div className="flex justify-end">
           <a href="/docs/guide/" className="neo-btn no-underline w-10 h-10 rounded-full" style={{ justifyContent: 'center', padding: 0 }}>
             <HelpCircle className="w-5 h-5" style={{ color: '#4a5c6c' }} />
           </a>
@@ -442,7 +443,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
       {/* ════ 背面：课程广场 ════ */}
       <div className="flip-back">
-        <div className="neo-wrap w-full h-full" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: '0.75rem' }}>
+        <div className="neo-wrap flat w-full h-full" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: '0.75rem' }}>
           {/* 顶部导航 + 课程类型筛选 */}
           <div className="flex justify-between items-end px-2 flex-shrink-0">
             <div className="flex items-end gap-3 min-w-0">
