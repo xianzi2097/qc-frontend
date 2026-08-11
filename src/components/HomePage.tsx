@@ -257,7 +257,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               className="flex items-center gap-1.5 mt-1"
               style={{ color: '#5f6c7a', fontWeight: 500 }}
             >
-            开源 轻量 编程 学习
+            开源的轻量少儿编程学习环境
             </div>
           </div>
 
@@ -669,12 +669,13 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
           right: '1rem',
           bottom: '0.4rem',
           textAlign: 'right',
-          color: '#171d24',
+          color: '#2c3e50',
           fontSize: '0.68rem',
           lineHeight: 1.7,
-          letterSpacing: '0.08em',
-          opacity: 0.9,
-          textShadow: '0.08rem 0.08rem 0.15rem rgba(255,255,255,0.85), -0.08rem -0.08rem 0.125rem rgba(60,75,90,0.5)',
+          fontWeight: 'normal',
+          letterSpacing: 'normal',
+          opacity: 1,
+          textShadow: '0.15rem 0.15rem 0.3rem rgba(255,255,255,0.7), -0.15rem -0.15rem 0.3rem rgba(188,195,201,0.4)',
           zIndex: 10,
           pointerEvents: 'none',
         }}

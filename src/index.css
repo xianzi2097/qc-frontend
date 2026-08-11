@@ -140,7 +140,7 @@ body {
     -20px -20px 40px var(--neo-shadow-light);
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 1.4rem;
 }
 
 /* 卡片 */
