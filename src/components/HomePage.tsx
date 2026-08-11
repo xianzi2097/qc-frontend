@@ -257,7 +257,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               className="flex items-center gap-1.5 mt-1"
               style={{ color: '#5f6c7a', fontWeight: 500 }}
             >
-            开源少儿编程学习平台
+            开源 轻量 编程 学习
             </div>
           </div>
 
@@ -267,7 +267,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
         </div>
 
         {/* ════ 4 等分卡片网格 ════ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-2">
 
           {/* ─── 在线课程 ─── */}
           <div className="neo-card">
@@ -429,11 +429,6 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
         </div>
 
-        {/* ════ 分割线 + 备案 ════ */}
-        <hr className="neo-hr" />
-        <p className="text-xs text-center mb-2" style={{ color: '#5f6c7a' }}>
-          粤ICP备2026057743号-1 · Arin | QC-Studio
-        </p>
       </div>
       </div>{/* flip-front end */}
 
@@ -665,6 +660,28 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
 
       </div>{/* flip-inner end */}
       </div>{/* flip-container end */}
+
+      {/* ════ 站点信息（右下角 · 烫金字，贴浏览器底部） ════ */}
+      <div
+        className="select-none"
+        style={{
+          position: 'fixed',
+          right: '1rem',
+          bottom: '0.4rem',
+          textAlign: 'right',
+          color: '#171d24',
+          fontSize: '0.68rem',
+          lineHeight: 1.7,
+          letterSpacing: '0.08em',
+          opacity: 0.9,
+          textShadow: '0.08rem 0.08rem 0.15rem rgba(255,255,255,0.85), -0.08rem -0.08rem 0.125rem rgba(60,75,90,0.5)',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }}
+      >
+        <div>粤ICP备2026057743号-1 · QC-Studio</div>
+        <div>Copyright © 2025-present Arin</div>
+      </div>
 
       {/* Login Modal */}
       {showLogin && (
