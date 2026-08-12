@@ -76,11 +76,15 @@ export default function Notebook({ username }: NotebookProps) {
   activeNoteRef.current = activeNote;
   const expandedNbsRef = useRef(expandedNbs);
   expandedNbsRef.current = expandedNbs;
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  const saveNoteRef = useRef<() => void>(() => {});
 
   // ── 文件夹 + 条目回调（给基件用） ──
 
   const callbacks: FolderTreeCallbacks<NotebookItem> = {
     onSelectFolder: (name) => {
+      if (dirtyRef.current) saveNote();  // 自动保存：有未保存内容先存，再切走
       setActiveNotebook(name); setActiveNote('');
       // 切换笔记本时关闭新建笔记输入框，防止笔记跑到错误的笔记本
       if (activeNotebookRef.current !== name) setShowNewNote(false);
@@ -94,7 +98,10 @@ export default function Notebook({ username }: NotebookProps) {
       // 展开时才加载（loadNotes 调用移到 setState 外面）
       if (!wasExpanded) loadNotes(name);
     },
-    onSelectItem: (id, folderName) => { setActiveNote(id); setActiveNotebook(folderName); },
+    onSelectItem: (id, folderName) => {
+      if (dirtyRef.current) saveNote();  // 自动保存：切换笔记前先把当前内容存好
+      setActiveNote(id); setActiveNotebook(folderName);
+    },
 
     onCreateFolder: async (name) => {
       await fetch(`/api/notebooks?username=${username}`, {
@@ -140,6 +147,7 @@ export default function Notebook({ username }: NotebookProps) {
   // ── 笔记操作（Notebook 自己管） ──
 
   const createNote = async () => {
+    if (dirtyRef.current) saveNote();  // 自动保存：新建笔记前先保存当前笔记
     const n = newNoteName.trim();
     if (!n || !activeNotebook) { setShowNewNote(false); return; }
     const filename = n.endsWith('.md') ? n : n + '.md';
@@ -164,6 +172,8 @@ export default function Notebook({ username }: NotebookProps) {
       .catch(e => console.error('保存笔记失败', e));
   }, [activeNote, activeNotebook, content, username, loadNotes]);
 
+  saveNoteRef.current = saveNote;
+
   // Ctrl+S 快捷键（saveNote 用 useCallback 包裹，加入依赖）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -172,6 +182,25 @@ export default function Notebook({ username }: NotebookProps) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [dirty, saveNote]);
+
+  // 有未保存内容时，关闭/刷新页面弹出浏览器原生提示，提醒学生保存
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (dirtyRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
+
+  // 组件卸载时（切换模块/退出）若有未保存内容自动保存，防止丢失
+  useEffect(() => {
+    return () => {
+      if (dirtyRef.current) saveNoteRef.current();
+    };
+  }, []);
 
   // ── 数据转换（NoteItem 已含 id，直接存入 Map） ──
 
