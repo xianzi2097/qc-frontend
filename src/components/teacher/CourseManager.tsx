@@ -530,7 +530,7 @@ export default function CourseManager() {
                 <>
                   {publish.status === 'success' && (
                     <a
-                      href={`/course/${selectedCourse.teacher_key || username}/${selectedCourse.id}/`}
+                      href={`/course/${selectedCourse.id}/`}
                       target="_blank"
                       className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20"
                     >

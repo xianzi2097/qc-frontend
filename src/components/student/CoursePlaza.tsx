@@ -129,7 +129,7 @@ export default function CoursePlaza() {
               <span className="text-4xl">📖</span>
               <p className="text-sm font-bold text-white">{selectedCourse.name}</p>
               {selectedCourse.publish?.status === 'success' ? (
-                <a href={`/course/${selectedCourse.teacher_key}/${selectedCourse.id}/`} target="_blank"
+                <a href={`/course/${selectedCourse.id}/`} target="_blank"
                   className="flex items-center gap-2 text-sm bg-cyan-500/20 text-cyan-300 px-4 py-2 rounded-lg border border-cyan-500/30 hover:bg-cyan-500/30 transition-all">
                   <ExternalLink size={14} /> 打开电子书
                 </a>

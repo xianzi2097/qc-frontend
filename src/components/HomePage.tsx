@@ -592,7 +592,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                     <span style={{ fontSize: '3rem' }}>📖</span>
                     <p className="font-semibold" style={{ color: '#1e2b38' }}>{selectedCourse.name}</p>
                     {selectedCourse.publish?.status === 'success' ? (
-                      <a href={`/course/${selectedCourse.teacher_key}/${selectedCourse.id}/`} target="_blank" className="neo-btn no-underline">
+                      <a href={`/course/${selectedCourse.id}/`} target="_blank" className="neo-btn no-underline">
                         <BookOpen className="w-4 h-4 ico-green" /> 打开电子书
                       </a>
                     ) : (
