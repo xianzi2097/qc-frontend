@@ -19,6 +19,9 @@ export default function CourseManager() {
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [publish, setPublish] = useState<{ status?: string; error?: string; published_at?: string }>({});
   const [publishing, setPublishing] = useState(false);
+  const [showDrop, setShowDrop] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
 
   const loadCourses = useCallback(() => {
     setError('');
@@ -213,6 +216,85 @@ export default function CourseManager() {
     } catch { alert('无法连接服务器'); }
     setPublishing(false);
     loadCourses();
+  };
+
+  // ── 一键上传：拖拽/选择整个文件夹，递归解析目录并批量上传 ──
+  type PendingFile = { rel: string; file: File };
+
+  const readDirEntries = (reader: any): Promise<any[]> =>
+    new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+
+  const collectFolder = async (entries: any[], base: string, out: PendingFile[]) => {
+    for (const entry of entries) {
+      const rel = base ? `${base}/${entry.name}` : entry.name;
+      if (entry.isFile) {
+        const file: File = await new Promise((res, rej) => entry.file(res, rej));
+        out.push({ rel, file });
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        const children: any[] = [];
+        let batch: any[];
+        do {
+          batch = await readDirEntries(reader);
+          children.push(...batch);
+        } while (batch.length > 0);
+        await collectFolder(children, rel, out);
+      }
+    }
+  };
+
+  const uploadBatch = async (files: PendingFile[]) => {
+    if (!selectedCourse) return;
+    setUploading(true);
+    setUploadProgress({ done: 0, total: files.length });
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const { rel, file } = files[i];
+        const dir = rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/')) : '';
+        const formData = new FormData();
+        formData.append('file', file);
+        await fetch(
+          `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree/upload?path=${encodeURIComponent(dir)}`,
+          { method: 'POST', body: formData }
+        );
+        setUploadProgress({ done: i + 1, total: files.length });
+      }
+      refreshTree();
+    } finally {
+      setUploading(false);
+      setShowDrop(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!selectedCourse || uploading) return;
+    const items = e.dataTransfer.items;
+    if (!items) return;
+    const entries: any[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const entry = (items[i] as any).webkitGetAsEntry?.();
+      if (entry) entries.push(entry);
+    }
+    if (entries.length === 0) { alert('请拖入文件夹'); return; }
+    const files: PendingFile[] = [];
+    await collectFolder(entries, '', files);
+    if (files.length === 0) { alert('文件夹为空'); return; }
+    await uploadBatch(files);
+  };
+
+  const handleFolderPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedCourse || uploading) return;
+    const fileList = e.target.files;
+    if (!fileList) return;
+    const files: PendingFile[] = [];
+    for (let i = 0; i < fileList.length; i++) {
+      const f = fileList[i];
+      files.push({ rel: (f as any).webkitRelativePath || f.name, file: f });
+    }
+    if (files.length === 0) { alert('文件夹为空'); return; }
+    await uploadBatch(files);
+    e.target.value = '';
   };
 
   const handleRenameConfirm = async () => {
@@ -493,6 +575,10 @@ export default function CourseManager() {
               className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
               <Upload size={14} /> 上传文件
             </button>
+            <button onClick={() => setShowDrop(true)}
+              className="flex items-center gap-1.5 text-xs bg-brand-orange/20 hover:bg-brand-orange/30 text-brand-orange px-3 py-1.5 rounded-lg transition-colors">
+              <FolderOpen size={14} /> 一键上传
+            </button>
             <button onClick={() => setNewFolderParent('')}
               className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
               <FolderPlus size={14} /> 新建文件夹
@@ -502,6 +588,39 @@ export default function CourseManager() {
               <RefreshCw size={14} /> 刷新
             </button>
           </div>
+
+          {/* 一键上传：拖拽/选择文件夹 */}
+          {showDrop && (
+            <div
+              onDragOver={e => e.preventDefault()}
+              onDrop={handleDrop}
+              className={`mb-3 border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+                uploading ? 'border-slate-600' : 'border-brand-orange/50 hover:border-brand-orange'
+              }`}
+            >
+              {uploading ? (
+                <div className="text-sm text-slate-300">
+                  <Loader2 size={16} className="inline animate-spin mr-2" />
+                  正在上传 {uploadProgress.done}/{uploadProgress.total} 个文件…
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-300 mb-2">把课程文件夹拖到这里，自动解析目录结构并上传</p>
+                  <label className="text-xs text-brand-orange cursor-pointer underline">
+                    或点击选择文件夹
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      {...({ webkitdirectory: '', directory: '' } as any)}
+                      onChange={handleFolderPick}
+                    />
+                  </label>
+                  <button onClick={() => setShowDrop(false)} className="block mx-auto mt-3 text-xs text-slate-500 hover:text-slate-300">取消</button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* 新建文件夹输入 */}
           {newFolderParent !== null && (
