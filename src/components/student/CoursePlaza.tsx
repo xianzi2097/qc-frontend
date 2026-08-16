@@ -52,7 +52,7 @@ export default function CoursePlaza() {
   const loadMaterials = useCallback(async (course: Course) => {
     setSelectedCourse(course);
     try {
-      const res = await fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${selectedTeacher}&t=${Date.now()}`);
+      const res = await fetch(`/api/courses/${encodeURIComponent(course.id)}/materials?teacher=${selectedTeacher}&t=${Date.now()}`);
       const data = await res.json();
       if (data.status === 'success') setMaterials(data.materials);
     } catch {}
@@ -102,9 +102,9 @@ export default function CoursePlaza() {
           {courses.length === 0 ? (
             <div className="text-xs text-slate-500 text-center py-8">暂无课程</div>
           ) : courses.map(c => (
-            <button key={c.name} onClick={() => loadMaterials(c)}
+            <button key={c.id} onClick={() => loadMaterials(c)}
               className={`text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
-                selectedCourse?.name === c.name
+                selectedCourse?.id === c.id
                   ? 'bg-cyan-500/10 border border-cyan-500/30 text-white'
                   : 'bg-slate-800/60 border border-slate-700/50 text-slate-300 hover:bg-slate-700/80'
               }`}>
@@ -124,6 +124,19 @@ export default function CoursePlaza() {
         <div className="flex-1 bg-slate-800/40 border border-slate-700/50 rounded-xl overflow-y-auto">
           {!selectedCourse ? (
             <div className="h-full flex items-center justify-center text-slate-500 text-sm">请从左侧选择一个课程</div>
+          ) : selectedCourse.format === 'ebook' ? (
+            <div className="h-full flex flex-col items-center justify-center gap-4 p-6 text-center">
+              <span className="text-4xl">📖</span>
+              <p className="text-sm font-bold text-white">{selectedCourse.name}</p>
+              {selectedCourse.publish?.status === 'success' ? (
+                <a href={`/course/${selectedCourse.teacher_key}/${selectedCourse.id}/`} target="_blank"
+                  className="flex items-center gap-2 text-sm bg-cyan-500/20 text-cyan-300 px-4 py-2 rounded-lg border border-cyan-500/30 hover:bg-cyan-500/30 transition-all">
+                  <ExternalLink size={14} /> 打开电子书
+                </a>
+              ) : (
+                <p className="text-xs text-slate-400">课程尚未渲染成功，请联系管理员</p>
+              )}
+            </div>
           ) : materials.length === 0 ? (
             <div className="h-full flex items-center justify-center text-slate-500 text-sm">暂无课件</div>
           ) : (

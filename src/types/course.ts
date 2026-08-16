@@ -4,11 +4,23 @@
 
 // 课程类型
 export interface Course {
+  id: string;
   name: string;
   type: string;
+  format?: string;
   description: string;
   material_count: number;
   teacher?: string;
+  teacher_key?: string;
+  publish?: { status?: string; error?: string; published_at?: string };
+}
+
+// 文件树节点（后台资源管理器）
+export interface TreeNode {
+  name: string;
+  type: 'dir' | 'file';
+  children?: TreeNode[];
+  size?: number;
 }
 
 // 教师类型
@@ -41,6 +53,19 @@ export const TYPE_OPTIONS = [
   { value: 'python', label: '🍁 Python' },
   { value: 'cpp', label: '⚙️ C++' },
 ];
+
+// 打开方式（format）：决定课程如何被打开
+export const FORMAT_OPTIONS = [
+  { value: 'scratch', label: '🧩 Scratch 编辑器' },
+  { value: 'folder', label: '📁 文件夹' },
+  { value: 'ebook', label: '📖 电子书' },
+];
+
+export const FORMAT_LABEL: Record<string, string> = {
+  scratch: 'Scratch',
+  folder: '文件夹',
+  ebook: '电子书',
+};
 
 // 文件扩展名到图标的映射（用于文件列表显示）
 // 注意：这个映射在 CoursePlaza.tsx 中使用，保留在此处

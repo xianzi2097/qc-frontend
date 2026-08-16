@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil, FileText, FolderPlus, Upload, Play, Loader2 } from 'lucide-react';
 import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
-import type { Course, Material } from '../../types/course';
-import { TYPE_ICON, TYPE_OPTIONS } from '../../types/course';
+import type { Course, TreeNode } from '../../types/course';
+import { TYPE_ICON, TYPE_OPTIONS, FORMAT_OPTIONS, FORMAT_LABEL } from '../../types/course';
 
 export default function CourseManager() {
   const { username } = useAuth();
@@ -14,8 +14,11 @@ export default function CourseManager() {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState('scratch');
+  const [newFormat, setNewFormat] = useState('scratch');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [materials, setMaterials] = useState<Material[]>([]);
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [publish, setPublish] = useState<{ status?: string; error?: string; published_at?: string }>({});
+  const [publishing, setPublishing] = useState(false);
 
   const loadCourses = useCallback(() => {
     setError('');
@@ -41,7 +44,7 @@ export default function CourseManager() {
       const res = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType }),
+        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: newFormat }),
       });
       const data = await res.json();
       if (data.status === 'success') {
@@ -60,17 +63,17 @@ export default function CourseManager() {
     }
   };
 
-  const handleDelete = async (name: string) => {
-    if (!confirm(`确定删除课程「${name}」？此操作不可恢复。`)) return;
+  const handleDelete = async (course: Course) => {
+    if (!confirm(`确定删除课程「${course.name}」？此操作不可恢复。`)) return;
     try {
-      const res = await fetch(`/api/courses/${encodeURIComponent(name)}?teacher=${username}`, {
+      const res = await fetch(`/api/courses/${encodeURIComponent(course.id)}?teacher=${username}`, {
         method: 'DELETE',
       });
       const data = await res.json();
       if (data.status === 'success') {
-        if (selectedCourse?.name === name) {
+        if (selectedCourse?.id === course.id) {
           setSelectedCourse(null);
-          setMaterials([]);
+          setTree([]);
         }
         loadCourses();
       } else {
@@ -81,46 +84,26 @@ export default function CourseManager() {
     }
   };
 
-  const handleDeleteMaterial = async (name: string) => {
-    if (!selectedCourse || !confirm(`确定删除课件「${name}」？`)) return;
-    const courseName = selectedCourse.name;
-    try {
-      const res = await fetch(
-        `/api/courses/${encodeURIComponent(courseName)}/materials/${encodeURIComponent(name)}?teacher=${username}`,
-        { method: 'DELETE' }
-      );
-      const data = await res.json();
-      if (data.status === 'success') {
-        // 重新加载同一课程的课件列表
-        const r2 = await fetch(`/api/courses/${encodeURIComponent(courseName)}/materials?teacher=${username}&t=${Date.now()}`);
-        const d2 = await r2.json();
-        if (d2.status === 'success') setMaterials(d2.materials);
-        // 刷新课程列表
-        loadCourses();
-      } else {
-        alert(data.detail || '删除失败');
-      }
-    } catch {
-      alert('无法连接服务器');
-    }
-  };
-
-  const loadMaterials = async (course: Course) => {
+  const loadTree = async (course: Course) => {
     setSelectedCourse(course);
+    setPublish(course.publish || {});
     await wrap(
-      fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${username}&t=${Date.now()}`)
+      fetch(`/api/courses/${encodeURIComponent(course.id)}/tree?t=${Date.now()}`)
         .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            setMaterials(data.materials);
-          }
-        }),
-      '加载课件...'
+        .then(data => { if (data.status === 'success') setTree(data.tree || []); }),
+      '加载文件...'
     ).catch(() => {});
   };
 
-  // ── 上传文件（Python/C++ 课程） ──
-  const handleUploadFile = async (lessonName: string) => {
+  const refreshTree = async () => {
+    if (!selectedCourse) return;
+    const data = await fetch(`/api/courses/${encodeURIComponent(selectedCourse.id)}/tree?t=${Date.now()}`).then(r => r.json());
+    if (data.status === 'success') setTree(data.tree || []);
+    loadCourses();
+  };
+
+  // ── 上传文件到指定目录（path 相对课程根） ──
+  const handleUploadFile = async (path: string) => {
     if (!selectedCourse) return;
     const input = document.createElement('input');
     input.type = 'file';
@@ -132,52 +115,43 @@ export default function CourseManager() {
         const formData = new FormData();
         formData.append('file', file);
         await fetch(
-          `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(lessonName)}/upload?teacher=${username}`,
+          `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree/upload?path=${encodeURIComponent(path)}`,
           { method: 'POST', body: formData }
         );
       }
-      // 刷新
-      loadMaterials(selectedCourse);
-      loadCourses();
+      refreshTree();
     };
     input.click();
   };
 
-  // ── 创建新文件夹（Python/C++ 课程） ──
-  const [showNewFolder, setShowNewFolder] = useState(false);
+  // ── 新建子文件夹（在指定父目录下） ──
+  const [newFolderParent, setNewFolderParent] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
 
   const handleCreateFolder = async () => {
-    if (!selectedCourse || !newFolderName.trim()) return;
-    // 直接调后端「新建文件夹」接口创建空目录，不再上传 .keep 占位文件
+    if (!selectedCourse || newFolderParent === null || !newFolderName.trim()) return;
+    const parentPath = newFolderParent ? newFolderParent + '/' + newFolderName.trim() : newFolderName.trim();
     try {
       const res = await fetch(
-        `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(newFolderName.trim())}/folder?teacher=${username}`,
+        `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree/folder?path=${encodeURIComponent(parentPath)}`,
         { method: 'POST' }
       );
       const data = await res.json().catch(() => null);
-      if (data?.status !== 'success') {
-        alert(data?.detail || '创建文件夹失败');
-        return;
-      }
-      setShowNewFolder(false);
+      if (data?.status !== 'success') { alert(data?.detail || '创建文件夹失败'); return; }
+      setNewFolderParent(null);
       setNewFolderName('');
-      loadMaterials(selectedCourse);
-      loadCourses();
-    } catch {
-      alert('无法连接服务器');
-    }
+      refreshTree();
+    } catch { alert('无法连接服务器'); }
   };
 
-  // ── 删除单个文件 ──
-  const handleDeleteFile = async (lessonName: string, fileName: string) => {
-    if (!selectedCourse || !confirm(`确定删除文件「${fileName}」？`)) return;
+  // ── 删除文件/文件夹 ──
+  const handleDeleteEntry = async (path: string, name: string) => {
+    if (!selectedCourse || !confirm(`确定删除「${name}」？`)) return;
     await fetch(
-      `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(lessonName)}/${encodeURIComponent(fileName)}?teacher=${username}`,
+      `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree?path=${encodeURIComponent(path)}`,
       { method: 'DELETE' }
     );
-    loadMaterials(selectedCourse);
-    loadCourses();
+    refreshTree();
   };
 
   // ── 重命名（自定义弹窗，不用原生 prompt） ──
@@ -190,58 +164,55 @@ export default function CourseManager() {
       kind: '课程',
       current: course.name,
       run: async (newName: string) => {
-        const res = await fetch(`/api/courses/${encodeURIComponent(course.name)}/rename`, {
+        const res = await fetch(`/api/courses/${encodeURIComponent(course.id)}/rename`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ new_name: newName }),
         });
         const data = await res.json().catch(() => null);
         if (data?.status !== 'success') return alert(data?.detail || '课程重命名失败');
-        // 若正在查看该课程，同步更新选中态后重新加载
-        if (selectedCourse?.name === course.name) {
-          const updated = { ...selectedCourse, name: newName };
-          setSelectedCourse(updated);
-          await loadMaterials(updated);
-        }
+        if (selectedCourse?.id === course.id) setSelectedCourse({ ...selectedCourse, name: newName });
         loadCourses();
       },
     });
   };
 
-  const openRenameMaterial = (m: Material) => {
+  const openRenameEntry = (path: string, name: string) => {
     if (!selectedCourse) return;
-    setRenameValue(m.name);
-    setRename({
-      kind: '课件',
-      current: m.name,
-      run: async (newName: string) => {
-        const res = await fetch(
-          `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(m.name)}/rename`,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }
-        );
-        const data = await res.json().catch(() => null);
-        if (data?.status !== 'success') return alert(data?.detail || '课件重命名失败');
-        loadMaterials(selectedCourse);
-        loadCourses();
-      },
-    });
-  };
-
-  const openRenameFile = (lessonName: string, fileName: string) => {
-    if (!selectedCourse) return;
-    setRenameValue(fileName);
+    setRenameValue(name);
     setRename({
       kind: '文件',
-      current: fileName,
+      current: name,
       run: async (newName: string) => {
         const res = await fetch(
-          `/api/courses/${encodeURIComponent(selectedCourse.name)}/materials/${encodeURIComponent(lessonName)}/${encodeURIComponent(fileName)}/rename`,
+          `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree/rename?path=${encodeURIComponent(path)}`,
           { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }
         );
         const data = await res.json().catch(() => null);
-        if (data?.status !== 'success') return alert(data?.detail || '文件重命名失败');
-        loadMaterials(selectedCourse);
+        if (data?.status !== 'success') return alert(data?.detail || '重命名失败');
+        refreshTree();
       },
     });
+  };
+
+  // ── 发布（电子书渲染） ──
+  const handlePublish = async () => {
+    if (!selectedCourse) return;
+    setPublishing(true);
+    setPublish({ status: 'building' });
+    try {
+      const res = await fetch(`/api/courses/${encodeURIComponent(selectedCourse.id)}/publish`, { method: 'POST' });
+      const data = await res.json().catch(() => null);
+      if (data?.status !== 'success') { alert(data?.detail || '发布失败'); setPublishing(false); return; }
+      for (let i = 0; i < 90; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const st = await fetch(`/api/courses/${encodeURIComponent(selectedCourse.id)}/publish/status?t=${Date.now()}`).then(r => r.json());
+        const p = st?.publish || {};
+        setPublish(p);
+        if (p.status === 'success' || p.status === 'failed') break;
+      }
+    } catch { alert('无法连接服务器'); }
+    setPublishing(false);
+    loadCourses();
   };
 
   const handleRenameConfirm = async () => {
@@ -276,6 +247,50 @@ export default function CourseManager() {
     if (!confirm('永久删除此课程？不可恢复！')) return;
     await fetch(`/api/trash/items/${encodeURIComponent(folder)}?username=${username}`, { method: 'DELETE' });
     loadTrash();
+  };
+
+  const renderTreeNode = (node: TreeNode, basePath: string): React.ReactNode => {
+    const path = basePath ? `${basePath}/${node.name}` : node.name;
+    if (node.type === 'dir') {
+      return (
+        <div key={path} className="border border-slate-700/50 rounded-xl mb-1">
+          <div className="flex items-center justify-between px-3 py-2 bg-slate-800/30 rounded-t-xl">
+            <span className="flex items-center gap-2 text-sm text-white">
+              <FolderOpen size={14} className="text-amber-400" /> {node.name}
+            </span>
+            <div className="flex items-center gap-1">
+              <button onClick={() => handleUploadFile(path)} title="上传到此文件夹"
+                className="text-slate-500 hover:text-slate-200 p-1"><Upload size={14} /></button>
+              <button onClick={() => setNewFolderParent(path)} title="新建子文件夹"
+                className="text-slate-500 hover:text-slate-200 p-1"><FolderPlus size={14} /></button>
+              <button onClick={() => openRenameEntry(path, node.name)} title="重命名"
+                className="text-slate-500 hover:text-slate-200 p-1"><Pencil size={14} /></button>
+              <button onClick={() => handleDeleteEntry(path, node.name)} title="删除"
+                className="text-slate-500 hover:text-rose-400 p-1"><Trash2 size={14} /></button>
+            </div>
+          </div>
+          {node.children && node.children.length > 0 && (
+            <div className="px-3 py-2 space-y-1">
+              {node.children.map(c => renderTreeNode(c, path))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div key={path} className="flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800/40 rounded">
+        <span className="flex items-center gap-2 truncate">
+          <FileText size={14} className="text-slate-500 shrink-0" /> {node.name}
+          {node.size !== undefined && <span className="text-[10px] text-slate-600">({(node.size / 1024).toFixed(1)} KB)</span>}
+        </span>
+        <div className="flex items-center gap-1">
+          <button onClick={() => openRenameEntry(path, node.name)} title="重命名"
+            className="text-slate-600 hover:text-slate-300 p-1"><Pencil size={12} /></button>
+          <button onClick={() => handleDeleteEntry(path, node.name)} title="删除"
+            className="text-slate-600 hover:text-rose-400 p-1"><Trash2 size={12} /></button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -333,6 +348,18 @@ export default function CourseManager() {
                 ))}
               </select>
             </div>
+            <div>
+              <label className="text-xs text-slate-400 block mb-1">打开方式</label>
+              <select
+                value={newFormat}
+                onChange={e => setNewFormat(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-orange"
+              >
+                {FORMAT_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex gap-2 justify-end pt-2">
               <button
                 onClick={() => setShowCreate(false)}
@@ -367,10 +394,10 @@ export default function CourseManager() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {courses.filter(c => TYPE_ICON[c.type] || c.type).map(course => (
             <div
-              key={course.name}
-              onClick={() => loadMaterials(course)}
+              key={course.id}
+              onClick={() => loadTree(course)}
               className={`bg-slate-900 border rounded-2xl p-5 cursor-pointer transition-all duration-300 group hover:translate-y-[-4px] ${
-                selectedCourse?.name === course.name
+                selectedCourse?.id === course.id
                   ? 'border-brand-orange/50 ring-1 ring-brand-orange/20'
                   : 'border-slate-600 hover:border-brand-orange/30'
               }`}
@@ -380,7 +407,7 @@ export default function CourseManager() {
                   <span className="text-2xl block mb-2">{TYPE_ICON[course.type] || '📁'}</span>
                   <h3 className="font-bold text-white text-sm mb-1">{course.name}</h3>
                   <p className="text-xs text-slate-500">
-                    {course.material_count} 个课件
+                    {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个课件
                   </p>
                 </div>
                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
@@ -392,7 +419,7 @@ export default function CourseManager() {
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(course.name)}
+                    onClick={() => handleDelete(course)}
                     className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all p-1"
                     title="删除课程"
                   >
@@ -405,168 +432,101 @@ export default function CourseManager() {
         </div>
       )}
 
-      {/* 课件详情 */}
+      {/* 课件详情（文件树：所有课程统一） */}
       {selectedCourse && (
         <div className="bg-slate-900/50 border border-slate-600 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <FolderOpen size={16} className="text-brand-orange" />
-              {selectedCourse.name} 的课件
+              {selectedCourse.name}
+              <span className="text-[10px] font-normal text-slate-500 px-2 py-0.5 bg-slate-800 rounded-full">
+                {FORMAT_LABEL[selectedCourse.format || 'folder'] || selectedCourse.format}
+              </span>
             </h3>
-            <button
-              onClick={() => { setSelectedCourse(null); setMaterials([]); }}
-              className="text-xs text-slate-500 hover:text-slate-300"
-            >
-              关闭
+            <div className="flex items-center gap-2">
+              {selectedCourse.format === 'ebook' && (
+                <>
+                  {publish.status === 'success' && (
+                    <a
+                      href={`/course/${selectedCourse.teacher_key || username}/${selectedCourse.id}/`}
+                      target="_blank"
+                      className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20"
+                    >
+                      <ExternalLink size={12} className="inline mr-1" />预览
+                    </a>
+                  )}
+                  <button
+                    onClick={handlePublish}
+                    disabled={publishing}
+                    className="flex items-center gap-1.5 text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                  >
+                    {publishing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                    {publishing ? '正在渲染...' : '保存并渲染'}
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => { setSelectedCourse(null); setTree([]); }}
+                className="text-xs text-slate-500 hover:text-slate-300"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+
+          {/* 发布状态提示（电子书） */}
+          {selectedCourse.format === 'ebook' && publish.status && publish.status !== 'idle' && (
+            <div className={`mb-4 text-xs px-4 py-2 rounded-lg border ${
+              publish.status === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30'
+              : publish.status === 'failed' ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
+              : 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+            }`}>
+              {publish.status === 'building' && '⏳ 正在渲染中，请稍候…'}
+              {publish.status === 'success' && `✅ 渲染成功${publish.published_at ? ' · ' + publish.published_at : ''}`}
+              {publish.status === 'failed' && `❌ 渲染失败：${publish.error || '未知错误'}。请保留文件并联系管理员，上次成功版本仍可正常使用。`}
+            </div>
+          )}
+
+          {/* 根目录工具栏 */}
+          <div className="flex items-center gap-2 mb-3">
+            <button onClick={() => handleUploadFile('')}
+              className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
+              <Upload size={14} /> 上传文件
+            </button>
+            <button onClick={() => setNewFolderParent('')}
+              className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
+              <FolderPlus size={14} /> 新建文件夹
+            </button>
+            <button onClick={refreshTree}
+              className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
+              <RefreshCw size={14} /> 刷新
             </button>
           </div>
 
-          {selectedCourse.type === 'scratch' ? (
-            /* ── Scratch 课程：保持原有 sb3 逻辑 ── */
-            materials.length === 0 ? (
-              <div className="text-sm text-slate-500 text-center py-8">
-                暂无课件，请在 Scratch 编辑器中通过「保存到课件」上传
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {materials.map(m => (
-                  <div key={m.name} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-center hover:border-brand-orange/30 transition-all duration-300 group hover:translate-y-[-2px] relative">
-                    <a
-                      href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
-                      target="_blank"
-                      className="block"
-                    >
-                      <span className="text-2xl block mb-2">📂</span>
-                      <div className="text-xs font-medium text-white mb-1 truncate">{m.name}</div>
-                      <div className="text-[10px] text-slate-500">
-                        {m.has_main && m.has_student ? '👥 师生版' : m.has_main ? '📘 教师版' : `${m.sb3_count} sb3`}
-                      </div>
-                      <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="text-[10px] text-brand-orange flex items-center justify-center gap-1">
-                          打开 <ExternalLink size={10} />
-                        </span>
-                      </div>
-                    </a>
-                    <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openRenameMaterial(m); }}
-                        className="text-slate-600 hover:text-brand-orange transition-colors"
-                        title="重命名课件"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteMaterial(m.name); }}
-                        className="text-slate-600 hover:text-rose-400 transition-colors"
-                        title="删除课件"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )
-          ) : (
-            /* ── Python/C++ 课程：文件夹 + 文件管理 ── */
-            <div className="space-y-4">
-              {/* 新建文件夹 */}
-              {showNewFolder ? (
-                <div className="flex gap-2 items-center">
-                  <input
-                    value={newFolderName}
-                    onChange={e => setNewFolderName(e.target.value)}
-                    placeholder="文件夹名称"
-                    className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
-                    onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); }}
-                    autoFocus
-                  />
-                  <button onClick={handleCreateFolder} className="text-xs bg-brand-orange text-black px-3 py-1.5 rounded-lg font-bold">创建</button>
-                  <button onClick={() => { setShowNewFolder(false); setNewFolderName(''); }} className="text-xs text-slate-400 hover:text-slate-200">取消</button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowNewFolder(true)}
-                  className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  <Plus size={14} /> 新建文件夹
-                </button>
-              )}
+          {/* 新建文件夹输入 */}
+          {newFolderParent !== null && (
+            <div className="flex gap-2 items-center mb-3">
+              <input
+                value={newFolderName}
+                onChange={e => setNewFolderName(e.target.value)}
+                placeholder={newFolderParent ? `在「${newFolderParent}」下新建文件夹` : '在课程根目录新建文件夹'}
+                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
+                onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') setNewFolderParent(null); }}
+                autoFocus
+              />
+              <button onClick={handleCreateFolder} className="text-xs bg-brand-orange text-black px-3 py-1.5 rounded-lg font-bold">创建</button>
+              <button onClick={() => { setNewFolderParent(null); setNewFolderName(''); }} className="text-xs text-slate-400 hover:text-slate-200">取消</button>
+            </div>
+          )}
 
-              {materials.length === 0 ? (
-                <div className="text-sm text-slate-500 text-center py-8">
-                  暂无课件，点击「新建文件夹」开始添加
-                </div>
-              ) : (
-                materials.map(m => (
-                  <div key={m.name} className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">📁</span>
-                        <span className="text-sm font-bold text-white">{m.name}</span>
-                        <span className="text-[10px] text-slate-500">{m.file_count} 个文件</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openRenameMaterial(m)}
-                          className="text-slate-600 hover:text-brand-orange transition-colors"
-                          title="重命名文件夹"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleUploadFile(m.name)}
-                          className="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded"
-                        >
-                          上传文件
-                        </button>
-                        <button
-                          onClick={() => handleDeleteMaterial(m.name)}
-                          className="text-slate-600 hover:text-rose-400 transition-colors"
-                          title="删除文件夹"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                    {m.files && m.files.length > 0 ? (
-                      <div className="space-y-1">
-                        {m.files.map(f => (
-                          <div key={f.name} className="flex items-center justify-between text-xs text-slate-400 bg-slate-900/50 rounded px-3 py-1.5 group hover:text-slate-200">
-                            <a
-                              href={`${m.url}${f.name}`}
-                              target="_blank"
-                              className="flex items-center gap-2 truncate"
-                            >
-                              <span>📄</span>
-                              <span className="truncate">{f.name}</span>
-                              <span className="text-[10px] text-slate-600">({(f.size / 1024).toFixed(1)} KB)</span>
-                            </a>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => openRenameFile(m.name, f.name)}
-                                className="text-slate-600 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-all"
-                                title="重命名文件"
-                              >
-                                <Pencil className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteFile(m.name, f.name)}
-                                className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"
-                                title="删除文件"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-[10px] text-slate-600 text-center py-2">空文件夹</div>
-                    )}
-                  </div>
-                ))
-              )}
+          {/* 文件树 */}
+          {tree.length === 0 ? (
+            <div className="text-sm text-slate-500 text-center py-8">
+              暂无文件，点击「上传文件」或「新建文件夹」开始
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {tree.map(n => renderTreeNode(n, ''))}
             </div>
           )}
         </div>

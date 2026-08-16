@@ -108,7 +108,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
     setSelectedCourse(course);
     const teacher = course.teacher || courseTeacher;
     setMaterialsLoading(true);
-    fetch(`/api/courses/${encodeURIComponent(course.name)}/materials?teacher=${teacher}&t=${Date.now()}`)
+    fetch(`/api/courses/${encodeURIComponent(course.id)}/materials?teacher=${teacher}&t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
         setMaterials(data.status === 'success' ? data.materials : []);
@@ -587,7 +587,19 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
             {selectedCourse ? (
               /* ── 课件视图 ── */
               <div>
-                {materialsLoading ? (
+                {selectedCourse.format === 'ebook' ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-16">
+                    <span style={{ fontSize: '3rem' }}>📖</span>
+                    <p className="font-semibold" style={{ color: '#1e2b38' }}>{selectedCourse.name}</p>
+                    {selectedCourse.publish?.status === 'success' ? (
+                      <a href={`/course/${selectedCourse.teacher_key}/${selectedCourse.id}/`} target="_blank" className="neo-btn no-underline">
+                        <BookOpen className="w-4 h-4 ico-green" /> 打开电子书
+                      </a>
+                    ) : (
+                      <p className="text-sm" style={{ color: '#5f6c7a' }}>课程尚未渲染成功，请联系管理员</p>
+                    )}
+                  </div>
+                ) : materialsLoading ? (
                   <div className="flex items-center justify-center h-32">
                     <p style={{ color: '#4a5b6b' }}>加载中...</p>
                   </div>
@@ -660,7 +672,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {courses.filter(c => courseType === '全部' || c.type === courseType).map(c => (
                   <button
-                    key={c.name}
+                    key={c.id}
                     onClick={() => loadMaterials(c)}
                     className="neo-card !min-h-0 !p-4 cursor-pointer hover:brightness-95 transition-all text-left w-full"
                     style={{ borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.4)', fontFamily: 'inherit', boxShadow: '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)' }}
