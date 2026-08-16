@@ -117,6 +117,15 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
       .finally(() => setMaterialsLoading(false));
   };
 
+  // 电子书课程：已渲染成功则直接进入，不再经过「打开电子书」这一步
+  const openCourse = (course: Course) => {
+    if (course.format === 'ebook' && course.publish?.status === 'success') {
+      window.open(`/course/${course.id}/`, '_blank');
+      return;
+    }
+    loadMaterials(course);
+  };
+
   const backToCourses = () => {
     setSelectedCourse(null);
     setMaterials([]);
@@ -591,13 +600,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                   <div className="flex flex-col items-center justify-center gap-3 py-16">
                     <span style={{ fontSize: '3rem' }}>📖</span>
                     <p className="font-semibold" style={{ color: '#1e2b38' }}>{selectedCourse.name}</p>
-                    {selectedCourse.publish?.status === 'success' ? (
-                      <a href={`/course/${selectedCourse.id}/`} target="_blank" className="neo-btn no-underline">
-                        <BookOpen className="w-4 h-4 ico-green" /> 打开电子书
-                      </a>
-                    ) : (
-                      <p className="text-sm" style={{ color: '#5f6c7a' }}>课程尚未渲染成功，请联系管理员</p>
-                    )}
+                    <p className="text-sm" style={{ color: '#5f6c7a' }}>课程尚未渲染成功，请联系管理员</p>
                   </div>
                 ) : materialsLoading ? (
                   <div className="flex items-center justify-center h-32">
@@ -673,7 +676,7 @@ export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props
                 {courses.filter(c => courseType === '全部' || c.type === courseType).map(c => (
                   <button
                     key={c.id}
-                    onClick={() => loadMaterials(c)}
+                    onClick={() => openCourse(c)}
                     className="neo-card !min-h-0 !p-4 cursor-pointer hover:brightness-95 transition-all text-left w-full"
                     style={{ borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.4)', fontFamily: 'inherit', boxShadow: '4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light)' }}
                   >

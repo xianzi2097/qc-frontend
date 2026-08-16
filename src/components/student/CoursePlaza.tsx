@@ -58,6 +58,15 @@ export default function CoursePlaza() {
     } catch {}
   }, [selectedTeacher]);
 
+  // 电子书课程：已渲染成功则直接进入，不再经过「打开电子书」这一步
+  const openCourse = (course: Course) => {
+    if (course.format === 'ebook' && course.publish?.status === 'success') {
+      window.open(`/course/${course.id}/`, '_blank');
+      return;
+    }
+    loadMaterials(course);
+  };
+
   const openScratch = (url: string) => {
     window.open(`/Scratch/index.html?folder=${encodeURIComponent(url)}`, '_blank');
   };
@@ -102,7 +111,7 @@ export default function CoursePlaza() {
           {courses.length === 0 ? (
             <div className="text-xs text-slate-500 text-center py-8">暂无课程</div>
           ) : courses.map(c => (
-            <button key={c.id} onClick={() => loadMaterials(c)}
+            <button key={c.id} onClick={() => openCourse(c)}
               className={`text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
                 selectedCourse?.id === c.id
                   ? 'bg-cyan-500/10 border border-cyan-500/30 text-white'
@@ -128,14 +137,7 @@ export default function CoursePlaza() {
             <div className="h-full flex flex-col items-center justify-center gap-4 p-6 text-center">
               <span className="text-4xl">📖</span>
               <p className="text-sm font-bold text-white">{selectedCourse.name}</p>
-              {selectedCourse.publish?.status === 'success' ? (
-                <a href={`/course/${selectedCourse.id}/`} target="_blank"
-                  className="flex items-center gap-2 text-sm bg-cyan-500/20 text-cyan-300 px-4 py-2 rounded-lg border border-cyan-500/30 hover:bg-cyan-500/30 transition-all">
-                  <ExternalLink size={14} /> 打开电子书
-                </a>
-              ) : (
-                <p className="text-xs text-slate-400">课程尚未渲染成功，请联系管理员</p>
-              )}
+              <p className="text-xs text-slate-400">课程尚未渲染成功，请联系管理员</p>
             </div>
           ) : materials.length === 0 ? (
             <div className="h-full flex items-center justify-center text-slate-500 text-sm">暂无课件</div>
