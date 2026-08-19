@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil, FileText, FolderPlus, Upload, Play, Loader2 } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil, FileText, FolderPlus, Upload, Play, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
 import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
@@ -169,6 +169,16 @@ export default function CourseManager() {
   // ── 重命名（自定义弹窗，不用原生 prompt） ──
   const [rename, setRename] = useState<{ kind: string; current: string; run: (newName: string) => Promise<void> } | null>(null);
   const [renameValue, setRenameValue] = useState('');
+
+  // ── 调整顺序（▲▼） ──
+  const handleReorder = async (dir: string, name: string, direction: 'up' | 'down') => {
+    if (!selectedCourse) return;
+    await fetch(
+      `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree/reorder?name=${encodeURIComponent(name)}&dir=${encodeURIComponent(dir)}&direction=${direction}`,
+      { method: 'POST' }
+    );
+    refreshTree();
+  };
 
   // ── 编辑课程弹窗 ──
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -367,8 +377,10 @@ export default function CourseManager() {
     loadTrash();
   };
 
-  const renderTreeNode = (node: TreeNode, basePath: string): React.ReactNode => {
+  const renderTreeNode = (node: TreeNode, basePath: string, index?: number, total?: number): React.ReactNode => {
     const path = basePath ? `${basePath}/${node.name}` : node.name;
+    const canUp = index !== undefined && index > 0;
+    const canDown = index !== undefined && total !== undefined && index < total - 1;
     if (node.type === 'dir') {
       return (
         <div key={path} className="border border-slate-700/50 rounded-xl mb-1">
@@ -377,6 +389,10 @@ export default function CourseManager() {
               <FolderOpen size={14} className="text-amber-400" /> {node.name}
             </span>
             <div className="flex items-center gap-1">
+              {canUp && <button onClick={() => handleReorder(basePath, node.name, 'up')} title="上移"
+                className="text-slate-500 hover:text-slate-200 p-1"><ArrowUp size={12} /></button>}
+              {canDown && <button onClick={() => handleReorder(basePath, node.name, 'down')} title="下移"
+                className="text-slate-500 hover:text-slate-200 p-1"><ArrowDown size={12} /></button>}
               <button onClick={() => handleUploadFile(path)} title="上传到此文件夹"
                 className="text-slate-500 hover:text-slate-200 p-1"><Upload size={14} /></button>
               <button onClick={() => setNewFolderParent(path)} title="新建子文件夹"
@@ -389,7 +405,7 @@ export default function CourseManager() {
           </div>
           {node.children && node.children.length > 0 && (
             <div className="px-3 py-2 space-y-1">
-              {node.children.map(c => renderTreeNode(c, path))}
+              {node.children.map((c, i) => renderTreeNode(c, path, i, node.children!.length))}
             </div>
           )}
         </div>
@@ -402,6 +418,10 @@ export default function CourseManager() {
           {node.size !== undefined && <span className="text-[10px] text-slate-600">({(node.size / 1024).toFixed(1)} KB)</span>}
         </span>
         <div className="flex items-center gap-1">
+          {canUp && <button onClick={() => handleReorder(basePath, node.name, 'up')} title="上移"
+            className="text-slate-600 hover:text-slate-300 p-1"><ArrowUp size={10} /></button>}
+          {canDown && <button onClick={() => handleReorder(basePath, node.name, 'down')} title="下移"
+            className="text-slate-600 hover:text-slate-300 p-1"><ArrowDown size={10} /></button>}
           <button onClick={() => openRenameEntry(path, node.name)} title="重命名"
             className="text-slate-600 hover:text-slate-300 p-1"><Pencil size={12} /></button>
           <button onClick={() => handleDeleteEntry(path, node.name)} title="删除"
@@ -753,7 +773,7 @@ export default function CourseManager() {
             </div>
           ) : (
             <div className="space-y-1">
-              {tree.map(n => renderTreeNode(n, ''))}
+              {tree.map((n, i) => renderTreeNode(n, '', i, tree.length))}
             </div>
           )}
         </div>
