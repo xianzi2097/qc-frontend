@@ -21,17 +21,14 @@ function SortableItem({ id, children, className = '', dragHandle }: {
     opacity: isDragging ? 0.4 : 1,
     zIndex: isDragging ? 50 : undefined,
   };
-  // 把 listeners/attributes 传给 dragHandle，否则整个元素可拖
-  const handleProps = dragHandle ? { ...listeners, ...attributes } : undefined;
-  const handle = dragHandle ? React.cloneElement(dragHandle as React.ReactElement, { ...handleProps } as any) : null;
   return (
-    <div ref={setNodeRef} style={style} className={className} {...(handle ? {} : { ...listeners, ...attributes })}>
-      {handle && (
-        <span className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 shrink-0">
-          {handle}
+    <div ref={setNodeRef} style={style} className={`flex items-center gap-0 ${className}`} {...attributes} {...listeners}>
+      {dragHandle && (
+        <span className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 shrink-0 px-1 -ml-1">
+          {dragHandle}
         </span>
       )}
-      {children}
+      <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
 }
@@ -914,11 +911,10 @@ export default function CourseManager() {
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-slate-400 block mb-1">课程名称{editFormat === 'ebook' && <span className="text-slate-500 ml-1">（电子书课程，名称由内容决定）</span>}</label>
+                  <label className="text-xs text-slate-400 block mb-1">课程名称</label>
                   <input value={editName} onChange={e => setEditName(e.target.value)}
-                    disabled={editFormat === 'ebook'}
-                    placeholder={editFormat === 'ebook' ? '由上传文件名决定' : ''}
-                    className={`w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-400 ${editFormat === 'ebook' ? 'text-slate-500 cursor-not-allowed' : 'text-white'}`} />
+                    placeholder="输入课程名称"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-400 text-white" />
                               <div>
                 <label className="text-xs text-slate-400 block mb-1 mt-2">标签</label>
                 <div className="flex flex-wrap gap-1.5 items-center">
