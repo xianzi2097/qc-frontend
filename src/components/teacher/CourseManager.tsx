@@ -1,11 +1,40 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil, FileText, FolderPlus, Upload, Play, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil, FileText, FolderPlus, Upload, Play, Loader2, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
 import type { Course, TreeNode } from '../../types/course';
 import { TYPE_LUCIDE, TYPE_OPTIONS, FORMAT_OPTIONS, FORMAT_LABEL } from '../../types/course';
+
+// ── 拖拽组件 ──
+function SortableItem({ id, children, className = '', dragHandle }: {
+  id: string; children: React.ReactNode; className?: string; dragHandle?: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  // 把 listeners/attributes 传给 dragHandle，否则整个元素可拖
+  const handleProps = dragHandle ? { ...listeners, ...attributes } : undefined;
+  const handle = dragHandle ? React.cloneElement(dragHandle as React.ReactElement, { ...handleProps } as any) : null;
+  return (
+    <div ref={setNodeRef} style={style} className={className} {...(handle ? {} : { ...listeners, ...attributes })}>
+      {handle && (
+        <span className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 shrink-0">
+          {handle}
+        </span>
+      )}
+      {children}
+    </div>
+  );
+}
 
 export default function CourseManager() {
   const { username } = useAuth();
@@ -170,11 +199,21 @@ export default function CourseManager() {
   const [rename, setRename] = useState<{ kind: string; current: string; run: (newName: string) => Promise<void> } | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  // ── 调整顺序（▲▼） ──
-  const handleReorder = async (dir: string, name: string, direction: 'up' | 'down') => {
-    if (!selectedCourse) return;
+  // ── 拖拽排序 ──
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !selectedCourse) return;
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    // 从 id 格式 "parentPath::name" 解析
+    const [aParent, aName] = activeId.includes('::') ? activeId.split('::') : ['', activeId];
+    const [oParent, oName] = overId.includes('::') ? overId.split('::') : ['', overId];
+    if (aParent !== oParent) return; // 只允许同级排序
+    // 调 API
     await fetch(
-      `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree/reorder?name=${encodeURIComponent(name)}&dir=${encodeURIComponent(dir)}&direction=${direction}`,
+      `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree/reorder?name=${encodeURIComponent(aName)}&dir=${encodeURIComponent(aParent)}&direction=swap&target=${encodeURIComponent(oName)}`,
       { method: 'POST' }
     );
     refreshTree();
@@ -383,22 +422,19 @@ export default function CourseManager() {
     loadTrash();
   };
 
-  const renderTreeNode = (node: TreeNode, basePath: string, index?: number, total?: number): React.ReactNode => {
+  const renderTreeNode = (node: TreeNode, basePath: string): React.ReactNode => {
     const path = basePath ? `${basePath}/${node.name}` : node.name;
-    const canUp = index !== undefined && index > 0;
-    const canDown = index !== undefined && total !== undefined && index < total - 1;
+    const sortableId = `${basePath}::${node.name}`;
+    const dragHandle = <GripVertical size={12} />;
+
     if (node.type === 'dir') {
       return (
-        <div key={path} className="border border-slate-700/50 rounded-xl mb-1">
+        <SortableItem key={sortableId} id={sortableId} className="border border-slate-700/50 rounded-xl mb-1" dragHandle={dragHandle}>
           <div className="flex items-center justify-between px-3 py-2 bg-slate-800/30 rounded-t-xl">
             <span className="flex items-center gap-2 text-sm text-white">
               <FolderOpen size={14} className="text-amber-400" /> {node.name}
             </span>
             <div className="flex items-center gap-1">
-              {canUp && <button onClick={() => handleReorder(basePath, node.name, 'up')} title="上移"
-                className="text-slate-500 hover:text-slate-200 p-1"><ArrowUp size={12} /></button>}
-              {canDown && <button onClick={() => handleReorder(basePath, node.name, 'down')} title="下移"
-                className="text-slate-500 hover:text-slate-200 p-1"><ArrowDown size={12} /></button>}
               <button onClick={() => handleUploadFile(path)} title="上传到此文件夹"
                 className="text-slate-500 hover:text-slate-200 p-1"><Upload size={14} /></button>
               <button onClick={() => setNewFolderParent(path)} title="新建子文件夹"
@@ -411,29 +447,33 @@ export default function CourseManager() {
           </div>
           {node.children && node.children.length > 0 && (
             <div className="px-3 py-2 space-y-1">
-              {node.children.map((c, i) => renderTreeNode(c, path, i, node.children!.length))}
+              {renderSortableChildren(node.children, path)}
             </div>
           )}
-        </div>
+        </SortableItem>
       );
     }
     return (
-      <div key={path} className="flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800/40 rounded">
+      <SortableItem key={sortableId} id={sortableId} className="flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800/40 rounded" dragHandle={dragHandle}>
         <span className="flex items-center gap-2 truncate">
           <FileText size={14} className="text-slate-500 shrink-0" /> {node.name}
           {node.size !== undefined && <span className="text-[10px] text-slate-600">({(node.size / 1024).toFixed(1)} KB)</span>}
         </span>
         <div className="flex items-center gap-1">
-          {canUp && <button onClick={() => handleReorder(basePath, node.name, 'up')} title="上移"
-            className="text-slate-600 hover:text-slate-300 p-1"><ArrowUp size={10} /></button>}
-          {canDown && <button onClick={() => handleReorder(basePath, node.name, 'down')} title="下移"
-            className="text-slate-600 hover:text-slate-300 p-1"><ArrowDown size={10} /></button>}
           <button onClick={() => openRenameEntry(path, node.name)} title="重命名"
             className="text-slate-600 hover:text-slate-300 p-1"><Pencil size={12} /></button>
           <button onClick={() => handleDeleteEntry(path, node.name)} title="删除"
             className="text-slate-600 hover:text-rose-400 p-1"><Trash2 size={12} /></button>
         </div>
-      </div>
+      </SortableItem>
+    );
+  };
+
+  const renderSortableChildren = (children: TreeNode[], parentPath: string) => {
+    return (
+      <SortableContext items={children.map(c => `${parentPath}::${c.name}`)} strategy={verticalListSortingStrategy}>
+        {children.map(c => renderTreeNode(c, parentPath))}
+      </SortableContext>
     );
   };
 
@@ -778,9 +818,13 @@ export default function CourseManager() {
               暂无文件，点击「上传文件」或「新建文件夹」开始
             </div>
           ) : (
-            <div className="space-y-1">
-              {tree.map((n, i) => renderTreeNode(n, '', i, tree.length))}
-            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={tree.map(n => `::${n.name}`)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-1">
+                  {tree.map(n => renderTreeNode(n, ''))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       )}
