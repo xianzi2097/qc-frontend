@@ -62,7 +62,7 @@ export const TYPE_OPTIONS = [
 import { Monitor, FolderOpen, BookOpen } from 'lucide-react';
 
 export const FORMAT_OPTIONS = [
-  { value: 'scratch', label: 'Scratch 编辑器', Icon: Monitor },
+  { value: 'scratch', label: 'Scratch', Icon: Monitor },
   {value: 'folder', label: '文件夹', Icon: FolderOpen },
   { value: 'ebook', label: '电子书', Icon: BookOpen },
 ];
@@ -72,10 +72,6 @@ export const FORMAT_LABEL: Record<string, string> = {
   folder: '文件夹',
   ebook: '电子书',
 };
-
-// 文件扩展名到图标的映射（用于文件列表显示）
-// 注意：这个映射在 CoursePlaza.tsx 中使用，保留在此处
-export const FILE_ICON_EXTENSIONS = ['html', 'htm', 'py', 'cpp', 'txt', 'md', 'pdf', 'png', 'jpg', 'jpeg', 'gif'];
 
 // 工具函数：获取文件扩展名
 export function getFileExt(name: string): string {

@@ -47,7 +47,7 @@ export default function CourseManager() {
   useEffect(() => { loadCourses(); }, [loadCourses]);
 
   const handleCreate = async () => {
-    if (!newName.trim()) return;
+    if (newFormat !== 'ebook' && !newName.trim()) return;
     try {
       const res = await fetch('/api/courses', {
         method: 'POST',
@@ -448,11 +448,13 @@ export default function CourseManager() {
             {/* 课程名称 + 描述（左右分栏） */}
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-xs text-slate-400 block mb-1">课程名称</label>
+                <label className="text-xs text-slate-400 block mb-1">课程名称{newFormat === 'ebook' && <span className="text-slate-500 ml-1">（由上传文件名决定）</span>}</label>
                 <input
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  className="w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
+                  disabled={newFormat === 'ebook'}
+                  placeholder={newFormat === 'ebook' ? '上传后自动获取' : '输入课程名称'}
+                  className={`w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-brand-orange ${newFormat === 'ebook' ? 'text-slate-500 cursor-not-allowed' : 'text-white'}`}
                 />
                 {/* 标签放在名称下方 */}
                 <div className="mt-2">
@@ -513,7 +515,7 @@ export default function CourseManager() {
                 {FORMAT_OPTIONS.map(o => (
                   <button
                     key={o.value}
-                    onClick={() => setNewFormat(o.value)}
+                    onClick={() => { setNewFormat(o.value); if (o.value === 'ebook') setNewName(''); }}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                       newFormat === o.value
                         ? 'bg-cyan-400/10 border-cyan-400/50 text-cyan-400'
@@ -837,14 +839,16 @@ export default function CourseManager() {
       {/* ── 编辑课程弹窗 ── */}
       {createPortal(editingCourse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setEditingCourse(null); }}>
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[700px] max-w-[90vw] max-h-[85vh] overflow-auto p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-[65vw] max-h-[85vh] overflow-auto p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
             <h3 className="text-sm font-bold text-white mb-4">编辑课程</h3>
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-slate-400 block mb-1">课程名称</label>
+                  <label className="text-xs text-slate-400 block mb-1">课程名称{editFormat === 'ebook' && <span className="text-slate-500 ml-1">（电子书课程，名称由内容决定）</span>}</label>
                   <input value={editName} onChange={e => setEditName(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
+                    disabled={editFormat === 'ebook'}
+                    placeholder={editFormat === 'ebook' ? '由上传文件名决定' : ''}
+                    className={`w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-400 ${editFormat === 'ebook' ? 'text-slate-500 cursor-not-allowed' : 'text-white'}`} />
                               <div>
                 <label className="text-xs text-slate-400 block mb-1 mt-2">标签</label>
                 <div className="flex flex-wrap gap-1.5 items-center">
@@ -886,7 +890,7 @@ export default function CourseManager() {
                 <label className="text-xs text-slate-400 block mb-1 mt-2">打开方式</label>
                 <div className="flex gap-2">
                   {FORMAT_OPTIONS.map(o => (
-                    <button key={o.value} onClick={() => setEditFormat(o.value)}
+                    <button key={o.value} onClick={() => { setEditFormat(o.value); if (o.value === 'ebook') setEditName(''); }}
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${editFormat === o.value ? 'bg-cyan-400/10 border-cyan-400/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}>
                       <o.Icon size={14} /> {o.label}
                     </button>
