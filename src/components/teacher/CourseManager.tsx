@@ -4,7 +4,7 @@ import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
 import type { Course, TreeNode } from '../../types/course';
-import { TYPE_ICON, TYPE_OPTIONS, FORMAT_OPTIONS, FORMAT_LABEL } from '../../types/course';
+import { TYPE_LUCIDE, TYPE_OPTIONS, FORMAT_OPTIONS, FORMAT_LABEL } from '../../types/course';
 
 export default function CourseManager() {
   const { username } = useAuth();
@@ -13,8 +13,12 @@ export default function CourseManager() {
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
   const [newType, setNewType] = useState('scratch');
   const [newFormat, setNewFormat] = useState('scratch');
+  const [newTags, setNewTags] = useState<string[]>([]);
+  const [showTagInput, setShowTagInput] = useState(false);
+  const [newTagInput, setNewTagInput] = useState('');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [publish, setPublish] = useState<{ status?: string; error?: string; published_at?: string }>({});
@@ -47,12 +51,16 @@ export default function CourseManager() {
       const res = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: newFormat }),
+        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: newFormat, tags: newTags, description: newDesc.trim() }),
       });
       const data = await res.json();
       if (data.status === 'success') {
         setShowCreate(false);
         setNewName('');
+        setNewTags([]);
+        setNewTagInput('');
+        setShowTagInput(false);
+        setNewDesc('');
         loadCourses();
       } else {
         // FastAPI 422 验证错误：detail 可能是数组或字符串
@@ -161,22 +169,49 @@ export default function CourseManager() {
   const [rename, setRename] = useState<{ kind: string; current: string; run: (newName: string) => Promise<void> } | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  const openRenameCourse = (course: Course) => {
-    setRenameValue(course.name);
-    setRename({
-      kind: '课程',
-      current: course.name,
-      run: async (newName: string) => {
-        const res = await fetch(`/api/courses/${encodeURIComponent(course.id)}/rename`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ new_name: newName }),
-        });
-        const data = await res.json().catch(() => null);
-        if (data?.status !== 'success') return alert(data?.detail || '课程重命名失败');
-        if (selectedCourse?.id === course.id) setSelectedCourse({ ...selectedCourse, name: newName });
+  // ── 编辑课程弹窗 ──
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editType, setEditType] = useState('scratch');
+  const [editFormat, setEditFormat] = useState('scratch');
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [editTagInput, setEditTagInput] = useState('');
+  const [showEditTagInput, setShowEditTagInput] = useState(false);
+
+  const openEditCourse = (course: Course) => {
+    setEditingCourse(course);
+    setEditName(course.name);
+    setEditDesc(course.description || '');
+    setEditType(course.type);
+    setEditFormat(course.format || 'folder');
+    setEditTags(course.tags || []);
+    setEditTagInput('');
+    setShowEditTagInput(false);
+  };
+
+  const handleUpdateCourse = async () => {
+    if (!editingCourse || !editName.trim()) return;
+    try {
+      const res = await fetch(`/api/courses/${encodeURIComponent(editingCourse.id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName.trim(), description: editDesc.trim(),
+          tags: editTags, course_type: editType, format: editFormat,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setEditingCourse(null);
         loadCourses();
-      },
-    });
+      } else {
+        const msg = Array.isArray(data.detail)
+          ? data.detail.map((e: any) => e.msg || JSON.stringify(e)).join('；')
+          : (data.detail || '更新失败');
+        setError(msg);
+      }
+    } catch { setError('无法连接服务器'); }
   };
 
   const openRenameEntry = (path: string, name: string) => {
@@ -408,43 +443,102 @@ export default function CourseManager() {
       {showCreate && (
         <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6">
           <h3 className="text-sm font-bold text-white mb-4">新建课程</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-slate-400 block mb-1">课程名称</label>
-              <input
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                placeholder="如：Scratch-周六早-初级班"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-slate-400 block mb-1">课程类型</label>
-              <select
-                value={newType}
-                onChange={e => setNewType(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-orange"
-              >
+          <div className="space-y-2">
+            {/* 课程名称 + 描述（左右分栏） */}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="text-xs text-slate-400 block mb-1">课程名称</label>
+                <input
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  className="w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
+                />
+                {/* 标签放在名称下方 */}
+                <div className="mt-2">
+                  <label className="text-xs text-slate-400 block mb-1">标签</label>
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    {newTags.map(tag => (
+                      <span key={tag} className="text-[11px] px-2.5 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/50 text-cyan-400 flex items-center gap-1">
+                        {tag}
+                        <button onClick={() => setNewTags(newTags.filter(t => t !== tag))} className="hover:text-white">×</button>
+                      </span>
+                    ))}
+                    {showTagInput ? (
+                      <input
+                        autoFocus
+                        value={newTagInput}
+                        onChange={e => setNewTagInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && newTagInput.trim() && !newTags.includes(newTagInput.trim())) {
+                            setNewTags([...newTags, newTagInput.trim()]);
+                            setNewTagInput('');
+                            setShowTagInput(false);
+                          }
+                          if (e.key === 'Escape') { setShowTagInput(false); setNewTagInput(''); }
+                        }}
+                        onBlur={() => { setShowTagInput(false); setNewTagInput(''); }}
+                        placeholder="回车确定"
+                        className="w-[4.5rem] bg-slate-800 border border-cyan-400/50 rounded-full px-2.5 py-1 text-[11px] text-slate-200 outline-none placeholder-slate-500"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => setShowTagInput(true)}
+                        className="w-6 h-6 rounded-full bg-slate-700 hover:bg-cyan-400/20 text-slate-400 hover:text-cyan-400 flex items-center justify-center text-sm transition-colors"
+                      >+</button>
+                    )}
+                  </div>
+                <div>
+              <label className="text-xs text-slate-400 block mb-1 mt-2">课程类型</label>
+              <div className="flex gap-2">
                 {TYPE_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <button
+                    key={o.value}
+                    onClick={() => setNewType(o.value)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      newType === o.value
+                        ? 'border-current/50'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
+                    }`}
+                    style={newType === o.value ? { color: o.color, backgroundColor: `${o.color}15` } : {}}
+                  >
+                    <o.Icon size={14} style={newType === o.value ? { color: o.color } : {}} /> {o.label}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
             <div>
-              <label className="text-xs text-slate-400 block mb-1">打开方式</label>
-              <select
-                value={newFormat}
-                onChange={e => setNewFormat(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-orange"
-              >
+              <label className="text-xs text-slate-400 block mb-1 mt-2">打开方式</label>
+              <div className="flex gap-2">
                 {FORMAT_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <button
+                    key={o.value}
+                    onClick={() => setNewFormat(o.value)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      newFormat === o.value
+                        ? 'bg-cyan-400/10 border-cyan-400/50 text-cyan-400'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
+                    }`}
+                  >
+                    <o.Icon size={14} /> {o.label}
+                  </button>
                 ))}
-              </select>
+              </div>
+            </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <label className="text-xs text-slate-400 block mb-1">课程描述</label>
+                <textarea
+                  value={newDesc}
+                  onChange={e => setNewDesc(e.target.value)}
+                  rows={9}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange resize-none"
+                />
+              </div>
             </div>
             <div className="flex gap-2 justify-end pt-2">
               <button
-                onClick={() => setShowCreate(false)}
+                onClick={() => { setShowCreate(false); setShowTagInput(false); setNewTagInput(''); setNewDesc(''); }}
                 className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg"
               >
                 取消
@@ -474,7 +568,10 @@ export default function CourseManager() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {courses.filter(c => TYPE_ICON[c.type] || c.type).map(course => (
+          {courses.map(course => {
+            const TypeIcon = TYPE_LUCIDE[course.type];
+            const typeColor = TYPE_OPTIONS.find(o => o.value === course.type)?.color || '#94a3b8';
+            return (
             <div
               key={course.id}
               onClick={() => loadTree(course)}
@@ -486,17 +583,24 @@ export default function CourseManager() {
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-2xl block mb-2">{TYPE_ICON[course.type] || '📁'}</span>
+                  <span className="text-2xl block mb-2">{TypeIcon ? <TypeIcon size={28} style={{ color: typeColor }} /> : <FolderOpen size={28} className="text-slate-400" />}</span>
                   <h3 className="font-bold text-white text-sm mb-1">{course.name}</h3>
                   <p className="text-xs text-slate-500">
                     {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个课件
                   </p>
+                  {course.tags && course.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {course.tags.map(tag => (
+                        <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400">{tag}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                   <button
-                    onClick={() => openRenameCourse(course)}
-                    className="text-slate-600 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-all p-1"
-                    title="重命名课程"
+                    onClick={() => openEditCourse(course)}
+                    className="text-slate-600 hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition-all p-1"
+                    title="编辑课程"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
@@ -510,7 +614,8 @@ export default function CourseManager() {
                 </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
 
@@ -571,13 +676,13 @@ export default function CourseManager() {
 
           {/* 根目录工具栏 */}
           <div className="flex items-center gap-2 mb-3">
+            <button onClick={() => setShowDrop(true)}
+              className="flex items-center gap-1.5 text-xs bg-brand-orange/20 hover:bg-brand-orange/30 text-brand-orange px-3 py-1.5 rounded-lg transition-colors">
+              <FolderOpen size={14} /> 批量上传
+            </button>
             <button onClick={() => handleUploadFile('')}
               className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
               <Upload size={14} /> 上传文件
-            </button>
-            <button onClick={() => setShowDrop(true)}
-              className="flex items-center gap-1.5 text-xs bg-brand-orange/20 hover:bg-brand-orange/30 text-brand-orange px-3 py-1.5 rounded-lg transition-colors">
-              <FolderOpen size={14} /> 一键上传
             </button>
             <button onClick={() => setNewFolderParent('')}
               className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
@@ -723,6 +828,83 @@ export default function CourseManager() {
               >
                 确定
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 编辑课程弹窗 ── */}
+      {editingCourse && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setEditingCourse(null); }}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[700px] max-w-[90vw] max-h-[85vh] overflow-auto p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-sm font-bold text-white mb-4">编辑课程</h3>
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="text-xs text-slate-400 block mb-1">课程名称</label>
+                  <input value={editName} onChange={e => setEditName(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
+                              <div>
+                <label className="text-xs text-slate-400 block mb-1 mt-2">标签</label>
+                <div className="flex flex-wrap gap-1.5 items-center">
+                  {editTags.map(tag => (
+                    <span key={tag} className="text-[11px] px-2.5 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/50 text-cyan-400 flex items-center gap-1">
+                      {tag}
+                      <button onClick={() => setEditTags(editTags.filter(t => t !== tag))} className="hover:text-white">×</button>
+                    </span>
+                  ))}
+                  {showEditTagInput ? (
+                    <input autoFocus value={editTagInput}
+                      onChange={e => setEditTagInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && editTagInput.trim() && !editTags.includes(editTagInput.trim())) { setEditTags([...editTags, editTagInput.trim()]); setEditTagInput(''); setShowEditTagInput(false); }
+                        if (e.key === 'Escape') { setShowEditTagInput(false); setEditTagInput(''); }
+                      }}
+                      onBlur={() => { setShowEditTagInput(false); setEditTagInput(''); }}
+                      placeholder="回车确定"
+                      className="w-[4.5rem] bg-slate-800 border border-cyan-400/50 rounded-full px-2.5 py-1 text-[11px] text-slate-200 outline-none placeholder-slate-500" />
+                  ) : (
+                    <button onClick={() => setShowEditTagInput(true)}
+                      className="w-6 h-6 rounded-full bg-slate-700 hover:bg-cyan-400/20 text-slate-400 hover:text-cyan-400 flex items-center justify-center text-sm transition-colors">+</button>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 block mb-1 mt-2">课程类型</label>
+                <div className="flex gap-2">
+                  {TYPE_OPTIONS.map(o => (
+                    <button key={o.value} onClick={() => setEditType(o.value)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${editType === o.value ? 'border-current/50' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}
+                      style={editType === o.value ? { color: o.color, backgroundColor: `${o.color}15` } : {}}>
+                      <o.Icon size={14} style={editType === o.value ? { color: o.color } : {}} /> {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 block mb-1 mt-2">打开方式</label>
+                <div className="flex gap-2">
+                  {FORMAT_OPTIONS.map(o => (
+                    <button key={o.value} onClick={() => setEditFormat(o.value)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${editFormat === o.value ? 'bg-cyan-400/10 border-cyan-400/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}>
+                      <o.Icon size={14} /> {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+                
+                </div>
+                
+                <div className="flex-1">
+                  <label className="text-xs text-slate-400 block mb-1">课程描述</label>
+                  <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={10}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 resize-none" />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <button onClick={() => setEditingCourse(null)} className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg">取消</button>
+                <button onClick={handleUpdateCourse} className="text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-4 py-2 rounded-lg">保存</button>
+              </div>
             </div>
           </div>
         </div>

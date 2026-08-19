@@ -9,6 +9,7 @@ export interface Course {
   type: string;
   format?: string;
   description: string;
+  tags?: string[];
   material_count: number;
   teacher?: string;
   teacher_key?: string;
@@ -40,25 +41,30 @@ export interface Material {
   url: string;
 }
 
-// 课程类型常量 - 统一的 emoji 映射
-export const TYPE_ICON: Record<string, string> = {
-  scratch: '🧩',
-  python: '🍁',
-  cpp: '⚙️',
+// 课程类型常量 - Lucide 图标映射
+import type { LucideIcon } from 'lucide-react';
+import { Puzzle, Code2, Cog } from 'lucide-react';
+
+export const TYPE_LUCIDE: Record<string, LucideIcon> = {
+  scratch: Puzzle,
+  python: Code2,
+  cpp: Cog,
 };
 
-// 课程类型选项 - 用于下拉选择等
+// 课程类型选项
 export const TYPE_OPTIONS = [
-  { value: 'scratch', label: '🧩 Scratch' },
-  { value: 'python', label: '🍁 Python' },
-  { value: 'cpp', label: '⚙️ C++' },
+  { value: 'scratch', label: 'Scratch', Icon: Puzzle, color: '#f97316' },  // 橙色
+  { value: 'python', label: 'Python', Icon: Code2, color: '#22c55e' },      // 绿色
+  { value: 'cpp', label: 'C++', Icon: Cog, color: '#94a3b8' },            // 金属灰
 ];
 
-// 打开方式（format）：决定课程如何被打开
+// 打开方式（format）
+import { Monitor, FolderOpen, BookOpen } from 'lucide-react';
+
 export const FORMAT_OPTIONS = [
-  { value: 'scratch', label: '🧩 Scratch 编辑器' },
-  { value: 'folder', label: '📁 文件夹' },
-  { value: 'ebook', label: '📖 电子书' },
+  { value: 'scratch', label: 'Scratch 编辑器', Icon: Monitor },
+  {value: 'folder', label: '文件夹', Icon: FolderOpen },
+  { value: 'ebook', label: '电子书', Icon: BookOpen },
 ];
 
 export const FORMAT_LABEL: Record<string, string> = {

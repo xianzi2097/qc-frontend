@@ -3,7 +3,7 @@ import {
   BookOpen, Award, Puzzle, Code2,
   Star, LogIn, Play, X, HelpCircle,
   Library, ArrowRight, Search, LayoutGrid,
-  Folder, FolderOpen, FileText, Braces, Terminal, Users, User
+  Folder, FolderOpen, FileText, Braces, Users, User
 } from 'lucide-react';
 
 import type { PortalUser } from '../lib/useAuth';
@@ -11,9 +11,9 @@ import type { Course, Material } from '../types/course';
 import AvatarPicker, { AVATARS } from './ui/AvatarPicker';
 // HomePage 使用图标组件版本的 TYPE_ICON
 const TYPE_ICON: Record<string, (props: { className?: string }) => React.ReactNode> = {
-  scratch: (cls) => <Puzzle className={cls?.className ? `${cls.className} ico-green` : 'w-6 h-6 ico-green'} />,
-  python: (cls) => <Terminal className={cls?.className ? `${cls.className} ico-blue` : 'w-6 h-6 ico-blue'} />,
-  cpp: (cls) => <Braces className={cls?.className ? `${cls.className} ico-orange` : 'w-6 h-6 ico-orange'} />,
+  scratch: (cls) => <Puzzle className={cls?.className ? `${cls.className}` : 'w-6 h-6'} style={{ color: '#f97316' }} />,
+  python: (cls) => <Code2 className={cls?.className ? `${cls.className}` : 'w-6 h-6'} style={{ color: '#22c55e' }} />,
+  cpp: (cls) => <Braces className={cls?.className ? `${cls.className}` : 'w-6 h-6'} style={{ color: '#94a3b8' }} />,
 };
 
 interface Props {

@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 
 import type { Course, Material } from '../../types/course';
-import { TYPE_ICON, getFileExt, formatSize } from '../../types/course';
+import { TYPE_LUCIDE, TYPE_OPTIONS, getFileExt, formatSize } from '../../types/course';
 
 const FILE_ICON: Record<string, React.ReactNode> = {
   html: <FileCode2 size={16} />, htm: <FileCode2 size={16} />,
@@ -110,7 +110,10 @@ export default function CoursePlaza() {
         <div className="w-56 shrink-0 flex flex-col gap-2 overflow-y-auto">
           {courses.length === 0 ? (
             <div className="text-xs text-slate-500 text-center py-8">暂无课程</div>
-          ) : courses.map(c => (
+          ) : courses.map(c => {
+            const CourseIcon = TYPE_LUCIDE[c.type];
+            const typeColor = TYPE_OPTIONS.find(o => o.value === c.type)?.color || '#94a3b8';
+            return (
             <button key={c.id} onClick={() => openCourse(c)}
               className={`text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
                 selectedCourse?.id === c.id
@@ -118,7 +121,7 @@ export default function CoursePlaza() {
                   : 'bg-slate-800/60 border border-slate-700/50 text-slate-300 hover:bg-slate-700/80'
               }`}>
               <div className="flex items-center gap-2">
-                <span>{TYPE_ICON[c.type] || '📁'}</span>
+                <span>{CourseIcon ? <CourseIcon size={20} style={{ color: typeColor }} /> : <FolderOpen size={20} className="text-slate-400" />}</span>
                 <span className="truncate flex-1 font-medium">{c.name}</span>
                 <span className="text-[10px] text-slate-500">{c.material_count}</span>
               </div>
@@ -126,7 +129,8 @@ export default function CoursePlaza() {
                 <p className="text-[10px] text-slate-500 mt-1 truncate">{c.description}</p>
               )}
             </button>
-          ))}
+            );
+          })}
         </div>
 
         {/* 右侧：课件详情 */}
