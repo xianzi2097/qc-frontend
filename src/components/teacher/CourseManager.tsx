@@ -204,16 +204,45 @@ export default function CourseManager() {
     if (!over || active.id === over.id || !selectedCourse) return;
     const activeId = String(active.id);
     const overId = String(over.id);
-    // 从 id 格式 "parentPath::name" 解析
     const [aParent, aName] = activeId.includes('::') ? activeId.split('::') : ['', activeId];
     const [oParent, oName] = overId.includes('::') ? overId.split('::') : ['', overId];
-    if (aParent !== oParent) return; // 只允许同级排序
-    // 调 API
+    if (aParent !== oParent) return;
+    // 本地先排序（触发动画），再后台调 API
+    const reorderInTree = (nodes: TreeNode[], parentPath: string): TreeNode[] => {
+      return nodes.map(node => {
+        const nodePath = parentPath ? `${parentPath}/${node.name}` : node.name;
+        if (nodePath === aParent && node.children) {
+          const oldIdx = node.children.findIndex(c => c.name === aName);
+          const newIdx = node.children.findIndex(c => c.name === oName);
+          if (oldIdx === -1 || newIdx === -1) return node;
+          const newChildren = [...node.children];
+          const [moved] = newChildren.splice(oldIdx, 1);
+          newChildren.splice(newIdx, 0, moved);
+          return { ...node, children: newChildren };
+        }
+        if (node.children) {
+          return { ...node, children: reorderInTree(node.children, nodePath) };
+        }
+        return node;
+      });
+    };
+    if (aParent === '') {
+      const oldIdx = tree.findIndex(c => c.name === aName);
+      const newIdx = tree.findIndex(c => c.name === oName);
+      if (oldIdx !== -1 && newIdx !== -1) {
+        const newTree = [...tree];
+        const [moved] = newTree.splice(oldIdx, 1);
+        newTree.splice(newIdx, 0, moved);
+        setTree(newTree);
+      }
+    } else {
+      setTree(reorderInTree(tree, ''));
+    }
+    // 后台调 API
     await fetch(
       `/api/courses/${encodeURIComponent(selectedCourse.id)}/tree/reorder?name=${encodeURIComponent(aName)}&dir=${encodeURIComponent(aParent)}&direction=swap&target=${encodeURIComponent(oName)}`,
       { method: 'POST' }
     );
-    refreshTree();
   };
 
   // ── 编辑课程弹窗 ──
