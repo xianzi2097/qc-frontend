@@ -247,11 +247,17 @@ export default function CourseManager() {
   const handlePublish = async () => {
     if (!selectedCourse) return;
     setPublishing(true);
-    setPublish({ status: 'building' });
     try {
       const res = await fetch(`/api/courses/${encodeURIComponent(selectedCourse.id)}/publish`, { method: 'POST' });
       const data = await res.json().catch(() => null);
-      if (data?.status !== 'success') { alert(data?.detail || '发布失败'); setPublishing(false); return; }
+      if (data?.status !== 'success') {
+        alert(data?.detail || '发布失败');
+        setPublishing(false);
+        setPublish({ status: 'idle' });
+        return;
+      }
+      // POST 成功后才显示 building
+      setPublish({ status: 'building' });
       for (let i = 0; i < 90; i++) {
         await new Promise(r => setTimeout(r, 2000));
         const st = await fetch(`/api/courses/${encodeURIComponent(selectedCourse.id)}/publish/status?t=${Date.now()}`).then(r => r.json());
