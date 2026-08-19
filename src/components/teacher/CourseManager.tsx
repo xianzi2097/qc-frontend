@@ -451,12 +451,12 @@ export default function CourseManager() {
       );
     }
     return (
-      <SortableItem key={sortableId} id={sortableId} className="flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800/40 rounded" dragHandle={dragHandle}>
+      <SortableItem key={sortableId} id={sortableId} className="px-2 py-1.5 text-xs text-slate-300 hover:bg-slate-800/40 rounded" dragHandle={dragHandle}>
         <span className="flex items-center gap-2 truncate">
           <FileText size={14} className="text-slate-500 shrink-0" /> {node.name}
           {node.size !== undefined && <span className="text-[10px] text-slate-600">({(node.size / 1024).toFixed(1)} KB)</span>}
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <button onClick={() => openRenameEntry(path, node.name)} title="重命名"
             className="text-slate-600 hover:text-slate-300 p-1"><Pencil size={12} /></button>
           <button onClick={() => handleDeleteEntry(path, node.name)} title="删除"
