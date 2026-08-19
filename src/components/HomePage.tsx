@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function HomePage({ onLogin, onSwitchHome: _onSwitchHome }: Props) {
-  const [flipped, setFlipped] = useState(false);
+  const [flipped, setFlipped] = useState(() => new URLSearchParams(window.location.search).get('view') === 'courses');
   const [showLoginFlip, setShowLoginFlip] = useState(false);
   const [showDocFlip, setShowDocFlip] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
