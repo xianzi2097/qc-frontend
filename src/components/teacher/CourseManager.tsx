@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil, FileText, FolderPlus, Upload, Play, Loader2 } from 'lucide-react';
 import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
@@ -834,7 +835,7 @@ export default function CourseManager() {
       )}
 
       {/* ── 编辑课程弹窗 ── */}
-      {editingCourse && (
+      {createPortal(editingCourse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setEditingCourse(null); }}>
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[700px] max-w-[90vw] max-h-[85vh] overflow-auto p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
             <h3 className="text-sm font-bold text-white mb-4">编辑课程</h3>
@@ -908,7 +909,7 @@ export default function CourseManager() {
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </div>
   );
 }
