@@ -31,6 +31,18 @@ export interface Teacher {
   username: string;
 }
 
+// 课件树节点（folder 型课程的递归结构，后端 materials 接口的 tree 字段）
+export interface MaterialNode {
+  name: string;
+  type: 'dir' | 'file';
+  /** 文件大小（字节），仅 file 节点 */
+  size?: number;
+  /** 相对课件根目录的路径，仅 file 节点，如 "一级真题/2025-09/试卷.docx" */
+  path?: string;
+  /** 子节点，仅 dir 节点 */
+  children?: MaterialNode[];
+}
+
 // 素材类型
 export interface Material {
   name: string;
@@ -39,6 +51,8 @@ export interface Material {
   sb3_count?: number;
   files?: { name: string; size: number }[];
   file_count?: number;
+  /** folder 型课程的递归目录树（后端返回；缺省时前端用 files 兜底） */
+  tree?: MaterialNode[];
   url: string;
 }
 

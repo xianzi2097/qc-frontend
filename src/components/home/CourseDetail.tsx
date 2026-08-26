@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft, ArrowUpRight, BookOpen, ExternalLink, FileText, Folder, FolderOpen,
+  ArrowLeft, ArrowUpRight, BookOpen, ChevronDown, ChevronRight, ExternalLink,
+  FileText, Folder, FolderOpen,
 } from 'lucide-react';
 import { fetchMaterials } from '../../lib/api';
 import { injectSeamless } from './seamless';
-import type { Course, Material } from '../../types/course';
+import { formatSize } from '../../types/course';
+import type { Course, Material, MaterialNode } from '../../types/course';
 
 interface Props {
   course: Course;
@@ -109,33 +111,32 @@ export default function CourseDetail({ course, onBack }: Props) {
           </div>
         ) : (
           <div className="flex flex-col gap-6 py-6">
-            {materials.map(m => (
-              <div key={m.name} className="bg-white border border-ed-line p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Folder size={17} strokeWidth={1.5} className="text-ed-muted" />
-                  <span className="text-sm font-semibold text-ed-ink">{m.name}</span>
-                  <span className="text-xs text-ed-muted">{m.file_count} 个文件</span>
-                </div>
-                {m.files && m.files.length > 0 && (
-                  <div className="flex flex-col">
-                    {m.files.map(f => (
-                      <a
-                        key={f.name}
-                        href={`${m.url}${f.name}`}
-                        target="_blank"
-                        className="group flex items-center justify-between gap-3 py-2 px-1 border-t border-ed-line first:border-t-0 no-underline hover:bg-black/[0.02] transition-colors"
-                      >
-                        <span className="flex items-center gap-2 min-w-0 text-sm text-ed-body group-hover:text-brand-orange transition-colors">
-                          <FileText size={14} strokeWidth={1.5} className="flex-shrink-0 text-ed-muted" />
-                          <span className="truncate">{f.name}</span>
-                        </span>
-                        <span className="text-xs text-ed-muted flex-shrink-0">{(f.size / 1024).toFixed(1)} KB</span>
-                      </a>
-                    ))}
+            {materials.map(m => {
+              // 优先用后端递归树；旧响应无 tree 时退回直接文件列表
+              const nodes: MaterialNode[] = m.tree?.length
+                ? m.tree
+                : (m.files ?? []).map(f => ({ name: f.name, type: 'file' as const, size: f.size, path: f.name }));
+              return (
+                <div key={m.name} className="bg-white border border-ed-line p-5">
+                  <div className="flex items-center gap-2 pb-3 mb-1 border-b border-ed-line">
+                    <Folder size={17} strokeWidth={1.5} className="text-ed-muted flex-shrink-0" />
+                    <span className="text-sm font-semibold text-ed-ink truncate">{m.name}</span>
+                    <span className="ml-auto text-xs text-ed-muted flex-shrink-0">
+                      {countTreeFiles(nodes)} 个文件
+                    </span>
                   </div>
-                )}
-              </div>
-            ))}
+                  {nodes.length === 0 ? (
+                    <p className="py-4 text-center text-xs text-ed-muted">此文件夹暂无内容</p>
+                  ) : (
+                    <div>
+                      {nodes.map(n => (
+                        <TreeNodeRow key={n.name} node={n} urlBase={m.url} relPrefix="" depth={0} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -149,5 +150,82 @@ function CenterNote({ text }: { text: string }) {
     <div className="h-full min-h-40 flex items-center justify-center text-sm text-ed-muted">
       {text}
     </div>
+  );
+}
+
+// ── folder 型课件：递归目录树 ──────────────────────────────
+
+/** 统计子树内的文件总数（含所有嵌套层级） */
+function countTreeFiles(nodes: MaterialNode[]): number {
+  return nodes.reduce(
+    (acc, n) => acc + (n.type === 'file' ? 1 : countTreeFiles(n.children ?? [])),
+    0,
+  );
+}
+
+/** /share 链接按路径段编码：中文、空格、#、% 等特殊字符不会断链 */
+function shareHref(urlBase: string, relPath: string): string {
+  const raw = urlBase.endsWith('/') ? urlBase + relPath : `${urlBase}/${relPath}`;
+  return raw.split('/').map(encodeURIComponent).join('/');
+}
+
+/**
+ * 单个树节点行：
+ * 文件夹 → 点击展开/收起；文件 → 新窗口打开（Caddy /share 静态服务）。
+ * 缩进 = 深度 × 16px，与主页 hairline 风格一致。
+ */
+function TreeNodeRow({ node, urlBase, relPrefix, depth }: {
+  node: MaterialNode;
+  urlBase: string;
+  relPrefix: string;
+  depth: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const rel = relPrefix ? `${relPrefix}/${node.name}` : node.name;
+
+  if (node.type === 'dir') {
+    const children = node.children ?? [];
+    return (
+      <div>
+        <button
+          onClick={() => setOpen(v => !v)}
+          style={{ paddingLeft: depth * 16 + 4 }}
+          className="group w-full flex items-center gap-2 pr-2 py-2 border-t border-ed-line text-left cursor-pointer hover:bg-black/[0.02] transition-colors"
+        >
+          {open
+            ? <ChevronDown size={13} className="flex-shrink-0 text-ed-muted" />
+            : <ChevronRight size={13} className="flex-shrink-0 text-ed-muted" />}
+          <Folder size={14} strokeWidth={1.5} className="flex-shrink-0 text-brand-orange" />
+          <span className="text-sm text-ed-body truncate group-hover:text-brand-orange transition-colors">
+            {node.name}
+          </span>
+          <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
+            {countTreeFiles(children)} 个文件
+          </span>
+        </button>
+        {open && children.map(c => (
+          <TreeNodeRow key={c.name} node={c} urlBase={urlBase} relPrefix={rel} depth={depth + 1} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={shareHref(urlBase, node.path || node.name)}
+      target="_blank"
+      rel="noreferrer"
+      title={rel}
+      style={{ paddingLeft: depth * 16 + 29 }}
+      className="group flex items-center gap-2 pr-2 py-2 border-t border-ed-line no-underline hover:bg-black/[0.02] transition-colors"
+    >
+      <FileText size={14} strokeWidth={1.5} className="flex-shrink-0 text-ed-muted" />
+      <span className="text-sm text-ed-body truncate group-hover:text-brand-orange transition-colors">
+        {node.name}
+      </span>
+      <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
+        {typeof node.size === 'number' ? formatSize(node.size) : ''}
+      </span>
+    </a>
   );
 }
