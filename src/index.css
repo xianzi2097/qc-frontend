@@ -334,3 +334,40 @@ body {
 .flip-inner.flipped .flip-front {
   pointer-events: none;
 }
+
+/* ══════════════════════════════════════
+   青橙学院（Editorial）— 主页设计系统
+   仅作用于 .ed-root 容器，不影响其他端的视觉
+   ══════════════════════════════════════ */
+@theme {
+  --color-ed-paper: #faf9f5;   /* 米白纸感底 */
+  --color-ed-ink: #16181d;     /* 近黑标题墨色 */
+  --color-ed-body: #3f4550;    /* 正文 */
+  --color-ed-muted: #8a8f98;   /* 次要信息灰 */
+  --color-ed-line: #e8e4da;    /* hairline 细线 */
+  --font-ed-serif: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'STZhongsong', 'SimSun', serif;
+}
+
+/* 本地自带的无衬线字体（内网可用，public/fonts 随包分发） */
+@font-face {
+  font-family: 'Noto Sans SC';
+  src: url('/fonts/NotoSansSC-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+.ed-root {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* 杂志感衬线标题（教室 Windows 无衬线字体时回退宋体，仍保留书卷气） */
+.ed-serif {
+  font-family: var(--font-ed-serif);
+}
+
+/* ── 美化气泡提示（Tip 组件）：从触发器右侧淡入滑近 ── */
+@keyframes tipPop {
+  from { opacity: 0; transform: translateX(-5px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.tip-bubble { animation: tipPop 0.18s ease-out both; }

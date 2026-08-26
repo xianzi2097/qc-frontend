@@ -4,7 +4,7 @@ import { useAuth } from './lib/useAuth';
 import { LoadingProvider, useLoading } from './lib/useLoading';
 import LoadingOverlay from './components/ui/LoadingOverlay';
 import StarHomePage from './components/star-home/StarHomePage';
-import HomePage from './components/HomePage';
+import HomePage from './components/home/HomePage';
 import TeacherDashboardWithSidebar from './components/teacher/TeacherDashboardWithSidebar';
 import AdminDashboardWithSidebar from './components/admin/AdminDashboardWithSidebar';
 import StudentDashboard from './components/student/StudentDashboard';
@@ -52,7 +52,7 @@ function HomePageSwitch() {
   if (mode === 'stars') {
     return <StarHomePage onSwitchHome={toggleMode} />;
   }
-  return <HomePage onLogin={login} onSwitchHome={toggleMode} />;
+  return <HomePage onLogin={login} />;
 }
 
 export default function App() {
