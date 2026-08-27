@@ -38,7 +38,7 @@ export default function CourseDetail({ course, onBack }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <header className="flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-4 pb-3 border-b border-ed-line">
+      <header className="flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
         <button
           onClick={onBack}
           className="group flex items-center gap-1.5 text-xs text-ed-muted hover:text-brand-orange transition-colors cursor-pointer"

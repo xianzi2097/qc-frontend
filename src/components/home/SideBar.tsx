@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  BookOpen, Code2, Download, ExternalLink, GraduationCap, Home, LayoutDashboard,
-  Library, LogIn, LogOut, Minus, PanelLeftClose, Plus, SquareLibrary, Terminal, Star,
+  Code2, Download, ExternalLink, GraduationCap, Home, LayoutDashboard,
+  Library, LogIn, LogOut, Minus, PanelLeftClose, Plus, SquareLibrary, Terminal,
 } from 'lucide-react';
 import LogoMark from './LogoMark';
 import { AVATARS } from '../ui/AvatarPicker';
@@ -46,13 +46,6 @@ const PROG_LANGS: { name: string; url?: string }[] = [
   { name: 'Scratch', url: '/Scratch/index.html' },
   { name: 'Python' },
   { name: 'C++' },
-];
-
-/** 软件下载列表 */
-const DOWNLOADS: { name: string; url: string }[] = [
-  { name: 'Typora（免费版）', url: 'https://typora.io/' },
-  { name: 'Scratch 桌面版', url: 'https://scratch.mit.edu/download' },
-  { name: 'Google Chrome', url: 'https://www.google.com/chrome/' },
 ];
 
 /**

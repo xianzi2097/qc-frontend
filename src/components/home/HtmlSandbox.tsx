@@ -28,7 +28,7 @@ export default function HtmlSandbox() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      <header className="flex items-center justify-between px-8 pt-4 pb-3 border-b border-ed-line">
+      <header className="flex items-center justify-between px-8 pt-2 pb-2 border-b border-ed-line">
         <h2 className="text-base font-semibold text-ed-ink">HTML 演示</h2>
         <div className="flex items-center gap-3">
           <span className="text-xs text-ed-muted">编辑代码 → 右侧实时预览</span>

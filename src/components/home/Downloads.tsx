@@ -10,7 +10,7 @@ const SOFTWARES = [
 export default function Downloads() {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <header className="flex items-center justify-between px-8 pt-4 pb-4 border-b border-ed-line">
+      <header className="flex items-center justify-between px-8 pt-2 pb-2 border-b border-ed-line">
         <h2 className="text-base font-semibold text-ed-ink">软件下载</h2>
       </header>
 
