@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { ArrowRight, GraduationCap, Star, Terminal } from 'lucide-react';
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
 
 /** 概览 — 内容区默认页：问候 + 三个快捷入口 */
 export default function Overview({ onGoCourses, onGoFeatured }: Props) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { setVisible(true); }, []);
   const hour = new Date().getHours();
   const greeting = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 18 ? '下午好' : '晚上好';
 
@@ -17,12 +20,12 @@ export default function Overview({ onGoCourses, onGoFeatured }: Props) {
   ];
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <header className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-ed-line">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <header className="flex items-center justify-between px-8 pt-4 pb-4 border-b border-ed-line">
         <h2 className="text-base font-semibold text-ed-ink">开始</h2>
       </header>
 
-      <div className="flex-1 flex flex-col justify-center pl-24 px-10 py-10 max-w-[54rem]">
+      <div className={`flex-1 flex flex-col justify-center pl-24 px-10 py-10 max-w-[54rem] transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <p className="text-lg text-ed-muted mb-2">{greeting}</p>
         <h3 className="ed-serif text-[2.1rem] leading-snug font-bold text-ed-ink mb-3">
           现在想创作点什么？

@@ -31,7 +31,7 @@ interface Props {
 /** 导航定义：scratch 为可展开的「在线编程」分组，其余为页内板块 */
 const NAV: { id: HomeSection | 'scratch'; label: string; icon: typeof Home }[] = [
   { id: 'overview', label: '开始', icon: Home },
-  { id: 'courses', label: '我的书架', icon: BookOpen },
+  { id: 'courses', label: '书架', icon: BookOpen },
   { id: 'featured', label: '在线课程', icon: Star },
   { id: 'docs', label: '学习文档', icon: GraduationCap },
   { id: 'scratch', label: '在线编程', icon: Terminal },
