@@ -2,15 +2,15 @@ import { useState, useRef, useEffect } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  BookOpen, ExternalLink, GraduationCap, Home, LayoutDashboard,
-  LogIn, LogOut, Minus, PanelLeftClose, Plus, Terminal, Star,
+  BookOpen, Code2, Download, ExternalLink, GraduationCap, Home, LayoutDashboard,
+  Library, LogIn, LogOut, Minus, PanelLeftClose, Plus, SquareLibrary, Terminal, Star,
 } from 'lucide-react';
 import LogoMark from './LogoMark';
 import { AVATARS } from '../ui/AvatarPicker';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
 
-export type HomeSection = 'overview' | 'courses' | 'featured' | 'docs';
+export type HomeSection = 'overview' | 'courses' | 'featured' | 'docs' | 'downloads' | 'html-sandbox';
 
 interface Props {
   section: HomeSection;
@@ -31,10 +31,12 @@ interface Props {
 /** 导航定义：scratch 为可展开的「在线编程」分组，其余为页内板块 */
 const NAV: { id: HomeSection | 'scratch'; label: string; icon: typeof Home }[] = [
   { id: 'overview', label: '开始', icon: Home },
-  { id: 'courses', label: '书架', icon: BookOpen },
-  { id: 'featured', label: '在线课程', icon: Star },
+  { id: 'courses', label: '书架', icon: SquareLibrary },
+  { id: 'featured', label: '在线课程', icon: Library },
   { id: 'docs', label: '学习文档', icon: GraduationCap },
   { id: 'scratch', label: '在线编程', icon: Terminal },
+  { id: 'downloads', label: '软件下载', icon: Download },
+  { id: 'html-sandbox', label: 'HTML 演示', icon: Code2 },
 ];
 
 // ── 二级目录行样式：在学课程与在线编程子列表共用；字号/缩进/间距微调只改这里 ──
@@ -44,6 +46,13 @@ const PROG_LANGS: { name: string; url?: string }[] = [
   { name: 'Scratch', url: '/Scratch/index.html' },
   { name: 'Python' },
   { name: 'C++' },
+];
+
+/** 软件下载列表 */
+const DOWNLOADS: { name: string; url: string }[] = [
+  { name: 'Typora（免费版）', url: 'https://typora.io/' },
+  { name: 'Scratch 桌面版', url: 'https://scratch.mit.edu/download' },
+  { name: 'Google Chrome', url: 'https://www.google.com/chrome/' },
 ];
 
 /**
@@ -167,6 +176,10 @@ export default function SideBar({
                     else setProgOpen(v => !v);
                     return;
                   }
+                  if (id === 'downloads' || id === 'html-sandbox') {
+                    onSection(id as HomeSection);
+                    return;
+                  }
                   if (id === 'featured') setFolded(false);
                   onSection(id as HomeSection);
                 }}
@@ -193,6 +206,7 @@ export default function SideBar({
                     {progOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                   </span>
                 )}
+                {/* 软件下载不显示 +/- */}
               </button>
               {!rail && id === 'featured' && !folded && featuredCourses.length > 0 && (
                 <div className="mt-0.5 mb-1 space-y-0.5">
@@ -229,7 +243,7 @@ export default function SideBar({
                     </a>
                   ))}
                 </div>
-              )}
+              )}              {/* 软件下载子目录 — 后续再做 */}
             </div>
           );
         })}

@@ -5,6 +5,8 @@ import Overview from './Overview';
 import DocsFrame from './DocsFrame';
 import CourseCatalog from './CourseCatalog';
 import CourseDetail from './CourseDetail';
+import Downloads from './Downloads';
+import HtmlSandbox from './HtmlSandbox';
 import LoginPanel from './LoginPanel';
 import AvatarPicker, { AVATARS } from '../ui/AvatarPicker';
 import { fetchAllCourses, logoutRequest, updateAvatar } from '../../lib/api';
@@ -110,6 +112,8 @@ export default function HomePage({ onLogin }: Props) {
             {section === 'courses' && <CourseCatalog />}
             {section === 'featured' && <CourseCatalog mode="featured" />}
             {section === 'docs' && <DocsFrame />}
+            {section === 'downloads' && <Downloads />}
+            {section === 'html-sandbox' && <HtmlSandbox />}
             {section === 'overview' && (
               <Overview
                 onGoCourses={() => setSection('courses')}
@@ -120,11 +124,12 @@ export default function HomePage({ onLogin }: Props) {
         )}
       </main>
 
-      {/* 页脚版权（右下角） */}
-      <footer className="fixed bottom-1.5 right-4 z-10 text-right text-[0.65rem] leading-relaxed text-ed-muted/70 select-none pointer-events-none">
-        <div>Copyright © 2025-present Arin|QC-Studio</div>
-        <div>粤ICP备2026057743号-1</div>
-      </footer>
+      {section === 'overview' && (
+        <footer className="fixed bottom-1.5 right-4 z-10 text-right text-[0.65rem] leading-relaxed text-ed-muted/70 select-none pointer-events-none">
+          <div>Copyright © 2025-present Arin</div>
+          <div>粤ICP备2026057743号-1</div>
+        </footer>
+      )}
 
       {/* 登录面板 / 头像选择器 */}
       <LoginPanel open={showLogin} onClose={() => setShowLogin(false)} onLogin={onLogin} />
