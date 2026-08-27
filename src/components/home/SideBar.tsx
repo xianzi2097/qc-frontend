@@ -140,8 +140,8 @@ export default function SideBar({
         ) : (
           <>
             <div className="flex items-center gap-2 whitespace-nowrap">
-              <LogoMark className="w-[22px] h-[22px] flex-shrink-0" />
-              <span className="text-[1.05rem] font-bold tracking-tight text-ed-ink">CodeNova</span>
+              <LogoMark className="w-6 h-6 flex-shrink-0" />
+              <span className="text-[1.65rem] font-bold tracking-tight text-ed-ink" style={{ fontFamily: "Consolas" }}>CodeNova</span>
             </div>
             <button
               onClick={toggleRail}
