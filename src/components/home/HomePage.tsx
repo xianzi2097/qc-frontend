@@ -106,7 +106,7 @@ export default function HomePage({ onLogin }: Props) {
         className="flex-1 min-w-0 min-h-0 flex flex-col animate-fadeIn"
       >
         {openCourse ? (
-          <CourseDetail course={openCourse} onBack={() => setOpenCourse(null)} />
+          <CourseDetail course={openCourse} onBack={() => { setOpenCourse(null); setSection('featured'); }} />
         ) : (
           <>
             {section === 'courses' && <CourseCatalog />}
