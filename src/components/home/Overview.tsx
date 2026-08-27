@@ -22,10 +22,10 @@ export default function Overview({ onGoCourses, onGoFeatured }: Props) {
         <h2 className="text-base font-semibold text-ed-ink">开始</h2>
       </header>
 
-      <div className="flex-1 flex flex-col justify-center px-10 py-10 max-w-[54rem]">
-        <p className="text-sm text-ed-muted mb-2">{greeting}</p>
+      <div className="flex-1 flex flex-col justify-center pl-24 px-10 py-10 max-w-[54rem]">
+        <p className="text-lg text-ed-muted mb-2">{greeting}</p>
         <h3 className="ed-serif text-[2.1rem] leading-snug font-bold text-ed-ink mb-3">
-          今天想写点什么代码？
+          现在想创作点什么？
         </h3>
         <p className="text-sm text-ed-muted mb-10">
           从下面选一个开始，或者用左侧控制台进入任意板块。

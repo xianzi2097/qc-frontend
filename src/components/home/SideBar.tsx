@@ -31,9 +31,9 @@ interface Props {
 /** 导航定义：scratch 为可展开的「在线编程」分组，其余为页内板块 */
 const NAV: { id: HomeSection | 'scratch'; label: string; icon: typeof Home }[] = [
   { id: 'overview', label: '开始', icon: Home },
-  { id: 'courses', label: '我的书架', icon: GraduationCap },
+  { id: 'courses', label: '我的书架', icon: BookOpen },
   { id: 'featured', label: '在线课程', icon: Star },
-  { id: 'docs', label: '学习文档', icon: BookOpen },
+  { id: 'docs', label: '学习文档', icon: GraduationCap },
   { id: 'scratch', label: '在线编程', icon: Terminal },
 ];
 
@@ -148,7 +148,7 @@ export default function SideBar({
               data-tip="收起侧边栏"
               className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.06] transition-colors cursor-pointer"
             >
-              <PanelLeftClose size={16} strokeWidth={1.8} />
+              <PanelLeftClose className="w-5 h-5" strokeWidth={1.8} />
             </button>
           </>
         )}
@@ -173,7 +173,7 @@ export default function SideBar({
                 data-tip={rail ? (id === 'scratch' ? '在线编程 · Scratch' : label) : undefined}
                 className={rowCls(active)}
               >
-                <Icon size={16} strokeWidth={1.8} className={iconCls(active)} />
+                <Icon className={`w-5 h-5 shrink-0 ${iconCls(active)}`} strokeWidth={1.8} />
                 {!rail && label}
                 {!rail && id === 'featured' && featuredCourses.length > 0 && (
                   <span
@@ -181,7 +181,7 @@ export default function SideBar({
                     data-tip={folded ? '展开课程列表' : '折叠课程列表'}
                     className="ml-auto flex items-center justify-center w-5 h-5 rounded text-ed-muted hover:text-brand-orange hover:bg-black/[0.06] transition-colors cursor-pointer"
                   >
-                    {folded ? <Plus size={13} /> : <Minus size={13} />}
+                    {folded ? <Plus className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
                   </span>
                 )}
                 {!rail && id === 'scratch' && (
@@ -190,7 +190,7 @@ export default function SideBar({
                     data-tip={progOpen ? '收起编程语言' : '展开编程语言'}
                     className="ml-auto flex items-center justify-center w-5 h-5 rounded text-ed-muted hover:text-brand-orange hover:bg-black/[0.06] transition-colors cursor-pointer"
                   >
-                    {progOpen ? <Minus size={13} /> : <Plus size={13} />}
+                    {progOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                   </span>
                 )}
               </button>
@@ -225,7 +225,7 @@ export default function SideBar({
                     >
                       <span className="w-1 h-1 rounded-full bg-brand-orange/50 flex-shrink-0" />
                       <span className="truncate">{name}</span>
-                      {url && <ExternalLink size={11} className="ml-auto opacity-60" />}
+                      {url && <ExternalLink className="w-3 h-3 ml-auto opacity-60" />}
                     </a>
                   ))}
                 </div>
@@ -253,14 +253,14 @@ export default function SideBar({
                 data-tip="进入后台"
                 className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors no-underline"
               >
-                <LayoutDashboard size={15} />
+                <LayoutDashboard className="w-[15px] h-[15px]" />
               </a>
               <button
                 onClick={onLogout}
                 data-tip="退出登录"
                 className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors cursor-pointer"
               >
-                <LogOut size={15} />
+                <LogOut className="w-[15px] h-[15px]" />
               </button>
             </div>
           ) : (
@@ -281,14 +281,14 @@ export default function SideBar({
                 data-tip="进入后台"
                 className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors no-underline"
               >
-                <LayoutDashboard size={15} />
+                <LayoutDashboard className="w-[15px] h-[15px]" />
               </a>
               <button
                 onClick={onLogout}
                 data-tip="退出登录"
                 className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors cursor-pointer"
               >
-                <LogOut size={15} />
+                <LogOut className="w-[15px] h-[15px]" />
               </button>
             </div>
           )
@@ -298,14 +298,14 @@ export default function SideBar({
             data-tip="登录"
             className="w-full flex items-center justify-center py-2.5 rounded-lg bg-ed-ink text-white hover:bg-brand-orange transition-colors cursor-pointer"
           >
-            <LogIn size={15} />
+            <LogIn className="w-[15px] h-[15px]" />
           </button>
         ) : (
           <button
             onClick={onLoginClick}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-ed-ink text-white text-sm tracking-[0.2em] hover:bg-brand-orange transition-colors cursor-pointer"
           >
-            <LogIn size={15} /> 登录
+            <LogIn className="w-[15px] h-[15px]" /> 登录
           </button>
         )}
       </div>
