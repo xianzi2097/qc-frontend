@@ -21,6 +21,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:8000',
+      '/judge0': {
+        target: 'http://192.168.2.158:2358',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/judge0/, ''),
+      },
       '/Scratch': SITE_ORIGIN,
       '/docs': SITE_ORIGIN,
       '/course': SITE_ORIGIN,

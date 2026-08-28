@@ -7,6 +7,8 @@ import CourseCatalog from './CourseCatalog';
 import CourseDetail from './CourseDetail';
 import Downloads from './Downloads';
 import HtmlSandbox from './HtmlSandbox';
+import CodePlayground from './CodePlayground';
+import type { Language } from './compilerApi';
 import LoginPanel from './LoginPanel';
 import AvatarPicker, { AVATARS } from '../ui/AvatarPicker';
 import { fetchAllCourses, logoutRequest, updateAvatar } from '../../lib/api';
@@ -37,6 +39,7 @@ export default function HomePage({ onLogin }: Props) {
   const [section, setSection] = useState<HomeSection>(() =>
     new URLSearchParams(window.location.search).get('view') === 'courses' ? 'courses' : 'overview',
   );
+  const [compilerLang, setCompilerLang] = useState<Language>('python');
   const [showLogin, setShowLogin] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   // 在学课程（精选）：侧边栏直达列表 + 当前打开的课程
@@ -54,6 +57,12 @@ export default function HomePage({ onLogin }: Props) {
   const handleSection = (s: HomeSection) => {
     setOpenCourse(null);
     setSection(s);
+  };
+
+  // 点击编译器语言
+  const handleCompilerClick = (lang: Language) => {
+    setCompilerLang(lang);
+    setSection('compiler');
   };
 
   // 每次渲染重读 localStorage——头像更新后无需手动刷新状态
@@ -91,6 +100,7 @@ export default function HomePage({ onLogin }: Props) {
         featuredCourses={featuredCourses}
         activeCourseId={openCourse?.id}
         onOpenCourse={setOpenCourse}
+        onCompilerClick={handleCompilerClick}
         user={storedUser}
         username={username}
         roleLabel={roleLabel}
@@ -114,6 +124,7 @@ export default function HomePage({ onLogin }: Props) {
             {section === 'docs' && <DocsFrame />}
             {section === 'downloads' && <Downloads />}
             {section === 'html-sandbox' && <HtmlSandbox />}
+            {section === 'compiler' && <CodePlayground key={compilerLang} language={compilerLang} />}
             {section === 'overview' && (
               <Overview
                 onGoCourses={() => setSection('courses')}
