@@ -18,4 +18,25 @@ int main() {
     return 0;
 }
 `,
+
+  html: `<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>HTML 演示</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h1 { color: #2f845e; }
+    .box { background: #e8f4eb; padding: 16px; border-radius: 8px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <h1>Hello, HTML!</h1>
+  <div class="box">
+    <p>在这里写你的 HTML 代码。</p>
+    <p>右侧会实时预览效果。</p>
+  </div>
+</body>
+</html>
+`,
 };

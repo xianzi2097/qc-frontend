@@ -20,7 +20,7 @@ interface Props {
   activeCourseId?: string;
   onOpenCourse: (c: Course) => void;
   /** 点击在线编译器语言 */
-  onCompilerClick: (lang: 'python' | 'cpp') => void;
+  onCompilerClick: (lang: 'python' | 'cpp' | 'html') => void;
   user: PortalUser | null;
   username: string;
   roleLabel: string;
@@ -44,10 +44,11 @@ const NAV: { id: HomeSection | 'scratch'; label: string; icon: typeof Home }[] =
 // ── 二级目录行样式：在学课程与在线编程子列表共用；字号/缩进/间距微调只改这里 ──
 const SUB_ITEM = 'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-lg text-[0.86rem]';
 /** 在线编程语言子项 */
-const PROG_LANGS: { name: string; url?: string; compiler?: 'python' | 'cpp' }[] = [
+const PROG_LANGS: { name: string; url?: string; compiler?: 'python' | 'cpp' | 'html' }[] = [
   { name: 'Scratch', url: '/Scratch/index.html' },
   { name: 'Python', compiler: 'python' },
   { name: 'C++', compiler: 'cpp' },
+  { name: 'HTML', compiler: 'html' },
 ];
 
 /**
@@ -161,7 +162,8 @@ export default function SideBar({
       {/* 导航 —— 外链与页内项统一由 NAV 数据驱动渲染 */}
       <nav className={`space-y-0.5 ${rail ? 'px-2' : 'px-3'}`}>
         {NAV.map(({ id, label, icon: Icon }) => {
-          const active = id !== 'scratch' && section === (id as HomeSection);
+          const active = id !== 'scratch' && section === (id as HomeSection)
+            || (id === 'scratch' && (section === 'compiler' || section === 'html-sandbox'));
           return (
             <div key={id}>
               <button

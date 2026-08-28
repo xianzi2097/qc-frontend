@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightSpecialChars, drawSelection, highlightActiveLine, rectangularSelection } from '@codemirror/view';
+import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightSpecialChars, drawSelection, rectangularSelection } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { syntaxHighlighting, indentOnInput, bracketMatching, foldGutter, foldKeymap, HighlightStyle } from '@codemirror/language';
@@ -9,6 +9,7 @@ import { lintKeymap } from '@codemirror/lint';
 import { tags } from '@lezer/highlight';
 import { python } from '@codemirror/lang-python';
 import { cpp } from '@codemirror/lang-cpp';
+import { html as htmlLang } from '@codemirror/lang-html';
 import type { Language } from './compilerApi';
 import { LANGUAGE_CONFIG, submitCode, checkJudgeStatus } from './compilerApi';
 import type { JudgeStatus, CompileResult } from './compilerApi';
@@ -118,7 +119,7 @@ export default function CodePlayground({ language }: Props) {
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const langExtension = language === 'python' ? python() : cpp();
+    const langExtension = language === 'python' ? python() : language === 'cpp' ? cpp() : htmlLang();
 
     const state = EditorState.create({
       doc: code,
@@ -136,7 +137,6 @@ export default function CodePlayground({ language }: Props) {
         closeBrackets(),
         autocompletion(),
         rectangularSelection(),
-        highlightActiveLine(),
         highlightSelectionMatches(),
         keymap.of([
           ...closeBracketsKeymap,
@@ -163,9 +163,6 @@ export default function CodePlayground({ language }: Props) {
           '.cm-scroller': { overflow: 'auto' },
           '.cm-content': { fontFamily: "'Consolas', 'Monaco', monospace", fontSize: fontSize + 'px', color: '#24292e' },
           '.cm-gutters': { backgroundColor: '#f6f8fa', borderRight: '1px solid #e1e4e8', color: '#6a737d' },
-          '.cm-activeLine': { backgroundColor: '#f6f8fa' },
-          '.cm-activeLineGutter': { backgroundColor: '#f6f8fa' },
-          '.cm-selectionBackground': { backgroundColor: '#e1e5ee !important' },
           '.cm-cursor': { borderLeftColor: '#24292e' },
         }),
       ],
@@ -180,15 +177,17 @@ export default function CodePlayground({ language }: Props) {
     };
   }, [language, fontSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const isLocal = language === 'html';
+
   // ── 运行代码 ─────────────────────────────────────────
   const handleRun = useCallback(async () => {
-    if (running) return;
+    if (running || isLocal) return;
     setRunning(true);
     setResult(null);
     try {
       const res = await submitCode({
         source_code: code,
-        language_id: langConf.id,
+        language_id: langConf.id!,
         stdin: stdin || undefined,
       });
       setResult(res);
@@ -204,7 +203,7 @@ export default function CodePlayground({ language }: Props) {
     } finally {
       setRunning(false);
     }
-  }, [code, stdin, langConf.id, running]);
+  }, [code, stdin, langConf.id, running, isLocal]);
 
   // ── 快捷键 Ctrl+Enter 运行 ───────────────────────────
   useEffect(() => {
@@ -229,9 +228,9 @@ export default function CodePlayground({ language }: Props) {
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* ── Header ── */}
       <header className="flex items-center justify-between px-8 pt-2 pb-2 border-b border-ed-line">
-        <h2 className="text-base font-semibold text-ed-ink">在线编译器</h2>
+        <h2 className="text-base font-semibold text-ed-ink">{isLocal ? 'HTML 演示' : '在线编译器'}</h2>
         <div className="flex items-center gap-4">
-          <StatusIndicator status={judgeStatus} />
+          {!isLocal && <StatusIndicator status={judgeStatus} />}
           {/* 字体大小调节 */}
           <div className="flex items-center gap-1 text-xs">
             <button
@@ -259,6 +258,7 @@ export default function CodePlayground({ language }: Props) {
               </button>
             )}
           </div>
+          {!isLocal && (
           <button
             onClick={handleRun}
             disabled={running}
@@ -276,6 +276,7 @@ export default function CodePlayground({ language }: Props) {
               '▶ 运行'
             )}
           </button>
+          )}
         </div>
       </header>
 
@@ -285,44 +286,57 @@ export default function CodePlayground({ language }: Props) {
         <div className="w-1/2 min-h-0 border-r border-ed-line flex flex-col relative">
           <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
             <span className="text-xs font-medium text-ed-muted">{langConf.name} 代码</span>
-            <span className="text-xs text-ed-muted/60 ml-auto">Ctrl+Enter 运行</span>
+            {!isLocal && <span className="text-xs text-ed-muted/60 ml-auto">Ctrl+Enter 运行</span>}
           </div>
           <div ref={editorRef} className="flex-1 min-h-0 overflow-auto" />
         </div>
 
-        {/* 右：输入 + 输出 */}
-        <div className="w-1/2 min-h-0 flex flex-col">
-          {/* 输入区 */}
-          <div className="h-2/5 min-h-0 flex flex-col border-b border-ed-line">
+        {/* 右侧：根据语言切换 */}
+        {isLocal ? (
+          /* HTML：实时预览 */
+          <div className="w-1/2 min-h-0 flex flex-col">
             <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
-              <span className="text-xs font-medium text-ed-muted">输入</span>
+              <span className="text-xs font-medium text-ed-muted">实时预览</span>
             </div>
-            <textarea
-              value={stdin}
-              onChange={(e) => setStdin(e.target.value)}
-              spellCheck={false}
-              placeholder="程序的标准输入 (stdin)..."
-              className="flex-1 w-full p-4 font-mono text-sm leading-relaxed text-ed-ink bg-white resize-none focus:outline-none border-0 placeholder:text-ed-muted/40"
+            <iframe
+              srcDoc={code}
+              className="flex-1 w-full border-0 bg-white"
+              title="HTML 预览"
+              sandbox="allow-scripts"
             />
           </div>
-
-          {/* 输出区 */}
-          <div className="flex-1 min-h-0 flex flex-col">
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
-              <span className="text-xs font-medium text-ed-muted">输出</span>
-              {result && <ResultBadge result={result} />}
+        ) : (
+          /* Python/C++：输入 + 输出 */
+          <div className="w-1/2 min-h-0 flex flex-col">
+            <div className="h-2/5 min-h-0 flex flex-col border-b border-ed-line">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
+                <span className="text-xs font-medium text-ed-muted">输入</span>
+              </div>
+              <textarea
+                value={stdin}
+                onChange={(e) => setStdin(e.target.value)}
+                spellCheck={false}
+                placeholder="程序的标准输入 (stdin)..."
+                className="flex-1 w-full p-4 font-mono text-sm leading-relaxed text-ed-ink bg-white resize-none focus:outline-none border-0 placeholder:text-ed-muted/40"
+              />
             </div>
-            <pre className="flex-1 w-full p-4 font-mono text-sm leading-relaxed text-ed-ink bg-white overflow-auto whitespace-pre-wrap">
-              {running ? (
-                <span className="text-ed-muted animate-pulse">执行中...</span>
-              ) : outputText ? (
-                outputText
-              ) : (
-                <span className="text-ed-muted/40">运行结果将显示在这里</span>
-              )}
-            </pre>
+            <div className="flex-1 min-h-0 flex flex-col">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
+                <span className="text-xs font-medium text-ed-muted">输出</span>
+                {result && <ResultBadge result={result} />}
+              </div>
+              <pre className="flex-1 w-full p-4 font-mono text-sm leading-relaxed text-ed-ink bg-white overflow-auto whitespace-pre-wrap">
+                {running ? (
+                  <span className="text-ed-muted animate-pulse">执行中...</span>
+                ) : outputText ? (
+                  outputText
+                ) : (
+                  <span className="text-ed-muted/40">运行结果将显示在这里</span>
+                )}
+              </pre>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── 底部状态栏 ── */}

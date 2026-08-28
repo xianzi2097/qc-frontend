@@ -11,7 +11,10 @@ export default function Overview({ onGoCourses, onGoFeatured }: Props) {
   const [visible, setVisible] = useState(false);
   useEffect(() => { setVisible(true); }, []);
   const hour = new Date().getHours();
-  const greeting = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 18 ? '下午好' : '晚上好';
+  const timeGreet = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 18 ? '下午好' : '晚上好';
+  const storedUser = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
+  const username = storedUser?.username || '游客';
+  const greeting = `${timeGreet}，${username}`;
 
     const tiles = [
     { icon: GraduationCap, title: '去上课', desc: '老师主讲的主线课程', onClick: onGoCourses, href: '' },

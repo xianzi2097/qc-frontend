@@ -14,11 +14,15 @@
 const JUDGE0_BASE_URL = '/judge0';
 
 // ── 语言映射 ──────────────────────────────────────────────
-export type Language = 'python' | 'cpp';
+export type Language = 'python' | 'cpp' | 'html';
 
-export const LANGUAGE_CONFIG: Record<Language, { id: number; name: string; version: string }> = {
+/** 本地语言（无需 Judge0） */
+export const LOCAL_LANGUAGES: Language[] = ['html'];
+
+export const LANGUAGE_CONFIG: Record<Language, { id?: number; name: string; version: string }> = {
   python: { id: 71, name: 'Python', version: '3.8.1' },
   cpp:    { id: 54, name: 'C++',   version: 'GCC 9.2.0' },
+  html:   { name: 'HTML', version: '5' },
 };
 
 // ── 类型定义（对齐 judge0 API） ──────────────────────────
@@ -42,16 +46,6 @@ export interface CompileResult {
 
 export type JudgeStatus = 'online' | 'busy' | 'offline' | 'unconfigured';
 
-interface WorkerInfo {
-  queue: string;
-  size: number;
-  available: number;
-  idle: number;
-  working: number;
-  paused: number;
-  failed: number;
-}
-
 // ── 健康检查（状态灯用） ─────────────────────────────────
 export async function checkJudgeStatus(): Promise<JudgeStatus> {
   if (!JUDGE0_BASE_URL) return 'unconfigured';
@@ -69,8 +63,10 @@ export async function checkJudgeStatus(): Promise<JudgeStatus> {
 // ── 提交代码 ─────────────────────────────────────────────
 export async function submitCode(req: CompileRequest): Promise<CompileResult> {
   if (!JUDGE0_BASE_URL) {
-    // Mock 模式：模拟返回
     return mockExecute(req);
+  }
+  if (LOCAL_LANGUAGES.includes(req.language_id as unknown as Language)) {
+    throw new Error('HTML is a local language, use iframe preview');
   }
 
   // 真实调用 judge0（wait=true 同步等待结果）
