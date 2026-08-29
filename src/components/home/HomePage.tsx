@@ -62,6 +62,7 @@ export default function HomePage({ onLogin }: Props) {
 
   // 点击编译器语言
   const handleCompilerClick = (lang: Language) => {
+    setOpenCourse(null);       // 清除课程选中态，否则 CourseDetail 会盖住编译器
     setCompilerLang(lang);
     setSection('compiler');
   };
@@ -102,6 +103,7 @@ export default function HomePage({ onLogin }: Props) {
         activeCourseId={openCourse?.id}
         onOpenCourse={setOpenCourse}
         onCompilerClick={handleCompilerClick}
+        onClearCourse={() => setOpenCourse(null)}
         user={storedUser}
         username={username}
         roleLabel={roleLabel}

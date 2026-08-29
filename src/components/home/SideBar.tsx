@@ -58,12 +58,13 @@ const PROG_LANGS: { name: string; url?: string; compiler?: 'python' | 'cpp' | 'h
  * 导航 + 在学课程子目录（可折叠）+ 底部账号区。
  */
 export default function SideBar({
-  section, onSection, featuredCourses, activeCourseId, onOpenCourse, onCompilerClick,
+  section, onSection, featuredCourses, activeCourseId, onOpenCourse, onCompilerClick, onClearCourse,
   user, username, roleLabel, avatarIdx,
   onAvatarClick, onLoginClick, onLogout,
 }: Props) {
   const [folded, setFolded] = useState(false); // 在学课程子目录折叠状态
   const [progOpen, setProgOpen] = useState(true); // 在线编程分组展开状态
+  const [selectedLang, setSelectedLang] = useState<string | null>(null); // 当前选中的编程语言
   // 图标栏模式：收窄为单图标宽度；localStorage 记忆，下次进入保持
   const [rail, setRail] = useState(() => localStorage.getItem('sidebarRail') === '1');
 
@@ -235,6 +236,9 @@ export default function SideBar({
                     else setProgOpen(v => !v);
                     return;
                   }
+                  // 统一规则：切到非编程页面时清除所有子选中
+                  setSelectedLang(null);
+                  onClearCourse();
                   if (id === 'downloads' || id === 'html-sandbox') {
                     onSection(id as HomeSection);
                     return;
@@ -272,7 +276,7 @@ export default function SideBar({
                   {featuredCourses.map((c) => (
                     <button
                       key={c.id}
-                      onClick={() => onOpenCourse(c)}
+                      onClick={() => { setSelectedLang(null); onSection('featured'); onOpenCourse(c); }}
                       className={`${SUB_ITEM} cursor-pointer transition-colors ${
                         activeCourseId === c.id
                           ? 'bg-black/[0.06] text-brand font-semibold'
@@ -288,14 +292,22 @@ export default function SideBar({
 {/* 在线编程子目录 */}
               {!rail && id === 'scratch' && progOpen && (
                 <div className="mt-0.5 mb-1 space-y-0.5">
-                  {PROG_LANGS.map(({ name, url, compiler }) => (
-                    compiler ? (
+                  {PROG_LANGS.map(({ name, url, compiler }) => {
+                    const isSelected = compiler && selectedLang === name;
+                    return compiler ? (
                       <button
                         key={name}
-                        onClick={() => onCompilerClick(compiler)}
-                        className={`${SUB_ITEM} transition-colors cursor-pointer text-ed-muted hover:bg-black/[0.04] hover:text-ed-body`}
+                        onClick={() => {
+                          setSelectedLang(name);
+                          onCompilerClick(compiler);
+                        }}
+                        className={`${SUB_ITEM} transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-black/[0.06] text-brand font-semibold'
+                            : 'text-ed-muted hover:bg-black/[0.04] hover:text-ed-body'
+                        }`}
                       >
-                        <span className="w-1 h-1 rounded-full bg-brand/50 flex-shrink-0" />
+                        <span className={`w-1 h-1 rounded-full flex-shrink-0 ${isSelected ? 'bg-brand' : 'bg-brand/50'}`} />
                         <span className="truncate">{name}</span>
                       </button>
                     ) : (
@@ -304,14 +316,15 @@ export default function SideBar({
                         href={url}
                         target={url ? '_blank' : undefined}
                         rel={url ? 'noreferrer' : undefined}
+                        onClick={() => { setSelectedLang(name); onClearCourse(); }}
                         className={`${SUB_ITEM} transition-colors no-underline cursor-pointer text-ed-muted hover:bg-black/[0.04] hover:text-ed-body`}
                       >
                         <span className="w-1 h-1 rounded-full bg-brand/50 flex-shrink-0" />
                         <span className="truncate">{name}</span>
                         {url && <ExternalLink className="w-3 h-3 ml-auto opacity-60" />}
                       </a>
-                    )
-                  ))}
+                    );
+                  })}
                 </div>
               )}              {/* 软件下载子目录 — 后续再做 */}
             </div>
