@@ -41,7 +41,7 @@ export default function HtmlSandbox() {
               a.click();
               URL.revokeObjectURL(a.href);
             }}
-            className="text-xs px-3 py-1.5 rounded-lg bg-ed-ink text-white hover:bg-brand-orange transition-colors cursor-pointer"
+            className="text-xs px-3 py-1.5 rounded-lg bg-ed-ink text-white hover:bg-brand transition-colors cursor-pointer"
           >
             下载 HTML
           </button>

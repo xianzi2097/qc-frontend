@@ -1,12 +1,71 @@
 /* src/index.css — Tailwind CSS v4 原生模式 */
 @import "tailwindcss";
 
-/* 全局主题色定义 */
+/* ════════════════════════════════════════════════
+   主题色系统 — 统一 OKLCH 公式
+   基准：#FAF9F5 = oklch(0.982 0.005 95)
+   所有主题同一公式，只换色相 H
+   ════════════════════════════════════════════════ */
+
+:root {
+  /* ── 种子色相 H（改这一个值 = 换一整套视觉气候）── */
+  --seed-hue: 95;     /* 🟠 米黄暖调（#FAF9F5 的色相） */
+}
+
+/* ── 主题色相切换（@layer 外，确保能覆盖 :root 的 --seed-hue）── */
+[data-theme="green"]  { --seed-hue: 155; }
+[data-theme="blue"]   { --seed-hue: 220; }
+[data-theme="custom"] { --seed-hue: var(--custom-hue); }
+
+/* ── 统一公式（所有主题共用同一组 L/C，只换 H）── */
+@layer theme {
+  :root {
+    /* 背景层：L 从高到低 = 从白到深 */
+    --page-bg:         oklch(0.988 0.003 var(--seed-hue));
+    --page-bg-subtle:  oklch(0.980 0.006 var(--seed-hue));
+    --sidebar-bg:      oklch(0.982 0.015 var(--seed-hue));  /* = #FAF9F5 当 H=95 */
+    --card-bg:         oklch(0.993 0.002 var(--seed-hue));
+
+    /* 边框 */
+    --border-default:  oklch(0.955 0.012 var(--seed-hue));
+    --border-hover:    oklch(0.92  0.04  var(--seed-hue));
+
+    /* 交互/强调 */
+    --accent:          oklch(0.62 0.18 var(--seed-hue));
+    --accent-hover:    oklch(0.55 0.19 var(--seed-hue));
+
+    /* 滚动条 */
+    --scrollbar-thumb: oklch(0.88 0.015 var(--seed-hue));
+
+    /* 兼容旧 token（后台组件还在用） */
+    --color-brand-orange: oklch(0.65 0.19 95);
+    --color-geek-green: #10b981;
+    --color-cyber-bg: #020617;
+    --font-chalk: 'Patrick Hand', 'Ma Shan Zheng', cursive;
+  }
+}
+
+/* ── Tailwind v4 @theme：把语义变量桥接到 Tailwind 工具类 ── */
 @theme {
-  --color-brand-orange: #f97316;   /* 青橙专属橙 */
-  --color-geek-green: #10b981;     /* 极客高亮绿 */
-  --color-cyber-bg: #020617;       /* 深邃极客夜空底 */
-  --font-chalk: 'Patrick Hand', 'Ma Shan Zheng', cursive; /* 粉笔手写体 */
+  /* 品牌色色阶 — 统一公式，跟随 --seed-hue */
+  --color-brand-50:  oklch(0.97 0.018 var(--seed-hue));
+  --color-brand-100: oklch(0.93 0.036 var(--seed-hue));
+  --color-brand-200: oklch(0.88 0.065 var(--seed-hue));
+  --color-brand-300: oklch(0.80 0.11  var(--seed-hue));
+  --color-brand-400: oklch(0.72 0.16  var(--seed-hue));
+  --color-brand:     var(--accent);
+  --color-brand-600: oklch(0.55 0.19 var(--seed-hue));
+  --color-brand-700: oklch(0.48 0.16 var(--seed-hue));
+  --color-brand-800: oklch(0.40 0.12 var(--seed-hue));
+  --color-brand-900: oklch(0.32 0.07 var(--seed-hue));
+  --color-brand-950: oklch(0.22 0.035 var(--seed-hue));
+
+  /* 页面/侧边栏/卡片/边框 — 直接引用语义变量 */
+  --color-page-bg:     var(--page-bg);
+  --color-page-subtle: var(--page-bg-subtle);
+  --color-sidebar-bg:  var(--sidebar-bg);
+  --color-card:        var(--card-bg);
+  --color-border-theme: var(--border-default);
 }
 
 /* 全局基础样式 — 以 1366×768（14"笔记本）为基准 */
@@ -48,16 +107,39 @@ body {
   animation: glowLine 3s ease-in-out infinite;
 }
 
-/* ── 滚动条：全局灰色基础，.accent-scrollbar 跟随模块强调色 ── */
+/* ── 滚动条：跟随主题色 ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
-* { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); opacity: 0.6; }
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) transparent; }
 
 .accent-scrollbar::-webkit-scrollbar-thumb { background: var(--accent); }
-.accent-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); opacity: 0.8; }
+.accent-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent-hover); }
 .accent-scrollbar { scrollbar-color: var(--accent) transparent; }
+
+/* ── 色相滑块 ── */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--ed-ink, #16181d);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--ed-ink, #16181d);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+
 
 /* ── Markdown 渲染样式（marked 输出）── */
 .marked-body {
@@ -340,11 +422,11 @@ body {
    仅作用于 .ed-root 容器，不影响其他端的视觉
    ══════════════════════════════════════ */
 @theme {
-  --color-ed-paper: #faf9f5;   /* 米白纸感底 */
+  --color-ed-paper: var(--sidebar-bg);   /* 跟随主题：浅色主题色底 */
   --color-ed-ink: #16181d;     /* 近黑标题墨色 */
   --color-ed-body: #3f4550;    /* 正文 */
   --color-ed-muted: #8a8f98;   /* 次要信息灰 */
-  --color-ed-line: #e8e4da;    /* hairline 细线 */
+  --color-ed-line: var(--border-default);    /* 跟随主题：带色相的 hairline */
   --font-ed-serif: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'STZhongsong', 'SimSun', serif;
 }
 

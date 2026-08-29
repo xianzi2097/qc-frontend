@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Code2, Download, ExternalLink, GraduationCap, Home, LayoutDashboard,
+  Code2, Download, ExternalLink, FileText, GraduationCap, Home, LayoutDashboard,
   Library, LogIn, LogOut, Minus, PanelLeftClose, Plus, SquareLibrary, Terminal,
 } from 'lucide-react';
 import LogoMark from './LogoMark';
@@ -10,7 +10,7 @@ import { AVATARS } from '../ui/AvatarPicker';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
 
-export type HomeSection = 'overview' | 'courses' | 'featured' | 'docs' | 'downloads' | 'html-sandbox' | 'compiler';
+export type HomeSection = 'overview' | 'courses' | 'featured' | 'resources' | 'docs' | 'downloads' | 'html-sandbox' | 'compiler';
 
 interface Props {
   section: HomeSection;
@@ -34,7 +34,8 @@ interface Props {
 const NAV: { id: HomeSection | 'scratch'; label: string; icon: typeof Home }[] = [
   { id: 'overview', label: '开始', icon: Home },
   { id: 'courses', label: '书架', icon: SquareLibrary },
-  { id: 'featured', label: '在线课程', icon: Library },
+  { id: 'featured', label: '课程', icon: Library },
+  { id: 'resources', label: '资源', icon: FileText },
   { id: 'docs', label: '学习文档', icon: GraduationCap },
   { id: 'scratch', label: '在线编程', icon: Terminal },
   { id: 'downloads', label: '软件下载', icon: Download },
@@ -65,6 +66,67 @@ export default function SideBar({
   const [progOpen, setProgOpen] = useState(true); // 在线编程分组展开状态
   // 图标栏模式：收窄为单图标宽度；localStorage 记忆，下次进入保持
   const [rail, setRail] = useState(() => localStorage.getItem('sidebarRail') === '1');
+
+  // ── 主题切换 ──
+  const THEMES = [
+    { id: '', label: '橙色', color: 'oklch(0.65 0.19 95)' },
+    { id: 'green', label: '绿色', color: 'oklch(0.65 0.19 155)' },
+    { id: 'blue', label: '蓝色', color: 'oklch(0.65 0.19 220)' },
+  ];
+  const [theme, setTheme] = useState(() => localStorage.getItem('codenova-theme') || '');
+  const [customHue, setCustomHue] = useState(() => localStorage.getItem('codenova-custom-hue-value') || '');
+  const [sliderOpen, setSliderOpen] = useState(() => localStorage.getItem('codenova-theme') === 'custom');
+
+  const switchTheme = useCallback((id: string) => {
+    setTheme(id);
+    setCustomHue('');
+    setSliderOpen(false);
+    document.documentElement.style.removeProperty('--custom-hue');
+    localStorage.removeItem('codenova-custom-hue-value');
+    if (id) {
+      document.documentElement.setAttribute('data-theme', id);
+      localStorage.setItem('codenova-theme', id);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('codenova-theme', '');
+    }
+  }, []);
+
+  const toggleCustom = useCallback(() => {
+    setSliderOpen(v => {
+      const next = !v;
+      if (next && customHue) {
+        // 重新打开时恢复上次的自定义色
+        setTheme('custom');
+        document.documentElement.setAttribute('data-theme', 'custom');
+        document.documentElement.style.setProperty('--custom-hue', customHue);
+        localStorage.setItem('codenova-theme', 'custom');
+        localStorage.setItem('codenova-custom-hue-value', customHue);
+      } else if (!next) {
+        // 关闭时如果有自定义色就保留，没选过就回默认
+        if (!customHue) {
+          switchTheme('');
+        }
+      }
+      return next;
+    });
+  }, [customHue, switchTheme]);
+
+  /** 拖动中：只改 CSS 变量，零开销，不触发 React */
+  const handleHueInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const hue = e.target.value;
+    document.documentElement.setAttribute('data-theme', 'custom');
+    document.documentElement.style.setProperty('--custom-hue', hue);
+  }, []);
+
+  /** 松手：才存 React 状态 + localStorage */
+  const handleHueCommit = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const hue = e.target.value;
+    setCustomHue(hue);
+    setTheme('custom');
+    localStorage.setItem('codenova-theme', 'custom');
+    localStorage.setItem('codenova-custom-hue-value', hue);
+  }, []);
 
   const toggleRail = () =>
     setRail(v => {
@@ -122,7 +184,7 @@ export default function SideBar({
     }`;
 
   const iconCls = (active: boolean) =>
-    `flex-shrink-0 ${active ? 'text-brand-orange' : 'text-ed-muted'}`;
+    `flex-shrink-0 ${active ? 'text-brand' : 'text-ed-muted'}`;
 
   return (
     <>
@@ -151,7 +213,7 @@ export default function SideBar({
             <button
               onClick={toggleRail}
               data-tip="收起侧边栏"
-              className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.06] transition-colors cursor-pointer"
+              className="p-1.5 rounded-md text-ed-muted hover:text-brand hover:bg-black/[0.06] transition-colors cursor-pointer"
             >
               <PanelLeftClose className="w-5 h-5" strokeWidth={1.8} />
             </button>
@@ -189,7 +251,7 @@ export default function SideBar({
                   <span
                     onClick={(e) => { e.stopPropagation(); setFolded(v => !v); }}
                     data-tip={folded ? '展开课程列表' : '折叠课程列表'}
-                    className="ml-auto flex items-center justify-center w-5 h-5 rounded text-ed-muted hover:text-brand-orange hover:bg-black/[0.06] transition-colors cursor-pointer"
+                    className="ml-auto flex items-center justify-center w-5 h-5 rounded text-ed-muted hover:text-brand hover:bg-black/[0.06] transition-colors cursor-pointer"
                   >
                     {folded ? <Plus className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
                   </span>
@@ -198,7 +260,7 @@ export default function SideBar({
                   <span
                     onClick={(e) => { e.stopPropagation(); setProgOpen(v => !v); }}
                     data-tip={progOpen ? '收起编程语言' : '展开编程语言'}
-                    className="ml-auto flex items-center justify-center w-5 h-5 rounded text-ed-muted hover:text-brand-orange hover:bg-black/[0.06] transition-colors cursor-pointer"
+                    className="ml-auto flex items-center justify-center w-5 h-5 rounded text-ed-muted hover:text-brand hover:bg-black/[0.06] transition-colors cursor-pointer"
                   >
                     {progOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                   </span>
@@ -213,11 +275,11 @@ export default function SideBar({
                       onClick={() => onOpenCourse(c)}
                       className={`${SUB_ITEM} cursor-pointer transition-colors ${
                         activeCourseId === c.id
-                          ? 'bg-black/[0.06] text-brand-orange font-semibold'
+                          ? 'bg-black/[0.06] text-brand font-semibold'
                           : 'text-ed-muted hover:bg-black/[0.04] hover:text-ed-body'
                       }`}
                     >
-                      <span className="w-1 h-1 rounded-full bg-brand-orange/50 flex-shrink-0" />
+                      <span className="w-1 h-1 rounded-full bg-brand/50 flex-shrink-0" />
                       <span className="truncate">{c.name}</span>
                     </button>
                   ))}
@@ -233,7 +295,7 @@ export default function SideBar({
                         onClick={() => onCompilerClick(compiler)}
                         className={`${SUB_ITEM} transition-colors cursor-pointer text-ed-muted hover:bg-black/[0.04] hover:text-ed-body`}
                       >
-                        <span className="w-1 h-1 rounded-full bg-brand-orange/50 flex-shrink-0" />
+                        <span className="w-1 h-1 rounded-full bg-brand/50 flex-shrink-0" />
                         <span className="truncate">{name}</span>
                       </button>
                     ) : (
@@ -244,7 +306,7 @@ export default function SideBar({
                         rel={url ? 'noreferrer' : undefined}
                         className={`${SUB_ITEM} transition-colors no-underline cursor-pointer text-ed-muted hover:bg-black/[0.04] hover:text-ed-body`}
                       >
-                        <span className="w-1 h-1 rounded-full bg-brand-orange/50 flex-shrink-0" />
+                        <span className="w-1 h-1 rounded-full bg-brand/50 flex-shrink-0" />
                         <span className="truncate">{name}</span>
                         {url && <ExternalLink className="w-3 h-3 ml-auto opacity-60" />}
                       </a>
@@ -257,8 +319,49 @@ export default function SideBar({
         })}
       </nav>
 
-      {/* 底部：账号区 */}
-      <div className={`mt-auto border-t border-ed-line ${rail ? 'p-2' : 'p-3'}`}>
+      {/* 底部：色条 + 账号区（整体推到底） */}
+      <div className="mt-auto">
+        {!rail && (
+          <div className="flex h-1 cursor-pointer">
+            {THEMES.map(t => (
+              <button
+                key={t.label}
+                onClick={() => switchTheme(t.id)}
+                className={`flex-1 border-r border-white/30 transition-all ${
+                  theme === t.id && !customHue ? 'opacity-100 ring-1 ring-inset ring-black/20' : 'opacity-60 hover:opacity-80'
+                }`}
+                style={{ background: t.color }}
+                title={t.label}
+              />
+            ))}
+            <button
+              onClick={toggleCustom}
+              className={`flex-1 transition-all ${
+                customHue ? 'opacity-100 ring-1 ring-inset ring-black/20' : 'opacity-60 hover:opacity-80'
+              }`}
+              style={{ background: customHue || 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
+              title="自定义"
+            />
+          </div>
+        )}
+        {sliderOpen && (
+          <div className="px-3 py-1.5 border-t border-ed-line animate-fadeIn">
+            <input
+              type="range"
+              min="0"
+              max="360"
+              value={customHue || '95'}
+              onInput={handleHueInput}
+              onChange={handleHueCommit}
+              className="w-full h-1.5 rounded-full cursor-pointer appearance-none"
+              style={{
+                background: 'linear-gradient(to right, hsl(0,80%,60%), hsl(60,80%,60%), hsl(120,80%,60%), hsl(180,80%,60%), hsl(240,80%,60%), hsl(300,80%,60%), hsl(360,80%,60%))',
+              }}
+              title={customHue ? `色相 ${customHue}°` : '拖动选择颜色'}
+            />
+          </div>
+        )}
+        <div className={`border-t border-ed-line ${rail ? 'p-1.5' : 'px-3 py-2'}`}>
         {user ? (
           rail ? (
             /* 图标栏：头像/后台/退出 纵向堆叠，均带悬停提示 */
@@ -273,14 +376,14 @@ export default function SideBar({
               <a
                 href="/dashboard"
                 data-tip="进入后台"
-                className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors no-underline"
+                className="p-1.5 rounded-md text-ed-muted hover:text-brand hover:bg-black/[0.04] transition-colors no-underline"
               >
                 <LayoutDashboard className="w-[15px] h-[15px]" />
               </a>
               <button
                 onClick={onLogout}
                 data-tip="退出登录"
-                className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors cursor-pointer"
+                className="p-1.5 rounded-md text-ed-muted hover:text-brand hover:bg-black/[0.04] transition-colors cursor-pointer"
               >
                 <LogOut className="w-[15px] h-[15px]" />
               </button>
@@ -301,14 +404,14 @@ export default function SideBar({
               <a
                 href="/dashboard"
                 data-tip="进入后台"
-                className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors no-underline"
+                className="p-1.5 rounded-md text-ed-muted hover:text-brand hover:bg-black/[0.04] transition-colors no-underline"
               >
                 <LayoutDashboard className="w-[15px] h-[15px]" />
               </a>
               <button
                 onClick={onLogout}
                 data-tip="退出登录"
-                className="p-1.5 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors cursor-pointer"
+                className="p-1.5 rounded-md text-ed-muted hover:text-brand hover:bg-black/[0.04] transition-colors cursor-pointer"
               >
                 <LogOut className="w-[15px] h-[15px]" />
               </button>
@@ -318,18 +421,19 @@ export default function SideBar({
           <button
             onClick={onLoginClick}
             data-tip="登录"
-            className="w-full flex items-center justify-center py-2.5 rounded-lg bg-ed-ink text-white hover:bg-brand-orange transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center py-2.5 rounded-lg bg-ed-ink text-white hover:bg-brand transition-colors cursor-pointer"
           >
             <LogIn className="w-[15px] h-[15px]" />
           </button>
         ) : (
           <button
             onClick={onLoginClick}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-ed-ink text-white text-sm tracking-[0.2em] hover:bg-brand-orange transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-ed-ink text-white text-sm tracking-[0.2em] hover:bg-brand transition-colors cursor-pointer"
           >
             <LogIn className="w-[15px] h-[15px]" /> 登录
           </button>
         )}
+      </div>
       </div>
     </aside>
       {tip &&

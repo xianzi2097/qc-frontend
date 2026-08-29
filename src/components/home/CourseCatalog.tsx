@@ -14,7 +14,7 @@ const TYPE_TABS = [
 ];
 
 const TYPE_ICON = { scratch: Puzzle, python: Code2, cpp: Cog } as const;
-const TYPE_COLOR: Record<string, string> = { scratch: '#f97316', python: '#22c55e', cpp: '#94a3b8' };
+const TYPE_COLOR: Record<string, string> = { scratch: 'var(--color-brand)', python: '#22c55e', cpp: '#94a3b8' };
 
 interface Props {
   /** main=在线课程（未精选的主线课）；featured=精选课程（老师勾选的选读内容） */
@@ -71,7 +71,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
       {/* ── 头部：标题 + 课程类型筛选 ── */}
       <header className="flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
         <h2 className="text-base font-semibold text-ed-ink">
-          {mode === 'featured' ? '在线课程' : '我的书架'}
+          {mode === 'featured' ? '课程' : '书架'}
         </h2>
         <TextTabs
           items={TYPE_TABS}
@@ -101,7 +101,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
         {loading ? (
           <CenterNote text="加载中…" />
         ) : courses.length === 0 ? (
-          <CenterNote text={mode === 'featured' ? '暂无在线课程' : '暂无课程'} />
+          <CenterNote text={mode === 'featured' ? '暂无课程' : '暂无课程'} />
         ) : visible.length === 0 ? (
           <CenterNote text="该类型暂无课程" />
         ) : (
@@ -123,7 +123,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                     <Folder size={20} strokeWidth={1.5} className="text-ed-muted flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-ed-ink truncate group-hover:text-brand-orange transition-colors">
+                    <h3 className="text-base font-semibold text-ed-ink truncate group-hover:text-brand transition-colors">
                       {c.name}
                     </h3>
                     <p className="text-xs text-ed-muted mt-0.5">
@@ -132,7 +132,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                   </div>
                   <ArrowRight
                     size={16}
-                    className="flex-shrink-0 text-ed-muted group-hover:text-brand-orange group-hover:translate-x-1 transition-all"
+                    className="flex-shrink-0 text-ed-muted group-hover:text-brand group-hover:translate-x-1 transition-all"
                   />
                 </button>
               );

@@ -251,7 +251,7 @@ export default function CodePlayground({ language }: Props) {
             {fontSize !== DEFAULT_FONT && (
               <button
                 onClick={() => updateFontSize(DEFAULT_FONT)}
-                className="ml-1 text-ed-muted hover:text-brand-orange transition-colors cursor-pointer"
+                className="ml-1 text-ed-muted hover:text-brand transition-colors cursor-pointer"
                 title="恢复默认"
               >
                 ↺
@@ -262,7 +262,7 @@ export default function CodePlayground({ language }: Props) {
           <button
             onClick={handleRun}
             disabled={running}
-            className="text-xs px-4 py-1.5 rounded-lg bg-brand-orange text-white hover:bg-brand-orange/90 disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5"
+            className="text-xs px-4 py-1.5 rounded-lg bg-brand text-white hover:bg-brand/90 disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5"
           >
             {running ? (
               <>

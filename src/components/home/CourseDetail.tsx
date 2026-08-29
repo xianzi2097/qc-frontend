@@ -41,7 +41,7 @@ export default function CourseDetail({ course, onBack }: Props) {
       <header className="flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
         <button
           onClick={onBack}
-          className="group flex items-center gap-1.5 text-xs text-ed-muted hover:text-brand-orange transition-colors cursor-pointer"
+          className="group flex items-center gap-1.5 text-xs text-ed-muted hover:text-brand transition-colors cursor-pointer"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
           返回
@@ -54,7 +54,7 @@ export default function CourseDetail({ course, onBack }: Props) {
               target="_blank"
               rel="noreferrer"
               title="新窗口打开"
-              className="p-1 rounded-md text-ed-muted hover:text-brand-orange hover:bg-black/[0.04] transition-colors no-underline"
+              className="p-1 rounded-md text-ed-muted hover:text-brand hover:bg-black/[0.04] transition-colors no-underline"
             >
               <ExternalLink size={14} />
             </a>
@@ -62,12 +62,12 @@ export default function CourseDetail({ course, onBack }: Props) {
         </div>
       </header>
 
-      <div className="flex-1 min-h-0 relative bg-white">
+      <div className="flex-1 min-h-0 relative bg-card">
         {ebookOk ? (
           <>
             {!ebookLoaded && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
-                <span className="w-6 h-6 rounded-full border-2 border-ed-line border-t-brand-orange animate-spin" />
+                <span className="w-6 h-6 rounded-full border-2 border-ed-line border-t-brand animate-spin" />
               </div>
             )}
             <iframe
@@ -96,14 +96,14 @@ export default function CourseDetail({ course, onBack }: Props) {
                 key={m.name}
                 href={`/Scratch/index.html?folder=${encodeURIComponent(m.url)}`}
                 target="_blank"
-                className="group flex flex-col items-center text-center gap-1.5 bg-white border border-ed-line p-5 no-underline hover:border-brand-orange hover:shadow-md transition-all"
+                className="group flex flex-col items-center text-center gap-1.5 bg-card border border-ed-line p-5 no-underline hover:border-brand hover:shadow-md transition-all"
               >
-                <FolderOpen size={26} strokeWidth={1.5} className="text-ed-body group-hover:text-brand-orange transition-colors" />
+                <FolderOpen size={26} strokeWidth={1.5} className="text-ed-body group-hover:text-brand transition-colors" />
                 <div className="text-sm font-semibold text-ed-ink truncate w-full">{m.name}</div>
                 <div className="text-[0.7rem] text-ed-muted">
                   {m.has_main && m.has_student ? '师生版' : m.has_main ? '教师版' : `${m.sb3_count ?? 0} 个 sb3`}
                 </div>
-                <div className="text-[0.7rem] text-brand-orange flex items-center gap-0.5">
+                <div className="text-[0.7rem] text-brand flex items-center gap-0.5">
                   打开编辑器 <ArrowUpRight size={11} />
                 </div>
               </a>
@@ -117,7 +117,7 @@ export default function CourseDetail({ course, onBack }: Props) {
                 ? m.tree
                 : (m.files ?? []).map(f => ({ name: f.name, type: 'file' as const, size: f.size, path: f.name }));
               return (
-                <div key={m.name} className="bg-white border border-ed-line p-5">
+                <div key={m.name} className="bg-card border border-ed-line p-5">
                   <div className="flex items-center gap-2 pb-3 mb-1 border-b border-ed-line">
                     <Folder size={17} strokeWidth={1.5} className="text-ed-muted flex-shrink-0" />
                     <span className="text-sm font-semibold text-ed-ink truncate">{m.name}</span>
@@ -195,8 +195,8 @@ function TreeNodeRow({ node, urlBase, relPrefix, depth }: {
           {open
             ? <ChevronDown size={13} className="flex-shrink-0 text-ed-muted" />
             : <ChevronRight size={13} className="flex-shrink-0 text-ed-muted" />}
-          <Folder size={14} strokeWidth={1.5} className="flex-shrink-0 text-brand-orange" />
-          <span className="text-sm text-ed-body truncate group-hover:text-brand-orange transition-colors">
+          <Folder size={14} strokeWidth={1.5} className="flex-shrink-0 text-brand" />
+          <span className="text-sm text-ed-body truncate group-hover:text-brand transition-colors">
             {node.name}
           </span>
           <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
@@ -220,7 +220,7 @@ function TreeNodeRow({ node, urlBase, relPrefix, depth }: {
       className="group flex items-center gap-2 pr-2 py-2 border-t border-ed-line no-underline hover:bg-black/[0.02] transition-colors"
     >
       <FileText size={14} strokeWidth={1.5} className="flex-shrink-0 text-ed-muted" />
-      <span className="text-sm text-ed-body truncate group-hover:text-brand-orange transition-colors">
+      <span className="text-sm text-ed-body truncate group-hover:text-brand transition-colors">
         {node.name}
       </span>
       <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">

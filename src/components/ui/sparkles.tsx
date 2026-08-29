@@ -19,7 +19,7 @@ export const SparklesCore = ({
   minSize = 0.6,
   maxSize = 1.4,
   particleDensity = 60,
-  particleColor = "#f97316",
+  particleColor = "var(--color-brand)",
   speed = 2,
 }: {
   className?: string;

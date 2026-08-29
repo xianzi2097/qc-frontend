@@ -24,7 +24,7 @@ export default function Downloads() {
               href={s.url}
               target="_blank"
               rel="noreferrer"
-              className="group flex items-start gap-4 p-5 border border-ed-line rounded-lg bg-white hover:border-brand-orange hover:shadow-sm transition-all duration-300 no-underline"
+              className="group flex items-start gap-4 p-5 border border-ed-line rounded-lg bg-card hover:border-brand hover:shadow-sm transition-all duration-300 no-underline"
             >
               <span className="text-2xl flex-shrink-0">{s.icon}</span>
               <div className="flex-1 min-w-0">
@@ -34,7 +34,7 @@ export default function Downloads() {
                 </div>
                 <div className="text-xs text-ed-muted mt-1">{s.desc}</div>
               </div>
-              <Download className="w-4 h-4 text-ed-muted group-hover:text-brand-orange transition-colors flex-shrink-0 mt-0.5" />
+              <Download className="w-4 h-4 text-ed-muted group-hover:text-brand transition-colors flex-shrink-0 mt-0.5" />
             </a>
           ))}
         </div>

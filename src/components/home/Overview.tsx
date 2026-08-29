@@ -46,12 +46,12 @@ export default function Overview({ onGoCourses, onGoFeatured }: Props) {
                 <div className="text-xs text-ed-muted mt-1">{t.desc}</div>
                 <ArrowRight
                   size={14}
-                  className="mt-4 ml-auto text-ed-muted group-hover:text-brand-orange group-hover:translate-x-1 transition-all"
+                  className="mt-4 ml-auto text-ed-muted group-hover:text-brand group-hover:translate-x-1 transition-all"
                 />
               </>
             );
             const cls =
-              'group flex flex-col bg-white border border-ed-line p-5 text-left cursor-pointer hover:border-brand-orange hover:shadow-sm transition-all';
+              'group flex flex-col bg-card border border-ed-line p-5 text-left cursor-pointer hover:border-brand hover:shadow-sm transition-all';
             return t.href ? (
               <a key={t.title} href={t.href} target="_blank" rel="noreferrer" className={`${cls} no-underline`}>
                 {inner}

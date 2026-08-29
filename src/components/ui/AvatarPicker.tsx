@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 
 const AVATARS = [
-  { bg: 'from-brand-orange to-amber-500', icon: '🦊' },
+  { bg: 'from-brand to-amber-500', icon: '🦊' },
   { bg: 'from-blue-500 to-cyan-400', icon: '🐱' },
   { bg: 'from-green-500 to-emerald-400', icon: '🐸' },
   { bg: 'from-purple-500 to-pink-400', icon: '🐙' },

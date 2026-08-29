@@ -55,7 +55,7 @@ export default function DocsFrame() {
       <div className="flex-1 min-h-0 relative bg-white">
         {!loaded && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
-            <span className="w-6 h-6 rounded-full border-2 border-ed-line border-t-brand-orange animate-spin" />
+            <span className="w-6 h-6 rounded-full border-2 border-ed-line border-t-brand animate-spin" />
           </div>
         )}
         <iframe

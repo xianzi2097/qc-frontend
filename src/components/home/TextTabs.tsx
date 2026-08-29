@@ -16,7 +16,7 @@ interface Props {
 }
 
 /** 编辑风文字 Tab — 底部细下划线平滑滑动到当前项 */
-export default function TextTabs({ items, value, onChange, accent = '#f97316', className = '' }: Props) {
+export default function TextTabs({ items, value, onChange, accent = 'var(--color-brand)', className = '' }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [ind, setInd] = useState({ left: 0, width: 0 });
 

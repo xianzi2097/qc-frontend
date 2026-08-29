@@ -8,6 +8,7 @@ import CourseDetail from './CourseDetail';
 import Downloads from './Downloads';
 import HtmlSandbox from './HtmlSandbox';
 import CodePlayground from './CodePlayground';
+import Resources from './Resources';
 import type { Language } from './compilerApi';
 import LoginPanel from './LoginPanel';
 import AvatarPicker, { AVATARS } from '../ui/AvatarPicker';
@@ -31,7 +32,7 @@ const ROLE_LABEL: Record<string, string> = { teacher: '教师', student: '学生
 
 /**
  * 主页 — 控制台式布局（类 ChatGPT）：
- * 左侧固定导航栏（概览 / 在线课程 / 学习文档 / 自由创作 + 底部账号区），
+ * 左侧固定导航栏（概览 / 书架 / 课程 / 资源 / 学习文档 / 在线编程 + 底部账号区），
  * 右侧全部为内容区，按 section 切换。
  */
 export default function HomePage({ onLogin }: Props) {
@@ -92,7 +93,7 @@ export default function HomePage({ onLogin }: Props) {
   };
 
   return (
-    <div className="ed-root h-screen flex overflow-hidden bg-white text-ed-body cursor-default">
+    <div className="ed-root h-screen flex overflow-hidden text-ed-body cursor-default" style={{ background: 'var(--page-bg)' }}>
       {/* ── 左侧控制台 ── */}
       <SideBar
         section={section}
@@ -121,6 +122,7 @@ export default function HomePage({ onLogin }: Props) {
           <>
             {section === 'courses' && <CourseCatalog />}
             {section === 'featured' && <CourseCatalog mode="featured" />}
+            {section === 'resources' && <Resources />}
             {section === 'docs' && <DocsFrame />}
             {section === 'downloads' && <Downloads />}
             {section === 'html-sandbox' && <HtmlSandbox />}

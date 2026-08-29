@@ -56,7 +56,7 @@ export default function LoginPanel({ open, onClose, onLogin }: Props) {
         </p>
 
         {error && (
-          <p className="text-sm text-brand-orange bg-brand-orange/10 px-3 py-2 mb-5">
+          <p className="text-sm text-brand bg-brand/10 px-3 py-2 mb-5">
             {error}
           </p>
         )}
@@ -68,7 +68,7 @@ export default function LoginPanel({ open, onClose, onLogin }: Props) {
               autoFocus
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="mt-1 w-full bg-transparent border-0 border-b border-ed-line focus:border-brand-orange outline-none py-1.5 text-sm text-ed-ink transition-colors"
+              className="mt-1 w-full bg-transparent border-0 border-b border-ed-line focus:border-brand outline-none py-1.5 text-sm text-ed-ink transition-colors"
             />
           </label>
           <label className="block">
@@ -77,13 +77,13 @@ export default function LoginPanel({ open, onClose, onLogin }: Props) {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="mt-1 w-full bg-transparent border-0 border-b border-ed-line focus:border-brand-orange outline-none py-1.5 text-sm text-ed-ink transition-colors"
+              className="mt-1 w-full bg-transparent border-0 border-b border-ed-line focus:border-brand outline-none py-1.5 text-sm text-ed-ink transition-colors"
             />
           </label>
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 w-full bg-ed-ink text-white py-2.5 text-sm tracking-[0.4em] hover:bg-brand-orange transition-colors disabled:opacity-60 cursor-pointer"
+            className="mt-2 w-full bg-ed-ink text-white py-2.5 text-sm tracking-[0.4em] hover:bg-brand transition-colors disabled:opacity-60 cursor-pointer"
           >
             {loading ? '登录中' : '进入'}
           </button>
