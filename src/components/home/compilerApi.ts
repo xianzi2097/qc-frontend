@@ -69,12 +69,17 @@ export async function submitCode(req: CompileRequest): Promise<CompileResult> {
     throw new Error('HTML is a local language, use iframe preview');
   }
 
-  // 真实调用 judge0（wait=true 同步等待结果）
-  const res = await fetch(`${JUDGE0_BASE_URL}/submissions?base64_encoded=false&wait=true`, {
+  // 始终用 base64 编码 —— 中文/特殊字符必须走 base64，否则 Judge0 报 UTF-8 错误
+  const encode = (s: string) => btoa(unescape(encodeURIComponent(s)));
+  const decode = (s: string | null) => s ? decodeURIComponent(escape(atob(s))) : null;
+
+  const res = await fetch(`${JUDGE0_BASE_URL}/submissions?base64_encoded=true&wait=true`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      ...req,
+      source_code: encode(req.source_code),
+      language_id: req.language_id,
+      stdin: req.stdin ? encode(req.stdin) : undefined,
       enable_per_process_and_thread_time_limit: true,
       enable_per_process_and_thread_memory_limit: true,
     }),
@@ -84,7 +89,13 @@ export async function submitCode(req: CompileRequest): Promise<CompileResult> {
     throw new Error(`Judge0 返回 ${res.status}`);
   }
 
-  return res.json();
+  const data = await res.json();
+  return {
+    ...data,
+    stdout: decode(data.stdout),
+    stderr: decode(data.stderr),
+    compile_output: decode(data.compile_output),
+  };
 }
 
 // ── Mock 执行（judge0 未接入时用） ────────────────────────
