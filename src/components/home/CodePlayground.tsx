@@ -13,6 +13,7 @@ import { html as htmlLang } from '@codemirror/lang-html';
 import type { Language } from './compilerApi';
 import { LANGUAGE_CONFIG, submitCode, checkJudgeStatus } from './compilerApi';
 import type { JudgeStatus, CompileResult } from './compilerApi';
+import { CheckCircle, XCircle, Clock, HardDrive } from 'lucide-react';
 import { CODE_TEMPLATES } from './compilerTemplates';
 
 // ── 浅色语法高亮 ─────────────────────────────────────────
@@ -51,12 +52,21 @@ function ResultBadge({ result }: { result: CompileResult }) {
   const { status, time } = result;
   const isSuccess = status.id === 3; // Accepted
   return (
-    <div className="flex items-center gap-3 text-xs">
-      <span className={isSuccess ? 'text-green-600' : 'text-red-500'}>
-        {isSuccess ? '✅' : '❌'} {status.description}
+    <div className="flex items-center gap-4 text-xs font-medium">
+      <span className={`flex items-center gap-1.5 ${isSuccess ? 'text-green-600' : 'text-red-500'}`}>
+        {isSuccess ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+        {status.description}
       </span>
-      {time && <span className="text-ed-muted">⏱ {time}s</span>}
-      {result.memory && <span className="text-ed-muted">💾 {(result.memory / 1024).toFixed(1)}MB</span>}
+      {time && (
+        <span className="flex items-center gap-1 text-ed-muted">
+          <Clock className="w-3 h-3" /> {time}s
+        </span>
+      )}
+      {result.memory && (
+        <span className="flex items-center gap-1 text-ed-muted">
+          <HardDrive className="w-3 h-3" /> {(result.memory / 1024).toFixed(1)}MB
+        </span>
+      )}
     </div>
   );
 }
@@ -323,7 +333,6 @@ export default function CodePlayground({ language }: Props) {
             <div className="flex-1 min-h-0 flex flex-col">
               <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
                 <span className="text-xs font-medium text-ed-muted">输出</span>
-                {result && <ResultBadge result={result} />}
               </div>
               <pre className="flex-1 w-full p-4 font-mono text-sm leading-relaxed text-ed-ink bg-white overflow-auto whitespace-pre-wrap">
                 {running ? (
@@ -346,6 +355,17 @@ export default function CodePlayground({ language }: Props) {
         <span>UTF-8</span>
         <span>·</span>
         <span>行 {cursorPos.line}, 列 {cursorPos.col}</span>
+        {result?.status && (
+          <>
+            <span className="ml-auto" />
+            <span className={`flex items-center gap-1 font-medium ${result.status.id === 3 ? 'text-green-600' : 'text-red-500'}`}>
+              {result.status.id === 3 ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+              {result.status.description}
+            </span>
+            {result.time && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {result.time}s</span>}
+            {result.memory && <span className="flex items-center gap-1"><HardDrive className="w-3 h-3" /> {(result.memory / 1024).toFixed(1)}MB</span>}
+          </>
+        )}
       </footer>
     </div>
   );

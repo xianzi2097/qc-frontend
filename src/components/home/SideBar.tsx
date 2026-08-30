@@ -225,8 +225,7 @@ export default function SideBar({
       {/* 导航 —— 外链与页内项统一由 NAV 数据驱动渲染 */}
       <nav className={`space-y-0.5 ${rail ? 'px-2' : 'px-3'}`}>
         {NAV.map(({ id, label, icon: Icon }) => {
-          const active = id !== 'scratch' && section === (id as HomeSection)
-            || (id === 'scratch' && (section === 'compiler' || section === 'html-sandbox'));
+          const active = id !== 'scratch' && section === (id as HomeSection);
           return (
             <div key={id}>
               <button
