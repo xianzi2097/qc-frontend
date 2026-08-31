@@ -163,7 +163,7 @@ function countTreeFiles(nodes: MaterialNode[]): number {
   );
 }
 
-/** /share 链接按路径段编码：中文、空格、#、% 等特殊字符不会断链 */
+/** /courses 链接按路径段编码：中文、空格、#、% 等特殊字符不会断链 */
 function shareHref(urlBase: string, relPath: string): string {
   const raw = urlBase.endsWith('/') ? urlBase + relPath : `${urlBase}/${relPath}`;
   return raw.split('/').map(encodeURIComponent).join('/');
@@ -171,7 +171,7 @@ function shareHref(urlBase: string, relPath: string): string {
 
 /**
  * 单个树节点行：
- * 文件夹 → 点击展开/收起；文件 → 新窗口打开（Caddy /share 静态服务）。
+ * 文件夹 → 点击展开/收起；文件 → 新窗口打开（Caddy /courses 静态服务）。
  * 缩进 = 深度 × 16px，与主页 hairline 风格一致。
  */
 function TreeNodeRow({ node, urlBase, relPrefix, depth }: {
