@@ -545,7 +545,7 @@ export default function ResourcesManager({ category }: { category: string }) {
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-3 py-1.5 rounded-lg transition-colors"
           >
-            <Plus size={14} /> 新建资料
+            <Plus size={14} /> 上传资料
           </button>
         </div>
       </div>
@@ -553,7 +553,7 @@ export default function ResourcesManager({ category }: { category: string }) {
       {/* 新建资料弹窗 */}
       {showCreate && (
         <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6">
-          <h3 className="text-sm font-bold text-white mb-4">新建资料</h3>
+          <h3 className="text-sm font-bold text-white mb-4">上传资料</h3>
           <div className="space-y-2">
             {/* 资料名称 + 描述（左右分栏） */}
             <div className="flex gap-3">
@@ -677,7 +677,7 @@ export default function ResourcesManager({ category }: { category: string }) {
       {/* 资料列表 */}
       {courses.length === 0 ? (
         <div className="text-sm text-slate-500 bg-slate-900/50 border border-slate-600 rounded-2xl p-8 text-center">
-          暂无资料，点击「新建资料」开始创建
+          暂无资料，点击「上传资料」开始创建
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
