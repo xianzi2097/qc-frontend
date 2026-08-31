@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft, BookOpen, ChevronDown, ChevronRight, ExternalLink,
+  ArrowLeft, BookOpen, ChevronDown, ChevronRight, Download, ExternalLink,
   FileText, Folder,
 } from 'lucide-react';
 import { fetchResourceTree } from '../../lib/api';
@@ -104,13 +104,21 @@ export default function ResourceFileTree({ resource, onBack }: Props) {
                     <span className="ml-auto text-xs text-ed-muted flex-shrink-0">
                       {countTreeFiles(nodes)} 个文件
                     </span>
+                    {/* 下载整个资源 */}
+                    <a
+                      href={`/api/resources/${encodeURIComponent(resource.id)}/download`}
+                      title="下载整个资料"
+                      className="p-1.5 text-ed-muted hover:text-brand transition-colors no-underline flex-shrink-0"
+                    >
+                      <Download size={14} />
+                    </a>
                   </div>
                   {nodes.length === 0 ? (
                     <p className="py-4 text-center text-xs text-ed-muted">此文件夹暂无内容</p>
                   ) : (
                     <div>
                       {nodes.map(n => (
-                        <TreeNodeRow key={n.name} node={n} urlBase={m.url} relPrefix="" depth={0} />
+                        <TreeNodeRow key={n.name} node={n} urlBase={m.url} relPrefix="" depth={0} resourceId={resource.id} />
                       ))}
                     </div>
                   )}
@@ -154,37 +162,51 @@ function shareHref(urlBase: string, relPath: string): string {
  * 文件夹 → 点击展开/收起；文件 → 新窗口打开（Caddy /courses 静态服务）。
  * 缩进 = 深度 × 16px，与主页 hairline 风格一致。
  */
-function TreeNodeRow({ node, urlBase, relPrefix, depth }: {
+function TreeNodeRow({ node, urlBase, relPrefix, depth, resourceId }: {
   node: MaterialNode;
   urlBase: string;
   relPrefix: string;
   depth: number;
+  resourceId: string;
 }) {
   const [open, setOpen] = useState(false);
   const rel = relPrefix ? `${relPrefix}/${node.name}` : node.name;
 
   if (node.type === 'dir') {
     const children = node.children ?? [];
+    const dirPath = node.path || rel;
     return (
       <div>
-        <button
-          onClick={() => setOpen(v => !v)}
-          style={{ paddingLeft: depth * 16 + 4 }}
-          className="group w-full flex items-center gap-2 pr-2 py-2 border-t border-ed-line text-left cursor-pointer hover:bg-black/[0.02] transition-colors"
+        <div
+          className="group flex items-center gap-2 pr-2 border-t border-ed-line hover:bg-black/[0.02] transition-colors"
         >
-          {open
-            ? <ChevronDown size={13} className="flex-shrink-0 text-ed-muted" />
-            : <ChevronRight size={13} className="flex-shrink-0 text-ed-muted" />}
-          <Folder size={14} strokeWidth={1.5} className="flex-shrink-0 text-brand" />
-          <span className="text-sm text-ed-body truncate group-hover:text-brand transition-colors">
-            {node.name}
-          </span>
-          <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
-            {countTreeFiles(children)} 个文件
-          </span>
-        </button>
+          <button
+            onClick={() => setOpen(v => !v)}
+            style={{ paddingLeft: depth * 16 + 4 }}
+            className="flex items-center gap-2 flex-1 min-w-0 py-2 text-left cursor-pointer"
+          >
+            {open
+              ? <ChevronDown size={13} className="flex-shrink-0 text-ed-muted" />
+              : <ChevronRight size={13} className="flex-shrink-0 text-ed-muted" />}
+            <Folder size={14} strokeWidth={1.5} className="flex-shrink-0 text-brand" />
+            <span className="text-sm text-ed-body truncate group-hover:text-brand transition-colors">
+              {node.name}
+            </span>
+            <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
+              {countTreeFiles(children)} 个文件
+            </span>
+          </button>
+          {/* 独立下载此目录 */}
+          <a
+            href={`/api/resources/${encodeURIComponent(resourceId)}/download?path=${encodeURIComponent(dirPath)}`}
+            title="下载此目录"
+            className="p-1.5 text-ed-muted opacity-0 group-hover:opacity-100 hover:text-brand transition-all no-underline flex-shrink-0"
+          >
+            <Download size={13} />
+          </a>
+        </div>
         {open && children.map(c => (
-          <TreeNodeRow key={c.name} node={c} urlBase={urlBase} relPrefix={rel} depth={depth + 1} />
+          <TreeNodeRow key={c.name} node={c} urlBase={urlBase} relPrefix={rel} depth={depth + 1} resourceId={resourceId} />
         ))}
       </div>
     );

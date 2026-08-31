@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil, FileText, FolderPlus, Upload, Play, Loader2, GripVertical, Star } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, FolderOpen, RotateCcw, Pencil, FileText, FolderPlus, Upload, Play, Loader2, GripVertical } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -116,25 +116,6 @@ export default function ResourcesManager({ category }: { category: string }) {
         loadCourses();
       } else {
         alert(data.detail || '删除失败');
-      }
-    } catch {
-      alert('无法连接服务器');
-    }
-  };
-
-  const handleToggleFeatured = async (course: Course) => {
-    try {
-      const res = await fetch(`/api/resources/${encodeURIComponent(course.id)}/featured`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ featured: !course.featured }),
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        // 本地先更新，开关即时反馈
-        setCourses(prev => prev.map(c => (c.id === course.id ? { ...c, featured: !course.featured } : c)));
-      } else {
-        alert(data.detail || '操作失败');
       }
     } catch {
       alert('无法连接服务器');
@@ -701,11 +682,6 @@ export default function ResourcesManager({ category }: { category: string }) {
                   <p className="text-xs text-slate-500">
                     {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个课件
                   </p>
-                  {course.featured && (
-                    <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-400/10 text-amber-400 mt-1">
-                      <Star size={9} className="fill-current" /> 精选
-                    </span>
-                  )}
                   {course.tags && course.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
                       {course.tags.map(tag => (
@@ -715,13 +691,6 @@ export default function ResourcesManager({ category }: { category: string }) {
                   )}
                 </div>
                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                  <button
-                    onClick={() => handleToggleFeatured(course)}
-                    className={`p-1 transition-all ${course.featured ? 'text-amber-400' : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'}`}
-                    title={course.featured ? '取消精选（从「精选资料」栏目移除）' : '设为精选（显示在主页「精选资料」栏目）'}
-                  >
-                    <Star size={14} className={course.featured ? 'fill-current' : ''} />
-                  </button>
                   <button
                     onClick={() => openEditCourse(course)}
                     className="text-slate-600 hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition-all p-1"
