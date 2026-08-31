@@ -8,6 +8,7 @@ import SendMessagePanel from './SendMessagePanel';
 import StudentListPanel from './StudentListPanel';
 import CourseManager from './CourseManager';
 import ResourcesManager from './ResourcesManager';
+import SoftwareManager from './SoftwareManager';
 
 interface TeacherDashboardProps {
   activeTab: string;
@@ -64,12 +65,12 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
     );
   }
 
-  // ── 软件管理：固定 download 类别 ──
+  // ── 软件管理：独立组件 ──
   if (activeTab === 'software') {
     return (
       <div className="h-full flex flex-col space-y-3 animate-fadeIn">
         <ErrorBoundary label="软件管理">
-          <ResourcesManager category="download" />
+          <SoftwareManager />
         </ErrorBoundary>
       </div>
     );
