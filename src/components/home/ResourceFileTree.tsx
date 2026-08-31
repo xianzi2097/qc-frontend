@@ -9,7 +9,7 @@ import { formatSize } from '../../types/course';
 import type { Course, Material, MaterialNode } from '../../types/course';
 
 interface Props {
-  resource: Course;
+  resource: Course & { url?: string };
   onBack: () => void;
 }
 
@@ -29,7 +29,7 @@ export default function ResourceFileTree({ resource, onBack }: Props) {
     if (ebookOk || ebookFail) return;
     let stale = false;
     setLoading(true);
-    fetchResourceTree(resource.id)
+    fetchResourceTree(resource.id, resource.url || `/resources/${resource.id}/`)
       .then(list => { if (!stale) setMaterials(list); })
       .catch(() => { if (!stale) setMaterials([]); })
       .finally(() => { if (!stale) setLoading(false); });

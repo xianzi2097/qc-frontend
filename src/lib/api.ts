@@ -65,7 +65,7 @@ export async function fetchResources(_teachers: string[], teacher: string, categ
 }
 
 /** 获取资源文件树（返回单个 Material，tree 字段为递归文件树） */
-export async function fetchResourceTree(resourceId: string): Promise<Material[]> {
+export async function fetchResourceTree(resourceId: string, resourceUrl: string): Promise<Material[]> {
   const res = await fetch(`/api/resources/${encodeURIComponent(resourceId)}/tree?${nocache()}`);
   const data = await res.json();
   if (data.status !== 'success') return [];
@@ -79,7 +79,7 @@ export async function fetchResourceTree(resourceId: string): Promise<Material[]>
   }));
   return [{
     name: data.meta?.name || '资源文件',
-    url: `/resources/${resourceId}/`,
+    url: resourceUrl,
     tree: toNodes(tree),
   }];
 }
