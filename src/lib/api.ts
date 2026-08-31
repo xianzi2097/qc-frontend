@@ -4,7 +4,7 @@
  * 注意：useAuth 已劫持全局 fetch 自动附带 Bearer token（/api/login 除外），
  * 因此这里不需要手动处理鉴权头。
  */
-import type { Course, Material } from '../types/course';
+import type { Course, Material, MaterialNode } from '../types/course';
 import type { PortalUser } from './useAuth';
 
 const nocache = () => `t=${Date.now()}`;
@@ -46,6 +46,42 @@ export async function fetchMaterials(courseId: string, teacher: string): Promise
   );
   const data = await res.json();
   return data.status === 'success' ? data.materials : [];
+}
+
+/** 获取资源列表（按 teacher + category 筛选） */
+export async function fetchResources(_teachers: string[], teacher: string, category: string = ''): Promise<Course[]> {
+  const url = `/api/resources?${nocache()}` + (category ? `&category=${category}` : '') + (teacher !== '全部' ? `&teacher=${teacher}` : '');
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status !== 'success') return [];
+  const items = data.resources || data.courses || [];
+  return items.map((r: any) => ({
+    ...r,
+    type: r.type || 'reference',
+    format: r.format || 'folder',
+    material_count: r.material_count || 0,
+    teacher: r.teacher || '',
+  }));
+}
+
+/** 获取资源文件树（返回单个 Material，tree 字段为递归文件树） */
+export async function fetchResourceTree(resourceId: string): Promise<Material[]> {
+  const res = await fetch(`/api/resources/${encodeURIComponent(resourceId)}/tree?${nocache()}`);
+  const data = await res.json();
+  if (data.status !== 'success') return [];
+  const tree = data.tree || [];
+  // 转成 MaterialNode[] 格式（name/type/size/children）
+  const toNodes = (nodes: any[]): MaterialNode[] => nodes.map(n => ({
+    name: n.name,
+    type: n.type === 'folder' || n.type === 'dir' ? 'dir' : 'file',
+    size: n.size || 0,
+    children: n.children ? toNodes(n.children) : undefined,
+  }));
+  return [{
+    name: data.meta?.name || '资源文件',
+    url: `/resources/${resourceId}/`,
+    tree: toNodes(tree),
+  }];
 }
 
 /** 登录；成功返回 user + token，失败抛错（消息为后端 detail 或默认文案） */

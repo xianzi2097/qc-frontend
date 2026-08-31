@@ -1,91 +1,40 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Download, File, Folder, FolderOpen, Loader2 } from 'lucide-react';
-
-interface Resource {
-  id: string;
-  name: string;
-  category: string;
-  teacher: string;
-  url: string;
-}
-
-interface TreeNode {
-  name: string;
-  type: 'file' | 'folder';
-  size: number;
-  children?: TreeNode[];
-  path?: string;
-}
+import { useEffect, useRef, useState } from 'react';
+import {
+  ArrowLeft, BookOpen, ChevronDown, ChevronRight, ExternalLink,
+  FileText, Folder,
+} from 'lucide-react';
+import { fetchResourceTree } from '../../lib/api';
+import { injectSeamless } from './seamless';
+import { formatSize } from '../../types/course';
+import type { Course, Material, MaterialNode } from '../../types/course';
 
 interface Props {
-  resource: Resource;
+  resource: Course;
   onBack: () => void;
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-/** 单个树节点（可递归展开） */
-function TreeRow({ node, depth, resource }: { node: TreeNode; depth: number; resource: Resource }) {
-  const [open, setOpen] = useState(depth === 0);
-  const isFolder = node.type === 'folder';
-  const filePath = node.path || node.name;
-  const downloadUrl = `${resource.url}${filePath}`;
-
-  return (
-    <div>
-      <div
-        className={`flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-black/[0.03] transition-colors group ${isFolder ? 'cursor-pointer' : ''}`}
-        style={{ paddingLeft: `${depth * 20 + 8}px` }}
-        onClick={() => isFolder && setOpen(!open)}
-      >
-        {isFolder ? (
-          open ? <FolderOpen size={14} className="text-brand shrink-0" /> : <Folder size={14} className="text-ed-muted shrink-0" />
-        ) : (
-          <File size={14} className="text-ed-muted shrink-0" />
-        )}
-        <span className="text-sm text-ed-ink truncate flex-1">{node.name}</span>
-        {!isFolder && (
-          <>
-            <span className="text-xs text-ed-muted">{formatSize(node.size)}</span>
-            <a
-              href={downloadUrl}
-              download
-              onClick={e => e.stopPropagation()}
-              className="p-1 rounded text-ed-muted opacity-0 group-hover:opacity-100 hover:text-brand transition-all no-underline"
-              title="下载"
-            >
-              <Download size={13} />
-            </a>
-          </>
-        )}
-      </div>
-      {isFolder && open && node.children?.map((child, i) => (
-        <TreeRow key={i} node={child} depth={depth + 1} resource={resource} />
-      ))}
-    </div>
-  );
-}
-
-/** 学生端资源文件树 — 只读浏览 + 下载 */
+/**
+ * 课程内容视图 — 供「课程目录点击」与「侧边栏在学课程直达」共用：
+ * 电子书（已渲染）→ 无痕内嵌；未渲染成功 → 占位；其他 → 课件/文件列表
+ */
 export default function ResourceFileTree({ resource, onBack }: Props) {
-  const [tree, setTree] = useState<TreeNode[]>([]);
-  const [loading, setLoading] = useState(true);
+  const ebookOk = resource.format === 'ebook' && resource.publish?.status === 'success';
+  const ebookFail = resource.format === 'ebook' && resource.publish?.status !== 'success';
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [loading, setLoading] = useState(!ebookOk && !ebookFail);
+  const [ebookLoaded, setEbookLoaded] = useState(false);
+  const frameRef = useRef<HTMLIFrameElement>(null);
 
-  const fetchTree = useCallback(async () => {
+  useEffect(() => {
+    if (ebookOk || ebookFail) return;
+    let stale = false;
     setLoading(true);
-    try {
-      const res = await fetch(`/api/resources/${resource.id}/tree`);
-      const data = await res.json();
-      setTree(data.tree || []);
-    } catch { /* ignore */ }
-    setLoading(false);
-  }, [resource.id]);
-
-  useEffect(() => { fetchTree(); }, [fetchTree]);
+    fetchResourceTree(resource.id)
+      .then(list => { if (!stale) setMaterials(list); })
+      .catch(() => { if (!stale) setMaterials([]); })
+      .finally(() => { if (!stale) setLoading(false); });
+    return () => { stale = true; };
+  }, [resource.id, ebookOk, ebookFail]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -99,28 +48,164 @@ export default function ResourceFileTree({ resource, onBack }: Props) {
         </button>
         <div className="flex items-center gap-4">
           <span className="text-sm font-semibold text-ed-ink">{resource.name}</span>
-          {resource.teacher && <span className="text-xs text-ed-muted">{resource.teacher}</span>}
+          {ebookOk && (
+            <a
+              href={`/course/${resource.id}/`}
+              target="_blank"
+              rel="noreferrer"
+              title="新窗口打开"
+              className="p-1 rounded-md text-ed-muted hover:text-brand hover:bg-black/[0.04] transition-colors no-underline"
+            >
+              <ExternalLink size={14} />
+            </a>
+          )}
         </div>
       </header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-8 py-4" style={{ scrollbarWidth: 'thin' }}>
-        {loading ? (
-          <div className="flex items-center justify-center py-12 text-ed-muted">
-            <Loader2 size={18} className="animate-spin mr-2" /> 加载中...
+      <div className="flex-1 min-h-0 relative bg-card">
+        {ebookOk ? (
+          <>
+            {!ebookLoaded && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
+                <span className="w-6 h-6 rounded-full border-2 border-ed-line border-t-brand animate-spin" />
+              </div>
+            )}
+            <iframe
+              ref={frameRef}
+              key={resource.id}
+              src={`/course/${resource.id}/`}
+              title={resource.name}
+              onLoad={() => { injectSeamless(frameRef.current); setEbookLoaded(true); }}
+              className="w-full h-full border-0"
+            />
+          </>
+        ) : ebookFail ? (
+          <div className="h-full flex flex-col items-center justify-center gap-3">
+            <BookOpen size={40} strokeWidth={1.5} className="text-ed-muted" />
+            <p className="font-semibold text-ed-ink">{resource.name}</p>
+            <p className="text-sm text-ed-muted">课程尚未渲染成功，请联系管理员</p>
           </div>
-        ) : tree.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-ed-muted">
-            <Folder size={36} strokeWidth={1.2} className="mb-3 opacity-40" />
-            <p className="text-sm">暂无文件</p>
-          </div>
+        ) : loading ? (
+          <CenterNote text="加载中…" />
+        ) : materials.length === 0 ? (
+          <CenterNote text="暂无文件" />
         ) : (
-          <div className="border border-ed-line rounded-lg overflow-hidden">
-            {tree.map((node, i) => (
-              <TreeRow key={i} node={node} depth={0} resource={resource} />
-            ))}
+          <div className="flex flex-col gap-6 py-6">
+            {materials.map(m => {
+              // 优先用后端递归树；旧响应无 tree 时退回直接文件列表
+              const nodes: MaterialNode[] = m.tree?.length
+                ? m.tree
+                : (m.files ?? []).map(f => ({ name: f.name, type: 'file' as const, size: f.size, path: f.name }));
+              return (
+                <div key={m.name} className="bg-card border border-ed-line p-5">
+                  <div className="flex items-center gap-2 pb-3 mb-1 border-b border-ed-line">
+                    <Folder size={17} strokeWidth={1.5} className="text-ed-muted flex-shrink-0" />
+                    <span className="text-sm font-semibold text-ed-ink truncate">{m.name}</span>
+                    <span className="ml-auto text-xs text-ed-muted flex-shrink-0">
+                      {countTreeFiles(nodes)} 个文件
+                    </span>
+                  </div>
+                  {nodes.length === 0 ? (
+                    <p className="py-4 text-center text-xs text-ed-muted">此文件夹暂无内容</p>
+                  ) : (
+                    <div>
+                      {nodes.map(n => (
+                        <TreeNodeRow key={n.name} node={n} urlBase={m.url} relPrefix="" depth={0} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+/** 居中占位文案 */
+function CenterNote({ text }: { text: string }) {
+  return (
+    <div className="h-full min-h-40 flex items-center justify-center text-sm text-ed-muted">
+      {text}
+    </div>
+  );
+}
+
+// ── folder 型课件：递归目录树 ──────────────────────────────
+
+/** 统计子树内的文件总数（含所有嵌套层级） */
+function countTreeFiles(nodes: MaterialNode[]): number {
+  return nodes.reduce(
+    (acc, n) => acc + (n.type === 'file' ? 1 : countTreeFiles(n.children ?? [])),
+    0,
+  );
+}
+
+/** /courses 链接按路径段编码：中文、空格、#、% 等特殊字符不会断链 */
+function shareHref(urlBase: string, relPath: string): string {
+  const raw = urlBase.endsWith('/') ? urlBase + relPath : `${urlBase}/${relPath}`;
+  return raw.split('/').map(encodeURIComponent).join('/');
+}
+
+/**
+ * 单个树节点行：
+ * 文件夹 → 点击展开/收起；文件 → 新窗口打开（Caddy /courses 静态服务）。
+ * 缩进 = 深度 × 16px，与主页 hairline 风格一致。
+ */
+function TreeNodeRow({ node, urlBase, relPrefix, depth }: {
+  node: MaterialNode;
+  urlBase: string;
+  relPrefix: string;
+  depth: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const rel = relPrefix ? `${relPrefix}/${node.name}` : node.name;
+
+  if (node.type === 'dir') {
+    const children = node.children ?? [];
+    return (
+      <div>
+        <button
+          onClick={() => setOpen(v => !v)}
+          style={{ paddingLeft: depth * 16 + 4 }}
+          className="group w-full flex items-center gap-2 pr-2 py-2 border-t border-ed-line text-left cursor-pointer hover:bg-black/[0.02] transition-colors"
+        >
+          {open
+            ? <ChevronDown size={13} className="flex-shrink-0 text-ed-muted" />
+            : <ChevronRight size={13} className="flex-shrink-0 text-ed-muted" />}
+          <Folder size={14} strokeWidth={1.5} className="flex-shrink-0 text-brand" />
+          <span className="text-sm text-ed-body truncate group-hover:text-brand transition-colors">
+            {node.name}
+          </span>
+          <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
+            {countTreeFiles(children)} 个文件
+          </span>
+        </button>
+        {open && children.map(c => (
+          <TreeNodeRow key={c.name} node={c} urlBase={urlBase} relPrefix={rel} depth={depth + 1} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={shareHref(urlBase, node.path || node.name)}
+      target="_blank"
+      rel="noreferrer"
+      title={rel}
+      style={{ paddingLeft: depth * 16 + 29 }}
+      className="group flex items-center gap-2 pr-2 py-2 border-t border-ed-line no-underline hover:bg-black/[0.02] transition-colors"
+    >
+      <FileText size={14} strokeWidth={1.5} className="flex-shrink-0 text-ed-muted" />
+      <span className="text-sm text-ed-body truncate group-hover:text-brand transition-colors">
+        {node.name}
+      </span>
+      <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
+        {typeof node.size === 'number' ? formatSize(node.size) : ''}
+      </span>
+    </a>
   );
 }
