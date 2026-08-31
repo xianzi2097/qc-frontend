@@ -70,11 +70,12 @@ export async function fetchResourceTree(resourceId: string, resourceUrl: string)
   const data = await res.json();
   if (data.status !== 'success') return [];
   const tree = data.tree || [];
-  // 转成 MaterialNode[] 格式（name/type/size/children）
+  // 转成 MaterialNode[] 格式（name/type/size/path/children）
   const toNodes = (nodes: any[]): MaterialNode[] => nodes.map(n => ({
     name: n.name,
     type: n.type === 'folder' || n.type === 'dir' ? 'dir' : 'file',
     size: n.size || 0,
+    path: n.path,
     children: n.children ? toNodes(n.children) : undefined,
   }));
   return [{
