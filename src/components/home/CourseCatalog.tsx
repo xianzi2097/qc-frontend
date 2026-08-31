@@ -23,34 +23,22 @@ interface Props {
 
 /** 课程目录 — 内容区视图：编号条目 + hairline 分隔；点击条目进入 CourseDetail 内容视图 */
 export default function CourseCatalog({ mode = 'main' }: Props) {
-  const [teachers, setTeachers] = useState<string[]>([]);
-  const [teacher, setTeacher] = useState('');
   const [courseType, setCourseType] = useState('全部');
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Course | null>(null);
 
-  // 进入目录页才加载老师列表（惰性策略）
+  // 进入目录页才加载所有老师的课程（不让学生筛选老师，系统自己记录归属）
   useEffect(() => {
-    fetchTeacherNames()
-      .then(names => {
-        setTeachers(names);
-        setTeacher('全部');
-      })
-      .catch(() => {});
-  }, []);
-
-  // 切换老师 → 拉课程
-  useEffect(() => {
-    if (!teacher) return;
     let stale = false;
     setLoading(true);
-    fetchCourses(teachers, teacher)
+    fetchTeacherNames()
+      .then(names => fetchCourses(names, '全部'))
       .then(list => { if (!stale) setCourses(list); })
       .catch(() => { if (!stale) setCourses([]); })
       .finally(() => { if (!stale) setLoading(false); });
     return () => { stale = true; };
-  }, [teacher, teachers]);
+  }, []);
 
   const visible = useMemo(
     () => courses.filter(c =>
@@ -68,33 +56,23 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* ── 头部：标题 + 课程类型筛选 ── */}
+      {/* ── 头部：只保留标题 ── */}
       <header className="flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
         <h2 className="text-base font-semibold text-ed-ink">
           {mode === 'featured' ? '课程' : '书架'}
         </h2>
-        <TextTabs
-          items={TYPE_TABS}
-          value={courseType}
-          onChange={setCourseType}
-        />
       </header>
 
-      {/* ── 老师筛选 ── */}
-      {teachers.length > 0 && (
-        <div className="flex-shrink-0 overflow-x-auto border-b border-ed-line px-8" style={{ scrollbarWidth: 'none' }}>
-          <TextTabs
-            className="w-max"
-            accent="#16181d"
-            value={teacher}
-            onChange={setTeacher}
-            items={[
-              { value: '全部', label: '全部老师' },
-              ...teachers.map(t => ({ value: t, label: t })),
-            ]}
-          />
-        </div>
-      )}
+      {/* ── 类型筛选（原老师筛选位置） ── */}
+      <div className="flex-shrink-0 overflow-x-auto border-b border-ed-line px-8" style={{ scrollbarWidth: 'none' }}>
+        <TextTabs
+          className="w-max"
+          accent="#16181d"
+          value={courseType}
+          onChange={setCourseType}
+          items={TYPE_TABS}
+        />
+      </div>
 
       {/* ── 课程列表 ── */}
       <div className="flex-1 overflow-y-auto min-h-0 px-8 pb-8" style={{ scrollbarWidth: 'thin' }}>
