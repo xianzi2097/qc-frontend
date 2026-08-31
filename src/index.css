@@ -54,6 +54,7 @@
   --color-brand-300: oklch(0.80 0.11  var(--seed-hue));
   --color-brand-400: oklch(0.72 0.16  var(--seed-hue));
   --color-brand:     var(--accent);
+  --color-brand-orange: var(--color-brand-orange);
   --color-brand-600: oklch(0.55 0.19 var(--seed-hue));
   --color-brand-700: oklch(0.48 0.16 var(--seed-hue));
   --color-brand-800: oklch(0.40 0.12 var(--seed-hue));
