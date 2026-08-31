@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Code2, Cog, Folder, Puzzle } from 'lucide-react';
+import { ArrowRight, Code2, Cog, Download, Folder, Puzzle } from 'lucide-react';
 import TextTabs from './TextTabs';
 import ResourceFileTree from './ResourceFileTree';
 import { fetchResources, fetchTeacherNames } from '../../lib/api';
@@ -76,32 +76,44 @@ export default function Downloads() {
             {visible.map((c, i) => {
               const Icon = TYPE_ICON[c.type as keyof typeof TYPE_ICON];
               return (
-                <button
+                <div
                   key={c.id}
-                  onClick={() => setSelected(c)}
-                  className="group w-full flex items-center gap-5 py-5 px-2 -mx-2 border-b border-ed-line text-left cursor-pointer hover:bg-black/[0.02] transition-colors"
+                  className="group flex items-center gap-5 py-5 px-2 -mx-2 border-b border-ed-line hover:bg-black/[0.02] transition-colors"
                 >
-                  <span className="ed-serif text-sm text-ed-muted w-7 flex-shrink-0">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  {Icon ? (
-                    <Icon size={20} strokeWidth={1.5} style={{ color: TYPE_COLOR[c.type] ?? '#8a8f98' }} className="flex-shrink-0" />
-                  ) : (
-                    <Folder size={20} strokeWidth={1.5} className="text-ed-muted flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-ed-ink truncate group-hover:text-brand transition-colors">
-                      {c.name}
-                    </h3>
-                    <p className="text-xs text-ed-muted mt-0.5">
-                      {c.material_count} 个课件{c.format && FORMAT_LABEL[c.format] ? ` · ${FORMAT_LABEL[c.format]}` : ''}
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => setSelected(c)}
+                    className="flex items-center gap-5 flex-1 min-w-0 text-left cursor-pointer"
+                  >
+                    <span className="ed-serif text-sm text-ed-muted w-7 flex-shrink-0">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    {Icon ? (
+                      <Icon size={20} strokeWidth={1.5} style={{ color: TYPE_COLOR[c.type] ?? '#8a8f98' }} className="flex-shrink-0" />
+                    ) : (
+                      <Folder size={20} strokeWidth={1.5} className="text-ed-muted flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-semibold text-ed-ink truncate group-hover:text-brand transition-colors">
+                        {c.name}
+                      </h3>
+                      <p className="text-xs text-ed-muted mt-0.5">
+                        {c.material_count} 个课件{c.format && FORMAT_LABEL[c.format] ? ` · ${FORMAT_LABEL[c.format]}` : ''}
+                      </p>
+                    </div>
+                  </button>
+                  {/* 直接下载整个资源，不用点进去 */}
+                  <a
+                    href={`/api/resources/${encodeURIComponent(c.id)}/download`}
+                    title={`下载「${c.name}」`}
+                    className="p-1.5 text-ed-muted opacity-0 group-hover:opacity-100 hover:text-brand transition-all no-underline flex-shrink-0"
+                  >
+                    <Download size={15} />
+                  </a>
                   <ArrowRight
                     size={16}
                     className="flex-shrink-0 text-ed-muted group-hover:text-brand group-hover:translate-x-1 transition-all"
                   />
-                </button>
+                </div>
               );
             })}
           </div>
