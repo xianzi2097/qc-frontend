@@ -32,9 +32,9 @@ const lightHighlighting = HighlightStyle.define([
 // ── 状态灯组件 ───────────────────────────────────────────
 function StatusIndicator({ status }: { status: JudgeStatus }) {
   const config = {
-    online:      { color: 'bg-green-500', text: '判题机在线', ring: 'ring-green-500/30' },
-    busy:        { color: 'bg-yellow-500', text: '判题机繁忙', ring: 'ring-yellow-500/30' },
-    offline:     { color: 'bg-red-500', text: '判题机离线', ring: 'ring-red-500/30' },
+    online:      { color: 'bg-green-500', text: 'Judge0 在线', ring: 'ring-green-500/30' },
+    busy:        { color: 'bg-yellow-500', text: 'Judge0 繁忙', ring: 'ring-yellow-500/30' },
+    offline:     { color: 'bg-red-500', text: 'Judge0 离线', ring: 'ring-red-500/30' },
     unconfigured:{ color: 'bg-gray-400', text: '待接入', ring: 'ring-gray-400/30' },
   }[status];
 
@@ -46,30 +46,7 @@ function StatusIndicator({ status }: { status: JudgeStatus }) {
   );
 }
 
-// ── 运行状态标记 ─────────────────────────────────────────
-function ResultBadge({ result }: { result: CompileResult }) {
-  if (!result?.status) return null;
-  const { status, time } = result;
-  const isSuccess = status.id === 3; // Accepted
-  return (
-    <div className="flex items-center gap-4 text-xs font-medium">
-      <span className={`flex items-center gap-1.5 ${isSuccess ? 'text-green-600' : 'text-red-500'}`}>
-        {isSuccess ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-        {status.description}
-      </span>
-      {time && (
-        <span className="flex items-center gap-1 text-ed-muted">
-          <Clock className="w-3 h-3" /> {time}s
-        </span>
-      )}
-      {result.memory && (
-        <span className="flex items-center gap-1 text-ed-muted">
-          <HardDrive className="w-3 h-3" /> {(result.memory / 1024).toFixed(1)}MB
-        </span>
-      )}
-    </div>
-  );
-}
+
 
 // ── localStorage 持久化 ─────────────────────────────────
 const STORAGE_PREFIX = 'codePlayground_';
@@ -114,7 +91,7 @@ export default function CodePlayground({ language }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 
-  // ── 检查判题机状态 ────────────────────────────────────
+  // ── 检查 Judge0 状态 ────────────────────────────────────
   useEffect(() => {
     checkJudgeStatus().then(setJudgeStatus);
   }, []);
