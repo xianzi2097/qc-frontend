@@ -212,22 +212,37 @@ function TreeNodeRow({ node, urlBase, relPrefix, depth, resourceId }: {
     );
   }
 
+  const filePath = node.path || node.name;
+  const fileUrl = shareHref(urlBase, filePath);
   return (
-    <a
-      href={shareHref(urlBase, node.path || node.name)}
-      target="_blank"
-      rel="noreferrer"
-      title={rel}
+    <div
       style={{ paddingLeft: depth * 16 + 29 }}
-      className="group flex items-center gap-2 pr-2 py-2 border-t border-ed-line no-underline hover:bg-black/[0.02] transition-colors"
+      className="group flex items-center gap-2 pr-2 border-t border-ed-line hover:bg-black/[0.02] transition-colors"
     >
-      <FileText size={14} strokeWidth={1.5} className="flex-shrink-0 text-ed-muted" />
-      <span className="text-sm text-ed-body truncate group-hover:text-brand transition-colors">
-        {node.name}
-      </span>
-      <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
-        {typeof node.size === 'number' ? formatSize(node.size) : ''}
-      </span>
-    </a>
+      <a
+        href={fileUrl}
+        target="_blank"
+        rel="noreferrer"
+        title={`打开 ${rel}`}
+        className="flex items-center gap-2 flex-1 min-w-0 py-2 no-underline"
+      >
+        <FileText size={14} strokeWidth={1.5} className="flex-shrink-0 text-ed-muted" />
+        <span className="text-sm text-ed-body truncate group-hover:text-brand transition-colors">
+          {node.name}
+        </span>
+        <span className="ml-auto text-[0.7rem] text-ed-muted flex-shrink-0">
+          {typeof node.size === 'number' ? formatSize(node.size) : ''}
+        </span>
+      </a>
+      {/* 下载单文件 */}
+      <a
+        href={fileUrl}
+        download
+        title={`下载 ${rel}`}
+        className="p-1.5 text-ed-muted opacity-0 group-hover:opacity-100 hover:text-brand transition-all no-underline flex-shrink-0"
+      >
+        <Download size={13} />
+      </a>
+    </div>
   );
 }
