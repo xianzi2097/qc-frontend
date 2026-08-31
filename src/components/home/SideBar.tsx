@@ -21,6 +21,8 @@ interface Props {
   onOpenCourse: (c: Course) => void;
   /** 点击在线编译器语言 */
   onCompilerClick: (lang: 'python' | 'cpp' | 'html') => void;
+  /** 清除课程选中态（切到其他板块时调用） */
+  onClearCourse: () => void;
   user: PortalUser | null;
   username: string;
   roleLabel: string;
@@ -35,7 +37,7 @@ const NAV: { id: HomeSection | 'scratch'; label: string; icon: typeof Home }[] =
   { id: 'overview', label: '开始', icon: Home },
   { id: 'courses', label: '书架', icon: SquareLibrary },
   { id: 'featured', label: '课程', icon: Library },
-  { id: 'resources', label: '资源', icon: FileText },
+  { id: 'resources', label: '资料', icon: FileText },
   { id: 'docs', label: '学习文档', icon: GraduationCap },
   { id: 'scratch', label: '在线编程', icon: Terminal },
   { id: 'downloads', label: '软件下载', icon: Download },
@@ -114,15 +116,15 @@ export default function SideBar({
   }, [customHue, switchTheme]);
 
   /** 拖动中：只改 CSS 变量，零开销，不触发 React */
-  const handleHueInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const hue = e.target.value;
+  const handleHueInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    const hue = (e.target as HTMLInputElement).value;
     document.documentElement.setAttribute('data-theme', 'custom');
     document.documentElement.style.setProperty('--custom-hue', hue);
   }, []);
 
   /** 松手：才存 React 状态 + localStorage */
-  const handleHueCommit = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const hue = e.target.value;
+  const handleHueCommit = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    const hue = (e.target as HTMLInputElement).value;
     setCustomHue(hue);
     setTheme('custom');
     localStorage.setItem('codenova-theme', 'custom');

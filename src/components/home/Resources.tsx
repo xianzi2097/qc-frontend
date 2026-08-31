@@ -15,7 +15,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** 资源栏目 — 参考资料 */
+/** 资料栏目 — 参考资料 */
 export default function Resources() {
   const [items, setItems] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
