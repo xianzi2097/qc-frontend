@@ -54,6 +54,8 @@ export default function SoftwareManager() {
   const [showDrop, setShowDrop] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  // 新建时直接上传文件夹
+  const [pendingFolder, setPendingFolder] = useState<PendingFile[] | null>(null);
 
   const loadItems = useCallback(() => {
     setError('');
@@ -74,7 +76,7 @@ export default function SoftwareManager() {
   useEffect(() => { loadItems(); }, [loadItems]);
 
   // ── 创建软件（只填名称+描述，不生成 class.json） ──
-  const handleCreate = async () => {
+  const handleCreate = async (withFolder?: PendingFile[]) => {
     if (!newName.trim()) return;
     try {
       const res = await fetch('/api/resources', {
@@ -87,7 +89,15 @@ export default function SoftwareManager() {
         setShowCreate(false);
         setNewName('');
         setNewDesc('');
+        setPendingFolder(null);
         loadItems();
+        // 如果选了文件夹，创建后直接上传
+        const newId = data.resource?.id || data.id;
+        if (withFolder && withFolder.length > 0 && newId) {
+          const software: Software = { id: newId, name: newName.trim(), description: newDesc.trim(), teacher: username, created_at: new Date().toISOString() };
+          setSelected(software);
+          await uploadBatchFor(software, withFolder);
+        }
       } else {
         const msg = Array.isArray(data.detail)
           ? data.detail.map((e: any) => e.msg || JSON.stringify(e)).join('；')
@@ -281,8 +291,7 @@ export default function SoftwareManager() {
     }
   };
 
-  const uploadBatch = async (files: PendingFile[]) => {
-    if (!selected) return;
+  const uploadBatchFor = async (target: Software, files: PendingFile[]) => {
     setUploading(true);
     setUploadProgress({ done: 0, total: files.length });
     try {
@@ -291,11 +300,19 @@ export default function SoftwareManager() {
         const dir = rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/')) : '';
         const formData = new FormData();
         formData.append('file', file);
-        await fetch(`/api/resources/${encodeURIComponent(selected.id)}/tree/upload?path=${encodeURIComponent(dir)}`, { method: 'POST', body: formData });
+        await fetch(`/api/resources/${encodeURIComponent(target.id)}/tree/upload?path=${encodeURIComponent(dir)}`, { method: 'POST', body: formData });
         setUploadProgress({ done: i + 1, total: files.length });
       }
-      refreshTree();
-    } finally { setUploading(false); setShowDrop(false); }
+      // 上传完刷新
+      const data = await fetch(`/api/resources/${encodeURIComponent(target.id)}/tree?t=${Date.now()}`).then(r => r.json());
+      if (data.status === 'success') setTree(data.tree || []);
+      loadItems();
+    } finally { setUploading(false); }
+  };
+
+  const uploadBatch = async (files: PendingFile[]) => {
+    if (!selected) return;
+    await uploadBatchFor(selected, files);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -434,9 +451,30 @@ export default function SoftwareManager() {
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange resize-none" />
               </div>
             </div>
+            {/* 文件夹上传：创建后自动上传 */}
+            <div>
+              <label className="text-xs text-slate-400 block mb-1">安装包文件夹（可选）</label>
+              <label className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-400 hover:border-brand-orange/50 cursor-pointer transition-colors">
+                <FolderOpen size={14} className="text-brand-orange" />
+                {pendingFolder ? <span className="text-white">{pendingFolder.length} 个文件待上传</span> : '选择文件夹（创建后自动上传）'}
+                <input type="file" multiple className="hidden" {...({ webkitdirectory: '', directory: '' } as any)}
+                  onChange={async e => {
+                    const fileList = e.target.files;
+                    if (!fileList) return;
+                    const files: PendingFile[] = [];
+                    for (let i = 0; i < fileList.length; i++) { const f = fileList[i]; files.push({ rel: (f as any).webkitRelativePath || f.name, file: f }); }
+                    if (files.length > 0) setPendingFolder(files);
+                  }} />
+              </label>
+              {pendingFolder && (
+                <button onClick={() => setPendingFolder(null)} className="text-[10px] text-slate-500 hover:text-slate-300 mt-1">取消选择</button>
+              )}
+            </div>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => { setShowCreate(false); setNewDesc(''); }} className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg">取消</button>
-              <button onClick={handleCreate} className="text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-4 py-2 rounded-lg">创建</button>
+              <button onClick={() => { setShowCreate(false); setNewDesc(''); setPendingFolder(null); }} className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg">取消</button>
+              <button onClick={() => handleCreate(pendingFolder || undefined)} className="text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-4 py-2 rounded-lg">
+                {pendingFolder ? '创建并上传' : '创建'}
+              </button>
             </div>
           </div>
         </div>
