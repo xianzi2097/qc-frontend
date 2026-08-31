@@ -97,6 +97,9 @@ export default function SoftwareManager() {
           const software: Software = { id: newId, name: newName.trim(), description: newDesc.trim(), teacher: username, created_at: new Date().toISOString() };
           setSelected(software);
           await uploadBatchFor(software, withFolder);
+          // 上传完自动加载文件树
+          const treeData = await fetch(`/api/resources/${encodeURIComponent(newId)}/tree?t=${Date.now()}`).then(r => r.json());
+          if (treeData.status === 'success') setTree(treeData.tree || []);
         }
       } else {
         const msg = Array.isArray(data.detail)
