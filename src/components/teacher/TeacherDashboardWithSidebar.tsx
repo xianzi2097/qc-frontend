@@ -86,14 +86,24 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
               <BookOpen size={18} /> 课件管理
             </button>
             <button
-              onClick={() => setActiveTab('resources')}
+              onClick={() => setActiveTab('references')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                activeTab === 'resources'
+                activeTab === 'references'
                   ? 'bg-geek-green text-black font-bold shadow-[0_0_20px_rgba(16,185,129,0.3)]'
                   : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
-              <FolderOpen size={18} /> 资源管理
+              <FolderOpen size={18} /> 资料管理
+            </button>
+            <button
+              onClick={() => setActiveTab('software')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                activeTab === 'software'
+                  ? 'bg-geek-green text-black font-bold shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                  : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+              }`}
+            >
+              <FolderOpen size={18} /> 软件管理
             </button>
             <div className="border-t border-slate-600 pt-3 mt-3">
               <a

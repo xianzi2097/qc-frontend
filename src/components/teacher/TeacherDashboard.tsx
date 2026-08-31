@@ -53,12 +53,23 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
     );
   }
 
-  // ── 资源管理：独立页面 ──
-  if (activeTab === 'resources') {
+  // ── 资料管理：固定 reference 类别 ──
+  if (activeTab === 'references') {
     return (
       <div className="h-full flex flex-col space-y-3 animate-fadeIn">
-        <ErrorBoundary label="资源管理">
-          <ResourcesManager />
+        <ErrorBoundary label="资料管理">
+          <ResourcesManager category="reference" />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
+  // ── 软件管理：固定 download 类别 ──
+  if (activeTab === 'software') {
+    return (
+      <div className="h-full flex flex-col space-y-3 animate-fadeIn">
+        <ErrorBoundary label="软件管理">
+          <ResourcesManager category="download" />
         </ErrorBoundary>
       </div>
     );

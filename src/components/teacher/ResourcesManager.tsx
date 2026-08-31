@@ -18,7 +18,14 @@ const CATEGORIES = [
   { value: 'download', label: '软件下载' },
 ];
 
-export default function ResourcesManager() {
+interface Props {
+  /** 固定类别，传了则自动筛选且隐藏类别选择器 */
+  category?: string;
+  /** 自定义标题 */
+  title?: string;
+}
+
+export default function ResourcesManager({ category: fixedCategory, title }: Props) {
   const { token } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,18 +33,22 @@ export default function ResourcesManager() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newCategory, setNewCategory] = useState('reference');
+  const [newCategory, setNewCategory] = useState(fixedCategory || 'reference');
   const [creating, setCreating] = useState(false);
+
+  // 标题自动推断
+  const headerTitle = title || (fixedCategory === 'download' ? '软件管理' : fixedCategory === 'reference' ? '资料管理' : '资源管理');
 
   const fetchResources = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/resources');
+      const url = fixedCategory ? `/api/resources?category=${fixedCategory}` : '/api/resources';
+      const res = await fetch(url);
       const data = await res.json();
       setResources(data.resources || []);
     } catch { /* ignore */ }
     setLoading(false);
-  }, []);
+  }, [fixedCategory]);
 
   useEffect(() => { fetchResources(); }, [fetchResources]);
 
@@ -82,7 +93,7 @@ export default function ResourcesManager() {
     <div className="h-full flex flex-col animate-fadeIn">
       <div className="flex items-center justify-between px-1 mb-4">
         <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          <FolderOpen className="text-brand-orange" size={20} /> 资源管理
+          <FolderOpen className="text-brand-orange" size={20} /> {headerTitle}
         </h2>
         <div className="flex items-center gap-2">
           <button onClick={fetchResources} className="p-2 text-slate-400 hover:text-white transition-colors" title="刷新">
@@ -90,7 +101,7 @@ export default function ResourcesManager() {
           </button>
           <button onClick={() => setShowCreate(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-brand-orange text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all">
-            <Plus size={16} /> 新建资源
+            <Plus size={16} /> 新建
           </button>
         </div>
       </div>
@@ -104,7 +115,7 @@ export default function ResourcesManager() {
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
             <FolderOpen size={40} strokeWidth={1.2} className="mb-3 opacity-40" />
             <p className="text-sm">暂无资源</p>
-            <p className="text-xs text-slate-600 mt-1">点击「新建资源」创建第一个资源</p>
+            <p className="text-xs text-slate-600 mt-1">点击「新建」创建第一个</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
@@ -148,6 +159,7 @@ export default function ResourcesManager() {
                        className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
                        autoFocus />
               </div>
+              {!fixedCategory && (
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">类别</label>
                 <div className="flex gap-2">
@@ -163,6 +175,7 @@ export default function ResourcesManager() {
                   ))}
                 </div>
               </div>
+              )}
               <button onClick={handleCreate} disabled={creating || !newName.trim()}
                       className="w-full py-2.5 bg-brand-orange text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 {creating ? '创建中...' : '创建'}

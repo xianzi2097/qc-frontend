@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FileText, Download, FolderOpen, Loader2 } from 'lucide-react';
+import { FileText, FolderOpen, Loader2 } from 'lucide-react';
+import ResourceFileTree from './ResourceFileTree';
 
 interface Resource {
+  id: string;
   name: string;
   size: number;
   teacher: string;
@@ -15,10 +17,11 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** 资料栏目 — 参考资料 */
+/** 资料栏目 — 参考资料：点击进文件树浏览；软件：点击直接下载 */
 export default function Resources() {
   const [items, setItems] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Resource | null>(null);
 
   useEffect(() => {
     fetch('/api/resources?category=reference')
@@ -27,6 +30,11 @@ export default function Resources() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // 点击资料 → 进文件树详情
+  if (selected) {
+    return <ResourceFileTree resource={selected} onBack={() => setSelected(null)} />;
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -49,15 +57,14 @@ export default function Resources() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {items.map((r, i) => (
-              <a key={i} href={r.url} target="_blank" rel="noreferrer"
-                 className="group flex items-start gap-3 p-4 border border-ed-line rounded-lg bg-card hover:border-brand hover:shadow-sm transition-all no-underline">
+              <button key={i} onClick={() => setSelected(r)}
+                 className="group flex items-start gap-3 p-4 border border-ed-line rounded-lg bg-card hover:border-brand hover:shadow-sm transition-all text-left cursor-pointer">
                 <FileText size={18} className="text-ed-muted mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-ed-ink truncate group-hover:text-brand transition-colors">{r.name}</p>
                   <p className="text-xs text-ed-muted mt-1">{r.teacher} · {formatSize(r.size)}</p>
                 </div>
-                <Download size={14} className="text-ed-muted opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
-              </a>
+              </button>
             ))}
           </div>
         )}
