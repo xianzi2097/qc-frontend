@@ -7,6 +7,7 @@ import AttendancePanel from './AttendancePanel';
 import SendMessagePanel from './SendMessagePanel';
 import StudentListPanel from './StudentListPanel';
 import CourseManager from './CourseManager';
+import ResourcesManager from './ResourcesManager';
 
 interface TeacherDashboardProps {
   activeTab: string;
@@ -47,6 +48,17 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
       <div className="h-full flex flex-col space-y-3 animate-fadeIn">
         <ErrorBoundary label="课件管理">
           <CourseManager />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
+  // ── 资源管理：独立页面 ──
+  if (activeTab === 'resources') {
+    return (
+      <div className="h-full flex flex-col space-y-3 animate-fadeIn">
+        <ErrorBoundary label="资源管理">
+          <ResourcesManager />
         </ErrorBoundary>
       </div>
     );
