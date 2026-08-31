@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FolderOpen, Upload, Trash2, RefreshCw, FileText, Download, Loader2 } from 'lucide-react';
 import { useAuth } from '../../lib/useAuth';
 
@@ -8,6 +8,12 @@ interface Resource {
   teacher: string;
   url: string;
   category?: string;
+  path?: string;
+}
+
+interface PendingFile {
+  rel: string;
+  file: File;
 }
 
 const CATEGORIES = [
@@ -21,6 +27,28 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** 递归读取拖拽文件夹 */
+async function collectFolder(
+  entries: any[], basePath: string, out: PendingFile[],
+) {
+  for (const entry of entries) {
+    const rel = basePath ? `${basePath}/${entry.name}` : entry.name;
+    if (entry.isFile) {
+      const file = await new Promise<File>((resolve) => entry.file(resolve));
+      out.push({ rel, file });
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader();
+      const children: any[] = [];
+      let batch: any[];
+      do {
+        batch = await new Promise<any[]>((resolve) => reader.readEntries(resolve));
+        children.push(...batch);
+      } while (batch.length > 0);
+      await collectFolder(children, rel, out);
+    }
+  }
+}
+
 export default function ResourcesManager() {
   const { token } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
@@ -28,6 +56,8 @@ export default function ResourcesManager() {
   const [uploading, setUploading] = useState(false);
   const [category, setCategory] = useState('reference');
   const [dragOver, setDragOver] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const folderRef = useRef<HTMLInputElement>(null);
 
   const fetchResources = useCallback(async () => {
     setLoading(true);
@@ -41,20 +71,73 @@ export default function ResourcesManager() {
 
   useEffect(() => { fetchResources(); }, [fetchResources]);
 
-  const handleUpload = async (file: File) => {
+  const uploadBatch = async (files: PendingFile[]) => {
     setUploading(true);
+    setUploadProgress({ done: 0, total: files.length });
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('category', category);
-      const res = await fetch('/api/resources/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      if (res.ok) fetchResources();
+      for (let i = 0; i < files.length; i++) {
+        const { rel, file } = files[i];
+        const dir = rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/')) : '';
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('category', category);
+        formData.append('path', dir);
+        await fetch('/api/resources/upload/tree', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        setUploadProgress({ done: i + 1, total: files.length });
+      }
+      fetchResources();
     } catch { /* ignore */ }
     setUploading(false);
+  };
+
+  /** 拖拽文件/文件夹 */
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (uploading) return;
+
+    const items = e.dataTransfer.items;
+    if (!items) return;
+    const entries: any[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const entry = (items[i] as any).webkitGetAsEntry?.();
+      if (entry) entries.push(entry);
+    }
+    if (entries.length === 0) return;
+
+    const files: PendingFile[] = [];
+    await collectFolder(entries, '', files);
+    if (files.length === 0) return;
+    await uploadBatch(files);
+  };
+
+  /** 选择文件夹上传 */
+  const handleFolderPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList || uploading) return;
+    const files: PendingFile[] = [];
+    for (let i = 0; i < fileList.length; i++) {
+      const f = fileList[i];
+      files.push({ rel: (f as any).webkitRelativePath || f.name, file: f });
+    }
+    if (files.length === 0) return;
+    await uploadBatch(files);
+    e.target.value = '';
+  };
+
+  /** 单文件上传（兼容旧逻辑） */
+  const handleUpload = async (file: File) => {
+    await uploadBatch([{ rel: file.name, file }]);
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleUpload(file);
+    e.target.value = '';
   };
 
   const handleDelete = async (teacher: string, filename: string) => {
@@ -64,12 +147,6 @@ export default function ResourcesManager() {
       headers: { Authorization: `Bearer ${token}` },
     });
     fetchResources();
-  };
-
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleUpload(file);
-    e.target.value = '';
   };
 
   return (
@@ -104,25 +181,48 @@ export default function ResourcesManager() {
           ))}
         </div>
 
-        <label
-          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleUpload(f); }}
-          className={`flex flex-col items-center justify-center py-8 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-            dragOver ? 'border-brand-orange bg-brand-orange/10' : 'border-slate-600 hover:border-slate-400'
-          }`}
-        >
-          {uploading ? (
+        {uploading ? (
+          <div className="flex flex-col items-center justify-center py-8">
             <Loader2 size={24} className="text-brand-orange animate-spin mb-2" />
-          ) : (
-            <Upload size={24} className="text-slate-500 mb-2" />
-          )}
-          <span className="text-sm text-slate-400">
-            {uploading ? '上传中...' : '点击选择文件，或拖拽到这里'}
-          </span>
-          <span className="text-xs text-slate-600 mt-1">最大 200MB</span>
-          <input type="file" className="hidden" onChange={onFileChange} disabled={uploading} />
-        </label>
+            <span className="text-sm text-slate-400">
+              上传中 {uploadProgress.done}/{uploadProgress.total}
+            </span>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            {/* 拖拽区域 */}
+            <label
+              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              className={`flex-1 flex flex-col items-center justify-center py-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                dragOver ? 'border-brand-orange bg-brand-orange/10' : 'border-slate-600 hover:border-slate-400'
+              }`}
+            >
+              <Upload size={20} className="text-slate-500 mb-1" />
+              <span className="text-sm text-slate-400">拖拽文件或文件夹到这里</span>
+              <span className="text-xs text-slate-600 mt-1">支持多级目录，最大 200MB/文件</span>
+              <input type="file" className="hidden" onChange={onFileChange} multiple />
+            </label>
+
+            {/* 选择文件夹按钮 */}
+            <label
+              onClick={() => folderRef.current?.click()}
+              className="flex flex-col items-center justify-center px-6 py-6 border-2 border-dashed border-slate-600 rounded-xl cursor-pointer hover:border-slate-400 transition-all"
+            >
+              <FolderOpen size={20} className="text-slate-500 mb-1" />
+              <span className="text-sm text-slate-400">选择文件夹</span>
+              <span className="text-xs text-slate-600 mt-1">保留目录结构上传</span>
+            </label>
+            <input
+              ref={folderRef}
+              type="file"
+              className="hidden"
+              {...{ webkitdirectory: '', directory: '' } as any}
+              onChange={handleFolderPick}
+            />
+          </div>
+        )}
       </div>
 
       {/* 资源列表 */}
@@ -135,7 +235,7 @@ export default function ResourcesManager() {
           <div className="flex flex-col items-center justify-center py-12 text-slate-500">
             <FolderOpen size={36} className="mb-3 opacity-40" />
             <p className="text-sm">暂无资源</p>
-            <p className="text-xs text-slate-600 mt-1">上传文件后将显示在这里</p>
+            <p className="text-xs text-slate-600 mt-1">上传文件或文件夹后将显示在这里</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-800">
