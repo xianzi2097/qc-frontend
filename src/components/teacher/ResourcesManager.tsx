@@ -61,7 +61,7 @@ export default function ResourcesManager({ category }: { category: string }) {
         .then(r => r.json())
         .then(data => {
           if (data.status === 'success') {
-            setCourses(data.courses);
+            setCourses(data.courses || data.resources || []);
           } else {
             setError(data.detail || '加载失败');
           }
