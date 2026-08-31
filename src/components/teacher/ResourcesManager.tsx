@@ -10,11 +10,6 @@ import { useAuth } from '../../lib/useAuth';
 import type { Course, TreeNode } from '../../types/course';
 import { TYPE_LUCIDE, TYPE_OPTIONS, FORMAT_OPTIONS, FORMAT_LABEL } from '../../types/course';
 
-interface Props {
-  /** 固定类别：reference=资料，download=软件 */
-  category: string;
-}
-
 // ── 拖拽组件 ──
 function SortableItem({ id, children, className = '', dragHandle }: {
   id: string; children: React.ReactNode; className?: string; dragHandle?: React.ReactNode;
@@ -38,13 +33,10 @@ function SortableItem({ id, children, className = '', dragHandle }: {
   );
 }
 
-export default function ResourcesManager({ category }: Props) {
+export default function ResourcesManager({ category }: { category: string }) {
   const { username } = useAuth();
   const { wrap } = useLoading();
   const [courses, setCourses] = useState<Course[]>([]);
-
-  // 标题根据 category 自动推断
-  const headerTitle = category === 'download' ? '软件管理' : '资料管理';
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
@@ -69,14 +61,14 @@ export default function ResourcesManager({ category }: Props) {
         .then(r => r.json())
         .then(data => {
           if (data.status === 'success') {
-            setCourses(data.courses || data.resources || []);
+            setCourses(data.courses);
           } else {
             setError(data.detail || '加载失败');
           }
         }),
-      '加载资源列表...'
+      '加载课程列表...'
     ).catch(() => setError('无法连接服务器'));
-  }, [username, category]);
+  }, [username]);
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
 
@@ -86,7 +78,7 @@ export default function ResourcesManager({ category }: Props) {
       const res = await fetch('/api/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: newFormat, tags: newTags, description: newDesc.trim(), category }),
+        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: newFormat, tags: newTags, description: newDesc.trim() }),
       });
       const data = await res.json();
       if (data.status === 'success') {
@@ -534,7 +526,7 @@ export default function ResourcesManager({ category }: Props) {
       {/* 标题栏 */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          <BookOpen className="text-brand-orange" size={20} /> {headerTitle}
+          <BookOpen className="text-brand-orange" size={20} /> 资料管理
         </h2>
         <div className="flex gap-2">
           <button
@@ -553,7 +545,7 @@ export default function ResourcesManager({ category }: Props) {
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-3 py-1.5 rounded-lg transition-colors"
           >
-            <Plus size={14} /> 新建
+            <Plus size={14} /> 新建课程
           </button>
         </div>
       </div>
@@ -571,7 +563,7 @@ export default function ResourcesManager({ category }: Props) {
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
                   disabled={newFormat === 'ebook'}
-                  placeholder={newFormat === 'ebook' ? '上传后自动获取' : '输入资源名称'}
+                  placeholder={newFormat === 'ebook' ? '上传后自动获取' : '输入课程名称'}
                   className={`w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-brand-orange ${newFormat === 'ebook' ? 'text-slate-500 cursor-not-allowed' : 'text-white'}`}
                 />
                 {/* 标签放在名称下方 */}
@@ -685,7 +677,7 @@ export default function ResourcesManager({ category }: Props) {
       {/* 课程列表 */}
       {courses.length === 0 ? (
         <div className="text-sm text-slate-500 bg-slate-900/50 border border-slate-600 rounded-2xl p-8 text-center">
-          暂无资源，点击「新建」开始创建
+          暂无课程，点击「新建课程」开始创建
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -899,7 +891,7 @@ export default function ResourcesManager({ category }: Props) {
           onClick={e => { if (e.target === e.currentTarget) setShowTrash(false); }}>
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[500px] max-h-[70vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-600">
-              <span className="text-sm text-white font-bold flex items-center gap-2"><Trash2 size={16} /> 资源回收站</span>
+              <span className="text-sm text-white font-bold flex items-center gap-2"><Trash2 size={16} /> 课程回收站</span>
               <button onClick={() => setShowTrash(false)} className="text-slate-400 hover:text-white p-1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
             </div>
             <div className="flex-1 overflow-auto p-4 space-y-2">
@@ -974,7 +966,7 @@ export default function ResourcesManager({ category }: Props) {
       {createPortal(editingCourse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setEditingCourse(null); }}>
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-[65vw] max-h-[85vh] overflow-auto p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-white mb-4">编辑资源</h3>
+            <h3 className="text-sm font-bold text-white mb-4">编辑课程</h3>
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex-1">
