@@ -41,7 +41,6 @@ export default function SoftwareManager() {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [newType, setNewType] = useState('scratch');
   const [newTags, setNewTags] = useState<string[]>([]);
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
@@ -77,7 +76,7 @@ export default function SoftwareManager() {
       const res = await fetch('/api/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: 'folder', tags: newTags, description: newDesc.trim() }),
+        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: 'scratch', format: 'folder', tags: newTags, description: newDesc.trim() }),
       });
       const data = await res.json();
       if (data.status === 'success') {
@@ -248,7 +247,6 @@ export default function SoftwareManager() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
-  const [editType, setEditType] = useState('scratch');
   const [editTags, setEditTags] = useState<string[]>([]);
   const [editTagInput, setEditTagInput] = useState('');
   const [showEditTagInput, setShowEditTagInput] = useState(false);
@@ -257,7 +255,6 @@ export default function SoftwareManager() {
     setEditingCourse(course);
     setEditName(course.name);
     setEditDesc(course.description || '');
-    setEditType(course.type);
     setEditTags(course.tags || []);
     setEditTagInput('');
     setShowEditTagInput(false);
@@ -271,7 +268,7 @@ export default function SoftwareManager() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editName.trim(), description: editDesc.trim(),
-          tags: editTags, course_type: editType, format: 'folder',
+          tags: editTags, course_type: 'scratch', format: 'folder',
         }),
       });
       const data = await res.json();
@@ -523,7 +520,7 @@ export default function SoftwareManager() {
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-3 py-1.5 rounded-lg transition-colors"
           >
-            <Plus size={14} /> 新建软件
+            <Plus size={14} /> 上传软件
           </button>
         </div>
       </div>
@@ -531,7 +528,7 @@ export default function SoftwareManager() {
       {/* 新建软件弹窗 */}
       {showCreate && (
         <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6">
-          <h3 className="text-sm font-bold text-white mb-4">新建软件</h3>
+          <h3 className="text-sm font-bold text-white mb-4">上传软件</h3>
           <div className="space-y-2">
             {/* 软件名称 + 描述（左右分栏） */}
             <div className="flex gap-3">
@@ -577,25 +574,6 @@ export default function SoftwareManager() {
                       >+</button>
                     )}
                   </div>
-                <div>
-              <label className="text-xs text-slate-400 block mb-1 mt-2">软件类型</label>
-              <div className="flex gap-2">
-                {TYPE_OPTIONS.map(o => (
-                  <button
-                    key={o.value}
-                    onClick={() => setNewType(o.value)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                      newType === o.value
-                        ? 'border-current/50'
-                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
-                    }`}
-                    style={newType === o.value ? { color: o.color, backgroundColor: `${o.color}15` } : {}}
-                  >
-                    <o.Icon size={14} style={newType === o.value ? { color: o.color } : {}} /> {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
                 </div>
               </div>
               <div className="flex-1">
@@ -636,7 +614,7 @@ export default function SoftwareManager() {
       {/* 软件列表 */}
       {courses.length === 0 ? (
         <div className="text-sm text-slate-500 bg-slate-900/50 border border-slate-600 rounded-2xl p-8 text-center">
-          暂无软件，点击「新建软件」开始创建
+          暂无软件，点击「上传软件」开始创建
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -944,18 +922,6 @@ export default function SoftwareManager() {
                     <button onClick={() => setShowEditTagInput(true)}
                       className="w-6 h-6 rounded-full bg-slate-700 hover:bg-cyan-400/20 text-slate-400 hover:text-cyan-400 flex items-center justify-center text-sm transition-colors">+</button>
                   )}
-                </div>
-              </div>
-              <div>
-                <label className="text-xs text-slate-400 block mb-1 mt-2">软件类型</label>
-                <div className="flex gap-2">
-                  {TYPE_OPTIONS.map(o => (
-                    <button key={o.value} onClick={() => setEditType(o.value)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${editType === o.value ? 'border-current/50' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}
-                      style={editType === o.value ? { color: o.color, backgroundColor: `${o.color}15` } : {}}>
-                      <o.Icon size={14} style={editType === o.value ? { color: o.color } : {}} /> {o.label}
-                    </button>
-                  ))}
                 </div>
               </div>
                 
