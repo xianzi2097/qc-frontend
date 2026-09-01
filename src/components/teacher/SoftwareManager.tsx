@@ -76,7 +76,7 @@ export default function SoftwareManager() {
       const res = await fetch('/api/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: 'scratch', format: 'folder', tags: newTags, description: newDesc.trim() }),
+        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: 'scratch', format: 'folder', category: 'download', tags: newTags, description: newDesc.trim() }),
       });
       const data = await res.json();
       if (data.status === 'success') {
