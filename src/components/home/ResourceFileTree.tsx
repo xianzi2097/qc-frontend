@@ -89,6 +89,40 @@ export default function ResourceFileTree({ resource, onBack }: Props) {
           <CenterNote text="加载中…" />
         ) : materials.length === 0 ? (
           <CenterNote text="暂无文件" />
+        ) : materials.length === 1 && (materials[0].tree?.length ?? 0) === 1 && materials[0].tree![0].type === 'file' ? (
+          /* ── 单文件模式：只有一个文件，不显示文件夹层，直接打开/下载 ── */
+          (() => {
+            const m = materials[0];
+            const f = m.tree![0];
+            const fileUrl = shareHref(m.url, f.path || f.name);
+            return (
+              <div className="flex flex-col items-center justify-center gap-6 py-16">
+                <FileText size={48} strokeWidth={1.2} className="text-brand" />
+                <div className="text-center">
+                  <p className="text-base font-semibold text-ed-ink truncate max-w-md">{f.name}</p>
+                  <p className="text-xs text-ed-muted mt-1">
+                    {typeof f.size === 'number' ? formatSize(f.size) : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all no-underline"
+                  >
+                    <ExternalLink size={15} /> 打开
+                  </a>
+                  <a
+                    href={`/api/resources/${encodeURIComponent(resource.id)}/download`}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-ed-ink text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all no-underline"
+                  >
+                    <Download size={15} /> 下载
+                  </a>
+                </div>
+              </div>
+            );
+          })()
         ) : (
           <div className="flex flex-col gap-6 py-6">
             {materials.map(m => {
