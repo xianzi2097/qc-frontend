@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft, ArrowUpRight, BookOpen, ChevronDown, ChevronRight, ExternalLink,
+  ArrowLeft, ArrowUpRight, BookOpen, ChevronDown, ChevronRight,
   FileText, Folder, FolderOpen,
 } from 'lucide-react';
 import { fetchMaterials } from '../../lib/api';
@@ -48,17 +48,6 @@ export default function CourseDetail({ course, onBack }: Props) {
         </button>
         <div className="flex items-center gap-4">
           <span className="text-sm font-semibold text-ed-ink">{course.name}</span>
-          {ebookOk && (
-            <a
-              href={`/course/${course.id}/`}
-              target="_blank"
-              rel="noreferrer"
-              title="新窗口打开"
-              className="p-1 rounded-md text-ed-muted hover:text-brand hover:bg-black/[0.04] transition-colors no-underline"
-            >
-              <ExternalLink size={14} />
-            </a>
-          )}
         </div>
       </header>
 
