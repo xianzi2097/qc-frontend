@@ -8,15 +8,23 @@
 export const SEAMLESS_CSS = `
   :root {
     --vp-nav-height: 0px !important;
-    --cn-sidebar-width: 228px;
   }
   .VPNavBar {
     display: none !important;
   }
-  /* VitePress 侧边栏宽度由 JS 动态注入（跟随父窗口缩放） */
+  /* VitePress 侧边栏：zoom 整体缩放，正文保持原样
+     断点基于 iframe 视口（≈父窗口 − 主页侧边栏） */
   .VPSidebar {
-    width: var(--cn-sidebar-width) !important;
-    transition: width 0.2s ease !important;
+    width: 272px !important;
+    transform-origin: left top;
+    zoom: 0.84 !important;
+    transition: zoom 0.2s ease !important;
+  }
+  @media (min-width: 1272px) {
+    .VPSidebar { zoom: 1.0 !important; }
+  }
+  @media (min-width: 1872px) {
+    .VPSidebar { zoom: 1.1 !important; }
   }
   ::-webkit-scrollbar {
     width: 6px;
@@ -44,22 +52,42 @@ export function injectSeamless(frame: HTMLIFrameElement | null): void {
   style.textContent = SEAMLESS_CSS;
   doc.head.appendChild(style);
 
-  // 注入 JS：读取父窗口宽度 → 同步侧边栏 width
+  // 注入 JS：同步内容区 padding + 主题色到 iframe
   const syncScript = doc.createElement('script');
   syncScript.textContent = `
     (function() {
       var W = window.parent;
-      function getW() { return W ? W.innerWidth : window.innerWidth; }
-      function sync() {
-        var w = getW();
-        var sw = w >= 2560 ? 360 : w >= 1920 ? 300 : 228;
-        document.documentElement.style.setProperty('--cn-sidebar-width', sw + 'px');
-        // 内容区 padding 同步
+      function syncPadding() {
+        var sidebar = document.querySelector('.VPSidebar');
+        if (!sidebar) return;
+        var zoom = parseFloat(getComputedStyle(sidebar).zoom) || 1;
+        var sw = Math.round(272 * zoom);
         var content = document.querySelector('.VPContent.has-sidebar');
         if (content) content.style.paddingLeft = sw + 'px';
       }
-      sync();
-      if (W) W.addEventListener('resize', sync);
+      // 同步主题色相到 iframe
+      function syncTheme() {
+        if (!W) return;
+        var parentHTML = W.document.documentElement;
+        var theme = parentHTML.getAttribute('data-theme') || '';
+        var customHue = W.getComputedStyle(parentHTML).getPropertyValue('--custom-hue').trim();
+        var root = document.documentElement;
+        if (theme) {
+          root.setAttribute('data-theme', theme);
+          if (theme === 'custom' && customHue) {
+            root.style.setProperty('--custom-hue', customHue);
+          }
+        } else {
+          root.removeAttribute('data-theme');
+          root.style.removeProperty('--custom-hue');
+        }
+      }
+      syncPadding(); syncTheme();
+      if (W) {
+        W.addEventListener('resize', syncPadding);
+        // 主题变化时同步（MutationObserver 监听 data-theme 变化）
+        new MutationObserver(syncTheme).observe(W.document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+      }
     })();
   `;
   doc.head.appendChild(syncScript);
