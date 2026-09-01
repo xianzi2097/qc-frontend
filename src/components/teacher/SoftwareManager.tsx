@@ -8,7 +8,7 @@ import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
 import type { Course, TreeNode } from '../../types/course';
-import { TYPE_LUCIDE, TYPE_OPTIONS, FORMAT_OPTIONS, FORMAT_LABEL } from '../../types/course';
+import { TYPE_LUCIDE, TYPE_OPTIONS, FORMAT_LABEL } from '../../types/course';
 
 // ── 拖拽组件 ──
 function SortableItem({ id, children, className = '', dragHandle }: {
@@ -42,7 +42,6 @@ export default function SoftwareManager() {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newType, setNewType] = useState('scratch');
-  const [newFormat, setNewFormat] = useState('scratch');
   const [newTags, setNewTags] = useState<string[]>([]);
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
@@ -73,12 +72,12 @@ export default function SoftwareManager() {
   useEffect(() => { loadCourses(); }, [loadCourses]);
 
   const handleCreate = async () => {
-    if (newFormat !== 'ebook' && !newName.trim()) return;
+    if (!newName.trim()) return;
     try {
       const res = await fetch('/api/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: newFormat, tags: newTags, description: newDesc.trim() }),
+        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: 'folder', tags: newTags, description: newDesc.trim() }),
       });
       const data = await res.json();
       if (data.status === 'success') {
@@ -250,7 +249,6 @@ export default function SoftwareManager() {
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editType, setEditType] = useState('scratch');
-  const [editFormat, setEditFormat] = useState('scratch');
   const [editTags, setEditTags] = useState<string[]>([]);
   const [editTagInput, setEditTagInput] = useState('');
   const [showEditTagInput, setShowEditTagInput] = useState(false);
@@ -260,7 +258,6 @@ export default function SoftwareManager() {
     setEditName(course.name);
     setEditDesc(course.description || '');
     setEditType(course.type);
-    setEditFormat(course.format || 'folder');
     setEditTags(course.tags || []);
     setEditTagInput('');
     setShowEditTagInput(false);
@@ -274,7 +271,7 @@ export default function SoftwareManager() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editName.trim(), description: editDesc.trim(),
-          tags: editTags, course_type: editType, format: editFormat,
+          tags: editTags, course_type: editType, format: 'folder',
         }),
       });
       const data = await res.json();
@@ -539,13 +536,12 @@ export default function SoftwareManager() {
             {/* 软件名称 + 描述（左右分栏） */}
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-xs text-slate-400 block mb-1">软件名称{newFormat === 'ebook' && <span className="text-slate-500 ml-1">（由上传文件名决定）</span>}</label>
+                <label className="text-xs text-slate-400 block mb-1">软件名称</label>
                 <input
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  disabled={newFormat === 'ebook'}
-                  placeholder={newFormat === 'ebook' ? '上传后自动获取' : '输入软件名称'}
-                  className={`w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-brand-orange ${newFormat === 'ebook' ? 'text-slate-500 cursor-not-allowed' : 'text-white'}`}
+                  placeholder="输入软件名称"
+                  className="w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
                 />
                 {/* 标签放在名称下方 */}
                 <div className="mt-2">
@@ -596,24 +592,6 @@ export default function SoftwareManager() {
                     style={newType === o.value ? { color: o.color, backgroundColor: `${o.color}15` } : {}}
                   >
                     <o.Icon size={14} style={newType === o.value ? { color: o.color } : {}} /> {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="text-xs text-slate-400 block mb-1 mt-2">打开方式</label>
-              <div className="flex gap-2">
-                {FORMAT_OPTIONS.map(o => (
-                  <button
-                    key={o.value}
-                    onClick={() => { setNewFormat(o.value); if (o.value === 'ebook') setNewName(''); }}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                      newFormat === o.value
-                        ? 'bg-cyan-400/10 border-cyan-400/50 text-cyan-400'
-                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
-                    }`}
-                  >
-                    <o.Icon size={14} /> {o.label}
                   </button>
                 ))}
               </div>
@@ -976,17 +954,6 @@ export default function SoftwareManager() {
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${editType === o.value ? 'border-current/50' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}
                       style={editType === o.value ? { color: o.color, backgroundColor: `${o.color}15` } : {}}>
                       <o.Icon size={14} style={editType === o.value ? { color: o.color } : {}} /> {o.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-xs text-slate-400 block mb-1 mt-2">打开方式</label>
-                <div className="flex gap-2">
-                  {FORMAT_OPTIONS.map(o => (
-                    <button key={o.value} onClick={() => { setEditFormat(o.value); if (o.value === 'ebook') setEditName(''); }}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${editFormat === o.value ? 'bg-cyan-400/10 border-cyan-400/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}>
-                      <o.Icon size={14} /> {o.label}
                     </button>
                   ))}
                 </div>
