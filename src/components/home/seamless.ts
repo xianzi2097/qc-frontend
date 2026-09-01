@@ -8,9 +8,15 @@
 export const SEAMLESS_CSS = `
   :root {
     --vp-nav-height: 0px !important;
+    --cn-sidebar-width: 228px;
   }
   .VPNavBar {
     display: none !important;
+  }
+  /* VitePress 侧边栏宽度由 JS 动态注入（跟随父窗口缩放） */
+  .VPSidebar {
+    width: var(--cn-sidebar-width) !important;
+    transition: width 0.2s ease !important;
   }
   ::-webkit-scrollbar {
     width: 6px;
@@ -32,7 +38,29 @@ export const SEAMLESS_CSS = `
 export function injectSeamless(frame: HTMLIFrameElement | null): void {
   const doc = frame?.contentDocument;
   if (!doc?.head) return;
+
+  // 注入 CSS
   const style = doc.createElement('style');
   style.textContent = SEAMLESS_CSS;
   doc.head.appendChild(style);
+
+  // 注入 JS：读取父窗口宽度 → 同步侧边栏 width
+  const syncScript = doc.createElement('script');
+  syncScript.textContent = `
+    (function() {
+      var W = window.parent;
+      function getW() { return W ? W.innerWidth : window.innerWidth; }
+      function sync() {
+        var w = getW();
+        var sw = w >= 2560 ? 360 : w >= 1920 ? 300 : 228;
+        document.documentElement.style.setProperty('--cn-sidebar-width', sw + 'px');
+        // 内容区 padding 同步
+        var content = document.querySelector('.VPContent.has-sidebar');
+        if (content) content.style.paddingLeft = sw + 'px';
+      }
+      sync();
+      if (W) W.addEventListener('resize', sync);
+    })();
+  `;
+  doc.head.appendChild(syncScript);
 }
