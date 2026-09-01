@@ -38,7 +38,7 @@ export default function ResourceFileTree({ resource, onBack }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <header className="flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
+      <header className="ed-header flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
         <button
           onClick={onBack}
           className="group flex items-center gap-1.5 text-xs text-ed-muted hover:text-brand transition-colors cursor-pointer"

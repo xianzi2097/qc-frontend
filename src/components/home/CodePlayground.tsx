@@ -214,7 +214,7 @@ export default function CodePlayground({ language }: Props) {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* ── Header ── */}
-      <header className="flex items-center justify-between px-8 pt-2 pb-2 border-b border-ed-line">
+      <header className="ed-header flex items-center justify-between px-8 pt-2 pb-2 border-b border-ed-line">
         <h2 className="text-base font-semibold text-ed-ink">{isLocal ? 'HTML 演示' : '在线编译器'}</h2>
         <div className="flex items-center gap-4">
           {!isLocal && <StatusIndicator status={judgeStatus} />}
@@ -271,7 +271,7 @@ export default function CodePlayground({ language }: Props) {
       <div className="flex-1 flex min-h-0">
         {/* 左：代码编辑器 */}
         <div className="w-1/2 min-h-0 border-r border-ed-line flex flex-col relative">
-          <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line ed-toolbar">
             <span className="text-xs font-medium text-ed-muted">{langConf.name} 代码</span>
             {!isLocal && <span className="text-xs text-ed-muted/60 ml-auto">Ctrl+Enter 运行</span>}
           </div>
@@ -282,7 +282,7 @@ export default function CodePlayground({ language }: Props) {
         {isLocal ? (
           /* HTML：实时预览 */
           <div className="w-1/2 min-h-0 flex flex-col">
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line ed-toolbar">
               <span className="text-xs font-medium text-ed-muted">实时预览</span>
             </div>
             <iframe
@@ -296,7 +296,7 @@ export default function CodePlayground({ language }: Props) {
           /* Python/C++：输入 + 输出 */
           <div className="w-1/2 min-h-0 flex flex-col">
             <div className="h-2/5 min-h-0 flex flex-col border-b border-ed-line">
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line ed-toolbar">
                 <span className="text-xs font-medium text-ed-muted">输入</span>
               </div>
               <textarea
@@ -308,7 +308,7 @@ export default function CodePlayground({ language }: Props) {
               />
             </div>
             <div className="flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line bg-ed-paper">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-ed-line ed-toolbar">
                 <span className="text-xs font-medium text-ed-muted">输出</span>
               </div>
               <pre className="flex-1 w-full p-4 font-mono text-sm leading-relaxed text-ed-ink bg-white overflow-auto whitespace-pre-wrap">
@@ -326,7 +326,7 @@ export default function CodePlayground({ language }: Props) {
       </div>
 
       {/* ── 底部状态栏 ── */}
-      <footer className="flex items-center gap-3 px-4 py-1.5 border-t border-ed-line bg-ed-paper text-[11px] text-ed-muted">
+      <footer className="flex items-center gap-3 px-4 py-1.5 border-t border-ed-line ed-toolbar text-[11px] text-ed-muted">
         <span>{langConf.name} {langConf.version}</span>
         <span>·</span>
         <span>UTF-8</span>

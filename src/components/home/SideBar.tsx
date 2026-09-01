@@ -194,7 +194,7 @@ export default function SideBar({
       <aside
         onMouseOver={handleOver}
         onMouseOut={handleOut}
-      className={`${rail ? 'w-14' : 'w-60'} flex-shrink-0 flex flex-col bg-ed-paper border-r border-ed-line overflow-hidden transition-[width] duration-300 ease-in-out`}
+      className={`${rail ? 'w-14' : 'w-60'} flex-shrink-0 flex flex-col bg-ed-paper border-r-[1.5px] border-ed-line overflow-hidden transition-[width] duration-300 ease-in-out`}
     >
       {/* 顶部：图标栏仅 Logo（点击展开）；展开态为字标 + 收起开关 */}
       <div className={`flex-shrink-0 flex items-center py-4 ${rail ? 'justify-center px-2' : 'justify-between px-5'}`}>

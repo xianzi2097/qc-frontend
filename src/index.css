@@ -24,10 +24,11 @@
     --page-bg:         oklch(0.988 0.003 var(--seed-hue));
     --page-bg-subtle:  oklch(0.980 0.006 var(--seed-hue));
     --sidebar-bg:      oklch(0.982 0.015 var(--seed-hue));  /* = #FAF9F5 当 H=95 */
+    --toolbar-bg:      oklch(0.990 0.010 var(--seed-hue));  /* 编辑器工具栏：稍深于侧边栏 */
     --card-bg:         oklch(0.993 0.002 var(--seed-hue));
 
     /* 边框 */
-    --border-default:  oklch(0.955 0.012 var(--seed-hue));
+    --border-default:  oklch(0.938 0.012 var(--seed-hue));
     --border-hover:    oklch(0.92  0.04  var(--seed-hue));
 
     /* 交互/强调 */
@@ -70,7 +71,7 @@
 }
 
 /* 全局基础样式 — 以 1366×768（14"笔记本）为基准 */
-html { font-size: 95%; } /* 16px × 0.88 ≈ 14.1px */
+html { font-size: 88%; } /* 16px × 0.88 ≈ 14.1px */
 
 body {
   background-color: var(--color-cyber-bg);
@@ -424,12 +425,18 @@ input[type="range"]::-moz-range-thumb {
    ══════════════════════════════════════ */
 @theme {
   --color-ed-paper: var(--sidebar-bg);   /* 跟随主题：浅色主题色底 */
+  --color-ed-header: var(--sidebar-bg);  /* 顶部标题栏背景，跟侧边栏同色 */
+  --color-ed-toolbar: var(--toolbar-bg);  /* 编辑器工具栏背景，独立 oklch 值 */
   --color-ed-ink: #16181d;     /* 近黑标题墨色 */
   --color-ed-body: #3f4550;    /* 正文 */
   --color-ed-muted: #8a8f98;   /* 次要信息灰 */
   --color-ed-line: var(--border-default);    /* 跟随主题：带色相的 hairline */
   --font-ed-serif: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'STZhongsong', 'SimSun', serif;
 }
+
+/* 顶部标题栏：独立背景色 */
+.ed-header { background-color: var(--color-ed-header); }
+.ed-toolbar { background-color: var(--color-ed-toolbar); }
 
 /* 本地自带的无衬线字体（内网可用，public/fonts 随包分发） */
 @font-face {
