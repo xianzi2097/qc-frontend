@@ -53,7 +53,7 @@ export default function Resources() {
       </header>
 
       {/* ── 类型筛选（原老师筛选位置） ── */}
-      <div className="flex-shrink-0 overflow-x-auto border-b border-ed-line px-8" style={{ scrollbarWidth: 'none' }}>
+      <div className="ed-toolbar flex-shrink-0 overflow-x-auto border-b border-ed-line px-8" style={{ scrollbarWidth: 'none' }}>
         <TextTabs
           className="w-max"
           accent="#16181d"

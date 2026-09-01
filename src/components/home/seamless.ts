@@ -58,12 +58,22 @@ export function injectSeamless(frame: HTMLIFrameElement | null): void {
     (function() {
       var W = window.parent;
       function syncPadding() {
+        var content = document.querySelector('.VPContent');
+        if (!content) return;
+        // iframe 视口 <960px：VitePress 自己的侧边栏隐藏逻辑接管，不留 padding
+        if (window.innerWidth < 960) {
+          content.style.paddingLeft = '';
+          return;
+        }
+        // 无侧边栏的页面（如首页）：不留 padding
+        if (!content.classList.contains('has-sidebar')) {
+          content.style.paddingLeft = '';
+          return;
+        }
+        // 宽屏且有侧边栏：按 zoom 后的视觉宽度设置 padding
         var sidebar = document.querySelector('.VPSidebar');
-        if (!sidebar) return;
-        var zoom = parseFloat(getComputedStyle(sidebar).zoom) || 1;
-        var sw = Math.round(272 * zoom);
-        var content = document.querySelector('.VPContent.has-sidebar');
-        if (content) content.style.paddingLeft = sw + 'px';
+        var zoom = sidebar ? (parseFloat(getComputedStyle(sidebar).zoom) || 1) : 1;
+        content.style.paddingLeft = Math.round(272 * zoom) + 'px';
       }
       // 同步主题色相到 iframe
       function syncTheme() {
@@ -87,6 +97,11 @@ export function injectSeamless(frame: HTMLIFrameElement | null): void {
         W.addEventListener('resize', syncPadding);
         // 主题变化时同步（MutationObserver 监听 data-theme 变化）
         new MutationObserver(syncTheme).observe(W.document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+      }
+      // SPA 切换页面时 .has-sidebar 会变，重新同步 padding（避免旧页面残留）
+      var vpContent = document.querySelector('.VPContent');
+      if (vpContent) {
+        new MutationObserver(syncPadding).observe(vpContent, {attributes: true, attributeFilter: ['class']});
       }
     })();
   `;

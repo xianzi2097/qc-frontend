@@ -1,24 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Code2, Cog, Download, Folder, Puzzle } from 'lucide-react';
-import TextTabs from './TextTabs';
+
 import ResourceFileTree from './ResourceFileTree';
 import { fetchResources, fetchTeacherNames } from '../../lib/api';
 import { FORMAT_LABEL } from '../../types/course';
 import type { Course } from '../../types/course';
 
-const TYPE_TABS = [
-  { value: '全部', label: '全部' },
-  { value: 'scratch', label: 'Scratch' },
-  { value: 'python', label: 'Python' },
-  { value: 'cpp', label: 'C++' },
-];
+
 
 const TYPE_ICON = { scratch: Puzzle, python: Code2, cpp: Cog } as const;
 const TYPE_COLOR: Record<string, string> = { scratch: 'var(--color-brand)', python: '#22c55e', cpp: '#94a3b8' };
 
 /** 软件下载 — 内容区视图：编号条目 + hairline 分隔；点击条目进入 ResourceFileTree 内容视图 */
 export default function Downloads() {
-  const [courseType, setCourseType] = useState('全部');
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Course | null>(null);
@@ -35,10 +30,7 @@ export default function Downloads() {
     return () => { stale = true; };
   }, []);
 
-  const visible = useMemo(
-    () => courses.filter(c => courseType === '全部' || c.type === courseType),
-    [courses, courseType],
-  );
+
 
   // 选中软件 → 整个内容区切换为内容视图（文件树）
   if (selected) {
@@ -52,28 +44,15 @@ export default function Downloads() {
         <h2 className="text-base font-semibold text-ed-ink">软件下载</h2>
       </header>
 
-      {/* ── 类型筛选（原老师筛选位置） ── */}
-      <div className="flex-shrink-0 overflow-x-auto border-b border-ed-line px-8" style={{ scrollbarWidth: 'none' }}>
-        <TextTabs
-          className="w-max"
-          accent="#16181d"
-          value={courseType}
-          onChange={setCourseType}
-          items={TYPE_TABS}
-        />
-      </div>
-
       {/* ── 软件列表 ── */}
       <div className="flex-1 overflow-y-auto min-h-0 px-8 pb-8" style={{ scrollbarWidth: 'thin' }}>
         {loading ? (
           <CenterNote text="加载中…" />
         ) : courses.length === 0 ? (
           <CenterNote text="暂无软件" />
-        ) : visible.length === 0 ? (
-          <CenterNote text="该类型暂无软件" />
         ) : (
           <div>
-            {visible.map((c, i) => {
+            {courses.map((c, i) => {
               const Icon = TYPE_ICON[c.type as keyof typeof TYPE_ICON];
               return (
                 <div
