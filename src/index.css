@@ -431,6 +431,7 @@ input[type="range"]::-moz-range-thumb {
   --color-ed-body: #3f4550;    /* 正文 */
   --color-ed-muted: #8a8f98;   /* 次要信息灰 */
   --color-ed-line: var(--border-default);    /* 跟随主题：带色相的 hairline */
+  --text-ed-title: 0.875rem;   /* 内容区标题栏字号（= 侧边栏导航 text-sm），改这里全局生效 */
   --font-ed-serif: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'STZhongsong', 'SimSun', serif;
 }
 

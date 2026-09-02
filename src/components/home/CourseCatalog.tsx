@@ -58,7 +58,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
     <div className="flex-1 flex flex-col min-h-0">
       {/* ── 头部：只保留标题 ── */}
       <header className="ed-header flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
-        <h2 className="text-base font-semibold text-ed-ink">
+        <h2 className="text-ed-title font-semibold text-ed-ink">
           {mode === 'featured' ? '课程' : '书架'}
         </h2>
       </header>

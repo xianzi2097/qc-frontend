@@ -197,7 +197,7 @@ export default function SideBar({
       className={`${rail ? 'w-14' : 'w-60'} flex-shrink-0 flex flex-col bg-ed-paper border-r-[1.5px] border-ed-line overflow-hidden transition-[width] duration-300 ease-in-out`}
     >
       {/* 顶部：图标栏仅 Logo（点击展开）；展开态为字标 + 收起开关 */}
-      <div className={`flex-shrink-0 flex items-center py-4 ${rail ? 'justify-center px-2' : 'justify-between px-5'}`}>
+      <div className={`flex-shrink-0 flex items-center pt-2 pb-2 ${rail ? 'justify-center px-2' : 'justify-between px-5'}`}>
         {rail ? (
           // GPT/Gemini 式收起态：只留 Logo，点一下即展开
           <button
@@ -211,7 +211,7 @@ export default function SideBar({
           <>
             <div className="flex items-center gap-2 whitespace-nowrap">
               <LogoMark className="w-6 h-6 flex-shrink-0" />
-              <span className="text-[1.65rem] font-bold tracking-tight text-ed-ink" style={{ fontFamily: "Consolas" }}>CodeNova</span>
+              <span className="text-[1.30rem] font-bold tracking-tight text-ed-ink" style={{ fontFamily: "Consolas" }}>CodeNova</span>
             </div>
             <button
               onClick={toggleRail}
@@ -327,7 +327,7 @@ export default function SideBar({
                     );
                   })}
                 </div>
-              )}              {/* 软件下载子目录 — 后续再做 */}
+              )} 
             </div>
           );
         })}

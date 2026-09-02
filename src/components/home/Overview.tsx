@@ -25,7 +25,7 @@ export default function Overview({ onGoCourses, onGoFeatured }: Props) {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       <header className="ed-header flex items-center justify-between px-8 pt-2 pb-2 border-b border-ed-line">
-        <h2 className="text-base font-semibold text-ed-ink">开始</h2>
+        <h2 className="text-ed-title font-semibold text-ed-ink">开始</h2>
       </header>
 
       <div className={`flex-1 flex flex-col justify-center pl-24 px-10 py-10 max-w-[54rem] transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
