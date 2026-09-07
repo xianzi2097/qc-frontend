@@ -95,7 +95,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
         ) : visible.length === 0 ? (
           <CenterNote text="该类型暂无课程" />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-[78rem] mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {visible.map((c, i) => {
               const shape = SHAPES[i % SHAPES.length];
               return (
@@ -126,7 +126,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                     />
                   </div>
                   <div className="absolute bottom-6 left-6 right-6 z-10">
-                    <h3 className="font-serif text-[1.875rem] font-medium leading-[1.05] tracking-tight truncate
+                    <h3 className="font-serif text-[1.2rem] font-medium leading-[1.05] tracking-tight line-clamp-2
                                    text-ed-ink group-hover:text-brand transition-colors">
                       {c.name}
                     </h3>
