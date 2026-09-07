@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Code2, Cog, Folder, Puzzle } from 'lucide-react';
 import TextTabs from './TextTabs';
 import CourseDetail from './CourseDetail';
 import { fetchCourses, fetchTeacherNames } from '../../lib/api';
@@ -13,8 +12,21 @@ const TYPE_TABS = [
   { value: 'cpp', label: 'C++' },
 ];
 
-const TYPE_ICON = { scratch: Puzzle, python: Code2, cpp: Cog } as const;
-const TYPE_COLOR: Record<string, string> = { scratch: 'var(--color-brand)', python: '#22c55e', cpp: '#94a3b8' };
+/** 6 套几何装饰预设（形状 + 颜色），按 index % 6 循环。尺寸匹配参考设计 */
+const SHAPES = [
+  // 0: 圆 120px + 方 75px
+  { a: 'w-[7.5rem] h-[7.5rem] rounded-full', b: 'w-[4.7rem] h-[4.7rem] right-3 top-[3.5rem] rotate-[17deg]', ca: '#e0d4c2', cb: '#bd7557' },
+  // 1: 大圆 160px + 小圆 90px
+  { a: 'w-[10rem] h-[10rem] rounded-full', b: 'w-[5.5rem] h-[5.5rem] rounded-full right-1 bottom-0', ca: '#d6ded6', cb: '#758378' },
+  // 2: 长方 135×180 + 小方 70px
+  { a: 'w-[8.5rem] h-[11rem] right-1 top-1 rotate-[8deg]', b: 'w-[4.5rem] h-[4.5rem] left-2 bottom-1 rotate-[14deg]', ca: '#e6d8c9', cb: '#3e3c37' },
+  // 3: 圆 140px + 长条 70×150
+  { a: 'w-[8.75rem] h-[8.75rem] rounded-full', b: 'w-[4.5rem] h-[9.5rem] right-2 top-1 rotate-[22deg]', ca: '#c77e61', cb: '#e5ddd0' },
+  // 4: 扁方 180×100 + 圆 85px
+  { a: 'w-[11rem] h-[6.5rem] rotate-[-12deg]', b: 'w-[5.5rem] h-[5.5rem] rounded-full right-0 bottom-1', ca: '#d7d0c2', cb: '#a7b5aa' },
+  // 5: 圆 140px + 菱形 80px
+  { a: 'w-[8.75rem] h-[8.75rem] rounded-full', b: 'w-12 h-12 right-1 top-3 rotate-45', ca: '#ded4c7', cb: '#41403b' },
+];
 
 interface Props {
   /** main=在线课程（未精选的主线课）；featured=精选课程（老师勾选的选读内容） */
@@ -49,7 +61,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
     [courses, courseType, mode],
   );
 
-  // 选中课程 → 整个内容区切换为内容视图（电子书内嵌 / 课件列表）
+  // 选中课程 → 整个内容区切换为内容视图（电子书内嵌 / 文件列表）
   if (selected) {
     return <CourseDetail course={selected} onBack={() => setSelected(null)} />;
   }
@@ -74,44 +86,59 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
         />
       </div>
 
-      {/* ── 课程列表 ── */}
-      <div className="flex-1 overflow-y-auto min-h-0 px-8 pb-8" style={{ scrollbarWidth: 'thin' }}>
+      {/* ── 卡片网格 ── */}
+      <div className="flex-1 overflow-y-auto min-h-0 p-8" style={{ scrollbarWidth: 'thin' }}>
         {loading ? (
           <CenterNote text="加载中…" />
         ) : courses.length === 0 ? (
-          <CenterNote text={mode === 'featured' ? '暂无课程' : '暂无课程'} />
+          <CenterNote text="暂无课程" />
         ) : visible.length === 0 ? (
           <CenterNote text="该类型暂无课程" />
         ) : (
-          <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-[78rem] mx-auto">
             {visible.map((c, i) => {
-              const Icon = TYPE_ICON[c.type as keyof typeof TYPE_ICON];
+              const shape = SHAPES[i % SHAPES.length];
               return (
                 <button
                   key={c.id}
                   onClick={() => setSelected(c)}
-                  className="group w-full flex items-center gap-5 py-5 px-2 -mx-2 border-b border-ed-line text-left cursor-pointer hover:bg-black/[0.02] transition-colors"
+                  className="group relative min-h-[21rem] p-7 text-left cursor-pointer
+                             overflow-hidden
+                             transition-all duration-300 ease-out
+                             hover:-translate-y-[7px] hover:shadow-[0_1.25rem_3rem_rgba(60,52,43,0.1)]"
+                  style={{
+                    background: 'oklch(0.965 0.012 var(--seed-hue))',
+                    border: '1px solid oklch(0.93 0.015 var(--seed-hue))',
+                  }}
                 >
-                  <span className="ed-serif text-sm text-ed-muted w-7 flex-shrink-0">
+                  <span className="relative z-10 font-serif text-2xl font-medium" style={{ color: 'var(--accent)' }}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  {Icon ? (
-                    <Icon size={20} strokeWidth={1.5} style={{ color: TYPE_COLOR[c.type] ?? '#8a8f98' }} className="flex-shrink-0" />
-                  ) : (
-                    <Folder size={20} strokeWidth={1.5} className="text-ed-muted flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-ed-ink truncate group-hover:text-brand transition-colors">
+                  <div className="absolute right-0 top-[3.25rem] w-[12rem] h-[13rem] pointer-events-none opacity-90
+                                  transition-transform duration-500 ease-out group-hover:-translate-x-1.5 group-hover:-translate-y-1.5">
+                    <div
+                      className={`absolute ${shape.a}`}
+                      style={{ background: shape.ca }}
+                    />
+                    <div
+                      className={`absolute ${shape.b}`}
+                      style={{ background: shape.cb }}
+                    />
+                  </div>
+                  <div className="absolute bottom-6 left-6 right-6 z-10">
+                    <h3 className="font-serif text-[1.875rem] font-medium leading-[1.05] tracking-tight truncate
+                                   text-ed-ink group-hover:text-brand transition-colors">
                       {c.name}
                     </h3>
-                    <p className="text-xs text-ed-muted mt-0.5">
-                      {c.material_count} 个课件{c.format && FORMAT_LABEL[c.format] ? ` · ${FORMAT_LABEL[c.format]}` : ''}
+                    {c.description && (
+                      <p className="text-[0.8rem] leading-relaxed mt-2 line-clamp-2 text-ed-muted">
+                        {c.description}
+                      </p>
+                    )}
+                    <p className="text-[0.7rem] mt-3 text-ed-muted">
+                      {c.material_count} 个文件{c.format && FORMAT_LABEL[c.format] ? ` · ${FORMAT_LABEL[c.format]}` : ''}
                     </p>
                   </div>
-                  <ArrowRight
-                    size={16}
-                    className="flex-shrink-0 text-ed-muted group-hover:text-brand group-hover:translate-x-1 transition-all"
-                  />
                 </button>
               );
             })}

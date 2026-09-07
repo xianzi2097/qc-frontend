@@ -15,7 +15,7 @@ interface Props {
 
 /**
  * 课程内容视图 — 供「课程目录点击」与「侧边栏在学课程直达」共用：
- * 电子书（已渲染）→ 无痕内嵌；未渲染成功 → 占位；其他 → 课件/文件列表
+ * 电子书（已渲染）→ 无痕内嵌；未渲染成功 → 占位；其他 → 文件列表
  */
 export default function ResourceFileTree({ resource, onBack }: Props) {
   const ebookOk = resource.format === 'ebook' && resource.publish?.status === 'success';
@@ -164,7 +164,7 @@ function CenterNote({ text }: { text: string }) {
   );
 }
 
-// ── folder 型课件：递归目录树 ──────────────────────────────
+// ── folder 型文件：递归目录树 ──────────────────────────────
 
 /** 统计子树内的文件总数（含所有嵌套层级） */
 function countTreeFiles(nodes: MaterialNode[]): number {

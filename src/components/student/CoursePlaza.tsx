@@ -133,7 +133,7 @@ export default function CoursePlaza() {
           })}
         </div>
 
-        {/* 右侧：课件详情 */}
+        {/* 右侧：文件详情 */}
         <div className="flex-1 bg-slate-800/40 border border-slate-700/50 rounded-xl overflow-y-auto">
           {!selectedCourse ? (
             <div className="h-full flex items-center justify-center text-slate-500 text-sm">请从左侧选择一个课程</div>
@@ -144,7 +144,7 @@ export default function CoursePlaza() {
               <p className="text-xs text-slate-400">课程尚未渲染成功，请联系管理员</p>
             </div>
           ) : materials.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-slate-500 text-sm">暂无课件</div>
+            <div className="h-full flex items-center justify-center text-slate-500 text-sm">暂无文件</div>
           ) : (
             <div className="p-4 space-y-2">
               {materials.map(m => (

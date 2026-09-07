@@ -15,7 +15,7 @@ interface Props {
 
 /**
  * 课程内容视图 — 供「课程目录点击」与「侧边栏在学课程直达」共用：
- * 电子书（已渲染）→ 无痕内嵌；未渲染成功 → 占位；其他 → 课件/文件列表
+ * 电子书（已渲染）→ 无痕内嵌；未渲染成功 → 占位；其他 → 文件列表
  */
 export default function CourseDetail({ course, onBack }: Props) {
   const ebookOk = course.format === 'ebook' && course.publish?.status === 'success';
@@ -77,7 +77,7 @@ export default function CourseDetail({ course, onBack }: Props) {
         ) : loading ? (
           <CenterNote text="加载中…" />
         ) : materials.length === 0 ? (
-          <CenterNote text="该课程暂无课件" />
+          <CenterNote text="该课程暂无文件" />
         ) : course.type === 'scratch' ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6">
             {materials.map(m => (
@@ -142,7 +142,7 @@ function CenterNote({ text }: { text: string }) {
   );
 }
 
-// ── folder 型课件：递归目录树 ──────────────────────────────
+// ── folder 型文件：递归目录树 ──────────────────────────────
 
 /** 统计子树内的文件总数（含所有嵌套层级） */
 function countTreeFiles(nodes: MaterialNode[]): number {

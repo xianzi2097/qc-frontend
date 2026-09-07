@@ -526,7 +526,7 @@ export default function CourseManager() {
       {/* 标题栏 */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          <BookOpen className="text-brand-orange" size={20} /> 课件管理
+          <BookOpen className="text-brand-orange" size={20} /> 文件管理
         </h2>
         <div className="flex gap-2">
           <button
@@ -699,7 +699,7 @@ export default function CourseManager() {
                   <span className="text-2xl block mb-2">{TypeIcon ? <TypeIcon size={28} style={{ color: typeColor }} /> : <FolderOpen size={28} className="text-slate-400" />}</span>
                   <h3 className="font-bold text-white text-sm mb-1">{course.name}</h3>
                   <p className="text-xs text-slate-500">
-                    {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个课件
+                    {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个文件
                   </p>
                   {course.featured && (
                     <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-400/10 text-amber-400 mt-1">
@@ -744,7 +744,7 @@ export default function CourseManager() {
         </div>
       )}
 
-      {/* 课件详情（文件树：所有课程统一） */}
+      {/* 文件详情（文件树：所有课程统一） */}
       {selectedCourse && (
         <div className="bg-slate-900/50 border border-slate-600 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">

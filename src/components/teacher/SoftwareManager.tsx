@@ -636,7 +636,7 @@ export default function SoftwareManager() {
                   <span className="text-2xl block mb-2">{TypeIcon ? <TypeIcon size={28} style={{ color: typeColor }} /> : <FolderOpen size={28} className="text-slate-400" />}</span>
                   <h3 className="font-bold text-white text-sm mb-1">{course.name}</h3>
                   <p className="text-xs text-slate-500">
-                    {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个课件
+                    {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个文件
                   </p>
                   {course.tags && course.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
@@ -669,7 +669,7 @@ export default function SoftwareManager() {
         </div>
       )}
 
-      {/* 课件详情（文件树：所有软件统一） */}
+      {/* 文件详情（文件树：所有软件统一） */}
       {selectedCourse && (
         <div className="bg-slate-900/50 border border-slate-600 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">

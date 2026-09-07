@@ -97,7 +97,7 @@ export default function Resources() {
                         {c.name}
                       </h3>
                       <p className="text-xs text-ed-muted mt-0.5">
-                        {c.material_count} 个课件{c.format && FORMAT_LABEL[c.format] ? ` · ${FORMAT_LABEL[c.format]}` : ''}
+                        {c.material_count} 个文件{c.format && FORMAT_LABEL[c.format] ? ` · ${FORMAT_LABEL[c.format]}` : ''}
                       </p>
                     </div>
                   </button>

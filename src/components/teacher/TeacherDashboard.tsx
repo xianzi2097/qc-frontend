@@ -43,11 +43,11 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
     );
   }
 
-  // ── 课件管理：独立页面 ──
+  // ── 文件管理：独立页面 ──
   if (activeTab === 'courses') {
     return (
       <div className="h-full flex flex-col space-y-3 animate-fadeIn">
-        <ErrorBoundary label="课件管理">
+        <ErrorBoundary label="文件管理">
           <CourseManager />
         </ErrorBoundary>
       </div>

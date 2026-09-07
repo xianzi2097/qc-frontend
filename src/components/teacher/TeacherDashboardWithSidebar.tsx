@@ -83,7 +83,7 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
                   : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
-              <BookOpen size={18} /> 课件管理
+              <BookOpen size={18} /> 文件管理
             </button>
             <button
               onClick={() => setActiveTab('references')}
