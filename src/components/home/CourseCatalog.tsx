@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import TextTabs from './TextTabs';
 import CourseDetail from './CourseDetail';
 import { fetchCourses, fetchTeacherNames } from '../../lib/api';
@@ -99,11 +100,13 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
             {visible.map((c, i) => {
               const shape = SHAPES[i % SHAPES.length];
               return (
-                <button
+                <div
                   key={c.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelected(c)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelected(c); }}
                   className="group relative min-h-[21rem] p-7 text-left cursor-pointer
-                             overflow-hidden
                              transition-all duration-300 ease-out
                              hover:-translate-y-[7px] hover:shadow-[0_1.25rem_3rem_rgba(60,52,43,0.1)]"
                   style={{
@@ -131,20 +134,59 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                       {c.name}
                     </h3>
                     {c.description && (
-                      <p className="text-[0.8rem] leading-relaxed mt-2 line-clamp-2 text-ed-muted">
-                        {c.description}
-                      </p>
+                      <HoverTip text={c.description} />
                     )}
-                    <p className="text-[0.7rem] mt-3 text-ed-muted">
-                      {c.material_count} 个文件{c.format && FORMAT_LABEL[c.format] ? ` · ${FORMAT_LABEL[c.format]}` : ''}
-                    </p>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** hover 弹出完整描述：用 portal 渲染到 body，避免被卡片 transform 影响定位 */
+function HoverTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  const show = () => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const tipW = Math.min(r.width, 320);
+    const spaceBelow = window.innerHeight - r.bottom;
+    const above = spaceBelow < 100;
+    let x = r.left;
+    if (x + tipW > window.innerWidth - 8) x = window.innerWidth - tipW - 8;
+    if (x < 8) x = 8;
+    setPos({ x, y: above ? r.top - 4 : r.bottom + 4 });
+    setOpen(true);
+  };
+
+  return (
+    <div ref={wrapRef} className="mt-2" onMouseEnter={show} onMouseLeave={() => setOpen(false)}>
+      <p className="text-[0.8rem] leading-relaxed h-[2.4rem] line-clamp-2 text-ed-muted cursor-help">
+        {text}
+      </p>
+      {open && createPortal(
+        <div
+          className="fixed px-3 py-2 text-[0.8rem] leading-relaxed text-ed-ink rounded-lg
+                     shadow-lg z-[100] max-w-[20rem] pointer-events-none"
+          style={{
+            left: pos.x,
+            top: pos.y,
+            background: 'var(--sidebar-bg, #faf9f5)',
+            border: '1px solid var(--border-default, #e5e5e5)',
+          }}
+        >
+          {text}
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }
