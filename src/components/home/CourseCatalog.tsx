@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import TextTabs from './TextTabs';
 import CourseDetail from './CourseDetail';
 import { fetchCourses, fetchTeacherNames } from '../../lib/api';
-import { FORMAT_LABEL } from '../../types/course';
 import type { Course } from '../../types/course';
 
 const TYPE_TABS = [
