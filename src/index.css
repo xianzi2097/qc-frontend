@@ -118,6 +118,10 @@ html { font-size: clamp(1rem, 0.625rem + 0.5vw, 1.5rem); }
 
 .accent-scrollbar::-webkit-scrollbar-thumb { background: var(--accent); }
 .accent-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent-hover); }
+
+/* 侧边栏等区域：滚动但隐藏滚动条 */
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
 .accent-scrollbar { scrollbar-color: var(--accent) transparent; }
 
 /* ── 色相滑块 ── */

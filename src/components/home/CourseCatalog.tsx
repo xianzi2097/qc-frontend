@@ -135,9 +135,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                                    text-ed-ink group-hover:text-brand transition-colors">
                       {c.name}
                     </h3>
-                    {c.description && (
-                      <HoverTip text={c.description} />
-                    )}
+                    <HoverTip text={c.description || ''} />
                   </div>
                 </div>
               );

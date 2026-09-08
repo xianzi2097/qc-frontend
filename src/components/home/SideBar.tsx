@@ -65,7 +65,7 @@ export default function SideBar({
   onAvatarClick, onLoginClick, onLogout,
 }: Props) {
   const [folded, setFolded] = useState(false); // 在学课程子目录折叠状态
-  const [progOpen, setProgOpen] = useState(true); // 在线编程分组展开状态
+  const [progOpen, setProgOpen] = useState(false); // 在线编程分组默认折叠
   const [selectedLang, setSelectedLang] = useState<string | null>(null); // 当前选中的编程语言
   // 图标栏模式：收窄为单图标宽度；localStorage 记忆，下次进入保持
   const [rail, setRail] = useState(() => localStorage.getItem('sidebarRail') === '1');
@@ -225,7 +225,7 @@ export default function SideBar({
       </div>
 
       {/* 导航 —— 外链与页内项统一由 NAV 数据驱动渲染 */}
-      <nav className={`space-y-0.5 ${rail ? 'px-2' : 'px-3'}`}>
+      <nav className={`flex-1 min-h-0 overflow-y-auto scrollbar-none space-y-0.5 ${rail ? 'px-2' : 'px-3'}`}>
         {NAV.map(({ id, label, icon: Icon }) => {
           const active = id !== 'scratch' && section === (id as HomeSection);
           return (
