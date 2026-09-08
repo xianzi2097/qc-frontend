@@ -26,6 +26,14 @@ const SHAPES = [
   { a: 'w-[11rem] h-[6.5rem] rotate-[-12deg]', b: 'w-[5.5rem] h-[5.5rem] rounded-full right-0 bottom-1', ca: '#d7d0c2', cb: '#a7b5aa' },
   // 5: 圆 140px + 菱形 80px
   { a: 'w-[8.75rem] h-[8.75rem] rounded-full', b: 'w-12 h-12 right-1 top-3 rotate-45', ca: '#ded4c7', cb: '#41403b' },
+  // 6: 小圆 100px + 大方 130px
+  { a: 'w-[6rem] h-[6rem] rounded-full left-2 bottom-[2rem]', b: 'w-[8rem] h-[8rem] right-0 top-0 rotate-[12deg]', ca: '#c8b8a8', cb: '#8b7355' },
+  // 7: 双圆交叉
+  { a: 'w-[9rem] h-[9rem] rounded-full left-1 top-[2rem]', b: 'w-[7rem] h-[7rem] rounded-full right-2 top-2', ca: '#b8c5b8', cb: '#d4a574' },
+  // 8: 长条横放 + 小圆
+  { a: 'w-[10rem] h-[5rem] bottom-[3rem] right-1 rotate-[-6deg]', b: 'w-[5rem] h-[5rem] rounded-full right-0 top-[1.5rem]', ca: '#e8ddd0', cb: '#6b7c6b' },
+  // 9: 斜方 + 小圆 三角感
+  { a: 'w-[7rem] h-[9rem] right-0 top-[2rem] rotate-[15deg]', b: 'w-[5rem] h-[5rem] rounded-full left-1 bottom-[3.5rem]', ca: '#c9b99a', cb: '#a0522d' },
 ];
 
 interface Props {
@@ -95,7 +103,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
         ) : visible.length === 0 ? (
           <CenterNote text="该类型暂无课程" />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 [2560px]:grid-cols-6 gap-4">
             {visible.map((c, i) => {
               const shape = SHAPES[i % SHAPES.length];
               return (
@@ -105,7 +113,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                   tabIndex={0}
                   onClick={() => setSelected(c)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelected(c); }}
-                  className="group relative min-h-[21rem] p-7 text-left cursor-pointer
+                  className="group relative min-h-[20rem] p-7 text-left cursor-pointer overflow-hidden
                              transition-all duration-300 ease-out
                              hover:-translate-y-[7px] hover:shadow-[0_1.25rem_3rem_rgba(60,52,43,0.1)]"
                   style={{
