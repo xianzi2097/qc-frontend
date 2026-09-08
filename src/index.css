@@ -462,3 +462,14 @@ input[type="range"]::-moz-range-thumb {
   to   { opacity: 1; transform: translateX(0); }
 }
 .tip-bubble { animation: tipPop 0.18s ease-out both; }
+
+/* ── 书架/课程卡片网格：超宽屏（≥2048px CSS）显示 6 列 ──
+   ⚠️ 放在 @layer 之外：非 layer 规则优先级恒高于 Tailwind utilities
+   layer 内的 xl:grid-cols-5，因此 2048px+ 时稳定覆盖为 6 列。
+   不用 min-[2048px]: 变体——Tailwind 对任意断点的排序不稳定，
+   会排在 xl 之前导致被 xl:grid-cols-5 覆盖（实测 2048 屏仍 5 列）。 */
+@media (width >= 2048px) {
+  .course-grid-ultrawide {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}

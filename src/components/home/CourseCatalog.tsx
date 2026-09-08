@@ -103,7 +103,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
         ) : visible.length === 0 ? (
           <CenterNote text="该类型暂无课程" />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 [2560px]:grid-cols-6 gap-4">
+          <div className="course-grid-ultrawide grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {visible.map((c, i) => {
               const shape = SHAPES[i % SHAPES.length];
               return (
