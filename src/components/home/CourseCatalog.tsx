@@ -19,7 +19,7 @@ const SHAPES = [
   // 1: 大圆 160px + 小圆 90px
   { a: 'w-[10rem] h-[10rem] rounded-full', b: 'w-[5.5rem] h-[5.5rem] rounded-full right-1 bottom-0', ca: '#d6ded6', cb: '#758378' },
   // 2: 长方 135×180 + 小方 70px
-  { a: 'w-[8.5rem] h-[11rem] right-1 top-1 rotate-[8deg]', b: 'w-[4.5rem] h-[4.5rem] left-2 bottom-1 rotate-[14deg]', ca: '#e6d8c9', cb: '#3e3c37' },
+  { a: 'w-[8.5rem] h-[11rem] right-1 top-1 rotate-[8deg]', b: 'w-[4.5rem] h-[4.5rem] left-2 bottom-1 rotate-[14deg]', ca: '#e6d8c9', cb: '#f5574c' },
   // 3: 圆 140px + 长条 70×150
   { a: 'w-[8.75rem] h-[8.75rem] rounded-full', b: 'w-[4.5rem] h-[9.5rem] right-2 top-1 rotate-[22deg]', ca: '#c77e61', cb: '#e5ddd0' },
   // 4: 扁方 180×100 + 圆 85px
@@ -27,7 +27,7 @@ const SHAPES = [
   // 5: 圆 140px + 菱形 80px
   { a: 'w-[8.75rem] h-[8.75rem] rounded-full', b: 'w-12 h-12 right-1 top-3 rotate-45', ca: '#ded4c7', cb: '#41403b' },
   // 6: 小圆 100px + 大方 130px
-  { a: 'w-[6rem] h-[6rem] rounded-full left-2 bottom-[2rem]', b: 'w-[8rem] h-[8rem] right-0 top-0 rotate-[12deg]', ca: '#c8b8a8', cb: '#8b7355' },
+  { a:'w-[8rem] h-[8rem] right-0 top-0 rotate-[12deg]', b: 'w-[6rem] h-[6rem] rounded-full left-2 bottom-[2rem]' , ca: '#c8b8a8', cb: '#8b7355' },
   // 7: 双圆交叉
   { a: 'w-[9rem] h-[9rem] rounded-full left-1 top-[2rem]', b: 'w-[7rem] h-[7rem] rounded-full right-2 top-2', ca: '#b8c5b8', cb: '#d4a574' },
   // 8: 长条横放 + 小圆
