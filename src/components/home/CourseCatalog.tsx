@@ -76,23 +76,18 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* ── 头部：只保留标题 ── */}
+      {/* ── 头部：标题 + 筛选 Tab ── */}
       <header className="ed-header flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
-        <h2 className="text-ed-title font-semibold text-ed-ink">
-          {mode === 'featured' ? '课程' : '书架'}
-        </h2>
-      </header>
-
-      {/* ── 类型筛选（原老师筛选位置） ── */}
-      <div className="ed-toolbar flex-shrink-0 overflow-x-auto border-b border-ed-line px-8" style={{ scrollbarWidth: 'none' }}>
         <TextTabs
           className="w-max"
-          accent="#16181d"
           value={courseType}
           onChange={setCourseType}
           items={TYPE_TABS}
         />
-      </div>
+        <h2 className="text-ed-title font-semibold text-ed-ink flex-shrink-0">
+          {mode === 'featured' ? '课程' : '书架'}
+        </h2>
+      </header>
 
       {/* ── 卡片网格 ── */}
       <div className="flex-1 overflow-y-auto min-h-0 p-8" style={{ scrollbarWidth: 'thin' }}>

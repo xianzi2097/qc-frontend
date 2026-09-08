@@ -46,9 +46,7 @@ export default function CourseDetail({ course, onBack }: Props) {
           <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
           返回
         </button>
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-semibold text-ed-ink">{course.name}</span>
-        </div>
+        <h2 className="text-ed-title font-semibold text-ed-ink truncate">{course.name}</h2>
       </header>
 
       <div className="flex-1 min-h-0 relative bg-card">

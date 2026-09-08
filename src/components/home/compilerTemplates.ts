@@ -3,7 +3,7 @@ import type { Language } from './compilerApi';
 /** 各语言的默认代码模板 */
 export const CODE_TEMPLATES: Record<Language, string> = {
   python: `# Python 在线编译器
-name = input()
+name = "Arin"
 print(f"Hello, {name}!")
 `,
 
