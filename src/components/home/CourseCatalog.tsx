@@ -75,6 +75,20 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
     railRef.current?.scrollBy({ left: dir * 280, behavior: 'smooth' });
   }, []);
 
+  // 鼠标滚轮 → 左右滚动（依赖 visible 确保 rail 元素已渲染）
+  useEffect(() => {
+    const el = railRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        el.scrollBy({ left: e.deltaY, behavior: 'auto' });
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [visible]);
+
   // 选中课程 → 整个内容区切换为内容视图（电子书内嵌 / 文件列表）
   if (selected) {
     return <CourseDetail course={selected} onBack={() => setSelected(null)} />;
@@ -163,17 +177,17 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                     tabIndex={0}
                     onClick={() => setSelected(c)}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setSelected(c); }}
-                    className="group shrink-0 w-60 flex flex-col rounded-2xl cursor-pointer
+                    className="group shrink-0 w-60 flex flex-col p-3 gap-3 rounded-2xl cursor-pointer
                                transition-all duration-200 ease-out
                                hover:-translate-y-1 hover:border-border-hover
                                hover:shadow-[var(--bookshelf-shadow)]"
                     style={{
                       background: 'var(--bookshelf-card-bg)',
-                      border: '1px solid var(--border-default)',
+                      border: '1px solid var(--border-hover)',
                     }}
                   >
                     {/* Cover */}
-                    <div className="relative w-full rounded-t-2xl overflow-hidden" style={{ background: 'var(--bookshelf-cover-bg)', height: '11rem' }}>
+                    <div className="relative w-full rounded-xl overflow-hidden" style={{ background: 'var(--bookshelf-cover-bg)', height: '11rem' }}>
                       <span className="absolute z-10 top-3 left-4 font-serif text-base" style={{ color: 'var(--accent)' }}>
                         {String(i + 1).padStart(2, '0')}
                       </span>
@@ -184,7 +198,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                       </div>
                     </div>
                     {/* Info */}
-                    <div className="flex-1 flex flex-col p-4 pt-3.5">
+                    <div className="flex-1 flex flex-col">
                       <div className="flex flex-wrap gap-1.5 mb-2.5">
                         {[c.type, ...(c.tags || [])].map(t => (
                           <span key={t} className="inline-flex items-center h-6 px-2.5 rounded-full text-xs font-semibold bg-[var(--bookshelf-type-tag-bg)] text-[var(--bookshelf-type-tag-text)]">
