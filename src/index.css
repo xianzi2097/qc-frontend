@@ -38,6 +38,18 @@
     /* 滚动条 */
     --scrollbar-thumb: oklch(0.88 0.015 var(--seed-hue));
 
+    /* 书架卡片系统色 — 随主题自动变 */
+    --bookshelf-header-bg: color-mix(in oklch, var(--page-bg) 88%, transparent);
+    --bookshelf-card-bg:   color-mix(in oklch, var(--page-bg) 92%, white);
+    --bookshelf-cover-bg:  var(--sidebar-bg);
+    --bookshelf-filter-on: color-mix(in oklch, var(--page-bg) 85%, var(--accent));
+    --bookshelf-filter-bg: color-mix(in oklch, var(--page-bg) 96%, var(--accent));
+    --bookshelf-tag-bg:      var(--bookshelf-type-tag-bg);    /* 自定义标签底色 = 类型标签同色 */
+    --bookshelf-tag-text:    var(--bookshelf-type-tag-text);  /* 自定义标签文字 = 类型标签同色 */
+    --bookshelf-type-tag-bg: var(--bookshelf-filter-on);    /* 类型标签底色 = 选中胶囊同色 */
+    --bookshelf-type-tag-text: var(--ed-ink);               /* 类型标签文字 = 选中胶囊同色 */
+    --bookshelf-shadow:    0 1.1rem 2.8rem oklch(0.22 0.03 var(--seed-hue) / 0.06);
+
     /* 兼容旧 token（后台组件还在用） */
     --color-brand-orange: oklch(0.65 0.19 95);
     --color-geek-green: #10b981;
@@ -122,6 +134,8 @@ html { font-size: clamp(1rem, 0.625rem + 0.5vw, 1.5rem); }
 /* 侧边栏等区域：滚动但隐藏滚动条 */
 .scrollbar-none { scrollbar-width: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
+
+
 .accent-scrollbar { scrollbar-color: var(--accent) transparent; }
 
 /* ── 色相滑块 ── */

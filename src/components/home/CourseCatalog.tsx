@@ -1,18 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import TextTabs from './TextTabs';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CourseDetail from './CourseDetail';
 import { fetchCourses, fetchTeacherNames } from '../../lib/api';
 import type { Course } from '../../types/course';
 
-const TYPE_TABS = [
+const FILTERS = [
   { value: '全部', label: '全部' },
   { value: 'scratch', label: 'Scratch' },
   { value: 'python', label: 'Python' },
   { value: 'cpp', label: 'C++' },
 ];
 
-/** 6 套几何装饰预设（形状 + 颜色），按 index % 6 循环。尺寸匹配参考设计 */
+/** 几何装饰预设（形状 + 颜色），按 index % 长度循环。适配横向卡片 cover 区 */
 const SHAPES = [
   // 0: 圆 120px + 方 75px
   { a: 'w-[7.5rem] h-[7.5rem] rounded-full', b: 'w-[4.7rem] h-[4.7rem] right-3 top-[3.5rem] rotate-[17deg]', ca: '#e0d4c2', cb: '#bd7557' },
@@ -44,6 +42,7 @@ interface Props {
 /** 课程目录 — 内容区视图：编号条目 + hairline 分隔；点击条目进入 CourseDetail 内容视图 */
 export default function CourseCatalog({ mode = 'main' }: Props) {
   const [courseType, setCourseType] = useState('全部');
+  const [searchQuery, setSearchQuery] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Course | null>(null);
@@ -60,14 +59,21 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
     return () => { stale = true; };
   }, []);
 
-  const visible = useMemo(
-    () => courses.filter(c =>
-      // 归属二选一：精选课程不在「在线课程」出现，普通课程不进「精选课程」
+  const visible = useMemo(() => {
+    const kw = searchQuery.trim().toLowerCase();
+    return courses.filter(c =>
       (mode === 'featured' ? c.featured === true : c.featured !== true) &&
-      (courseType === '全部' || c.type === courseType),
-    ),
-    [courses, courseType, mode],
-  );
+      (courseType === '全部' || c.type === courseType) &&
+      (!kw || c.name.toLowerCase().includes(kw)),
+    );
+  }, [courses, courseType, mode, searchQuery]);
+
+  const title = mode === 'featured' ? '课程' : '书架';
+
+  const railRef = useRef<HTMLDivElement>(null);
+  const scroll = useCallback((dir: -1 | 1) => {
+    railRef.current?.scrollBy({ left: dir * 280, behavior: 'smooth' });
+  }, []);
 
   // 选中课程 → 整个内容区切换为内容视图（电子书内嵌 / 文件列表）
   if (selected) {
@@ -76,117 +82,149 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* ── 头部：标题 + 筛选 Tab ── */}
-      <header className="ed-header flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
-        <TextTabs
-          className="w-max"
-          value={courseType}
-          onChange={setCourseType}
-          items={TYPE_TABS}
-        />
-        <h2 className="text-ed-title font-semibold text-ed-ink flex-shrink-0">
-          {mode === 'featured' ? '课程' : '书架'}
-        </h2>
+      {/* ── Topbar：标题 + 筛选 pill + 数量 ── */}
+      <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
+        style={{ background: 'var(--bookshelf-header-bg)', backdropFilter: 'blur(14px)' }}>
+        <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">{title}</span>
+        <div className="flex items-center gap-2">
+          {FILTERS.map(f => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setCourseType(f.value)}
+              className={`h-8 px-4 rounded-full text-sm transition-colors duration-150 ${
+                courseType === f.value
+                  ? 'bg-[var(--bookshelf-filter-on)] text-ed-ink font-semibold'
+                  : 'text-ed-muted hover:text-ed-ink hover:bg-[var(--bookshelf-filter-bg)]'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </header>
 
-      {/* ── 卡片网格 ── */}
-      <div className="flex-1 overflow-y-auto min-h-0 p-8" style={{ scrollbarWidth: 'thin' }}>
+      {/* ── 居中内容区：Hero + 书架 ── */}
+      <div className="flex-1 flex flex-col justify-center min-h-0 px-8">
+
+      {/* ── Hero 标题区 ── */}
+      <div className="pb-6">
+        <div className="flex items-end justify-between gap-8">
+          <div>
+            <p className="mb-2 text-xs font-bold tracking-[0.13em] uppercase" style={{ color: 'var(--accent)' }}>
+              COURSE LIBRARY
+            </p>
+            <h1 className="m-0 ed-serif text-[clamp(1.75rem,3vw,2.5rem)] font-medium tracking-tight">
+              选择一本书，开始探索
+            </h1>
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-ed-muted">
+              这里收录机构开放的教材与课程。无需登录，选择感兴趣的内容即可查看。
+            </p>
+          </div>
+          <label className="hidden sm:flex items-center gap-2.5 h-11 w-72 shrink-0 px-4 rounded-xl border border-ed-line bg-white/72">
+            <svg className="w-5 h-5 text-ed-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m16.5 16.5 4 4" strokeLinecap="round" />
+            </svg>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="搜索书名"
+              className="min-w-0 w-full border-0 outline-none bg-transparent text-ed-ink text-sm placeholder:text-ed-muted"
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* ── 书架：横向滚动卡片 ── */}
+      <div className="min-h-0 relative" style={{ height: '22rem' }}>
         {loading ? (
           <CenterNote text="加载中…" />
         ) : courses.length === 0 ? (
           <CenterNote text="暂无课程" />
         ) : visible.length === 0 ? (
-          <CenterNote text="该类型暂无课程" />
+          <CenterNote text="没有找到相关书籍，换一个关键词试试。" />
         ) : (
-          <div className="course-grid-ultrawide grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {visible.map((c, i) => {
-              const shape = SHAPES[i % SHAPES.length];
-              return (
-                <div
-                  key={c.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelected(c)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelected(c); }}
-                  className="group relative min-h-[20rem] p-7 text-left cursor-pointer overflow-hidden
-                             transition-all duration-300 ease-out
-                             hover:-translate-y-[7px] hover:shadow-[0_1.25rem_3rem_rgba(60,52,43,0.1)]"
-                  style={{
-                    background: 'oklch(0.965 0.012 var(--seed-hue))',
-                    border: '1px solid oklch(0.93 0.015 var(--seed-hue))',
-                  }}
-                >
-                  <span className="relative z-10 font-serif text-2xl font-medium" style={{ color: 'var(--accent)' }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div className="absolute right-0 top-[3.25rem] w-[12rem] h-[13rem] pointer-events-none opacity-90
-                                  transition-transform duration-500 ease-out group-hover:-translate-x-1.5 group-hover:-translate-y-1.5">
-                    <div
-                      className={`absolute ${shape.a}`}
-                      style={{ background: shape.ca }}
-                    />
-                    <div
-                      className={`absolute ${shape.b}`}
-                      style={{ background: shape.cb }}
-                    />
-                  </div>
-                  <div className="absolute bottom-6 left-6 right-6 z-10">
-                    <h3 className="font-serif text-[1.2rem] font-medium leading-[1.05] tracking-tight line-clamp-2
-                                   text-ed-ink group-hover:text-brand transition-colors">
-                      {c.name}
-                    </h3>
-                    <HoverTip text={c.description || ''} />
-                  </div>
-                </div>
-              );
-            })}
+          <div className="shelf-frame h-full relative flex items-center">
+            <button type="button" onClick={() => scroll(-1)}
+              className="shelf-arrow left absolute left-0 z-10 w-10 h-10 grid place-items-center rounded-full
+                         text-ed-muted border border-ed-line bg-[var(--bookshelf-card-bg)] hover:text-ed-ink hover:border-border-hover
+                         transition-all duration-150 shadow-sm"
+            >←</button>
+            <div ref={railRef} className="books-rail flex-1 h-full flex items-start gap-5 overflow-x-auto px-12"
+              style={{ scrollbarWidth: 'none' }}>
+              {visible.map((c, i) => {
+                const shape = SHAPES[i % SHAPES.length];
+                return (
+                  <article
+                    key={c.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelected(c)}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setSelected(c); }}
+                    className="group shrink-0 w-60 flex flex-col rounded-2xl cursor-pointer
+                               transition-all duration-200 ease-out
+                               hover:-translate-y-1 hover:border-border-hover
+                               hover:shadow-[var(--bookshelf-shadow)]"
+                    style={{
+                      background: 'var(--bookshelf-card-bg)',
+                      border: '1px solid var(--border-default)',
+                    }}
+                  >
+                    {/* Cover */}
+                    <div className="relative w-full rounded-t-2xl overflow-hidden" style={{ background: 'var(--bookshelf-cover-bg)', height: '11rem' }}>
+                      <span className="absolute z-10 top-3 left-4 font-serif text-base" style={{ color: 'var(--accent)' }}>
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <div className="absolute inset-0 pointer-events-none opacity-90
+                                      transition-transform duration-500 ease-out group-hover:scale-105">
+                        <div className={`absolute ${shape.a}`} style={{ background: shape.ca }} />
+                        <div className={`absolute ${shape.b}`} style={{ background: shape.cb }} />
+                      </div>
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 flex flex-col p-4 pt-3.5">
+                      <div className="flex flex-wrap gap-1.5 mb-2.5">
+                        {[c.type, ...(c.tags || [])].map(t => (
+                          <span key={t} className="inline-flex items-center h-6 px-2.5 rounded-full text-xs font-semibold bg-[var(--bookshelf-type-tag-bg)] text-[var(--bookshelf-type-tag-text)]">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                      <h3 className="m-0 ed-serif text-base font-medium leading-snug tracking-tight line-clamp-2 text-ed-ink">
+                        {c.name}
+                      </h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-ed-muted line-clamp-2 h-10">
+                        {c.description || '\u00A0'}
+                      </p>
+                      <div className="mt-auto pt-3 flex items-center justify-between">
+                        <small className="text-xs text-ed-muted">{c.material_count} 个章节</small>
+                        <span
+                          className="grid place-items-center w-8 h-8 rounded-full text-white transition-all duration-200
+                                     group-hover:bg-[var(--color-brand-orange)]"
+                          style={{ background: 'var(--ed-ink)' }}
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                          </svg>
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <button type="button" onClick={() => scroll(1)}
+              className="shelf-arrow right absolute right-0 z-10 w-10 h-10 grid place-items-center rounded-full
+                         text-ed-muted border border-ed-line bg-[var(--bookshelf-card-bg)] hover:text-ed-ink hover:border-border-hover
+                         transition-all duration-150 shadow-sm"
+            >→</button>
           </div>
         )}
       </div>
-    </div>
-  );
-}
 
-/** hover 弹出完整描述：用 portal 渲染到 body，避免被卡片 transform 影响定位 */
-function HoverTip({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  const show = () => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const tipW = Math.min(r.width, 320);
-    const spaceBelow = window.innerHeight - r.bottom;
-    const above = spaceBelow < 100;
-    let x = r.left;
-    if (x + tipW > window.innerWidth - 8) x = window.innerWidth - tipW - 8;
-    if (x < 8) x = 8;
-    setPos({ x, y: above ? r.top - 4 : r.bottom + 4 });
-    setOpen(true);
-  };
-
-  return (
-    <div ref={wrapRef} className="mt-2" onMouseEnter={show} onMouseLeave={() => setOpen(false)}>
-      <p className="text-[0.8rem] leading-relaxed h-[2.4rem] line-clamp-2 text-ed-muted cursor-help">
-        {text}
-      </p>
-      {open && createPortal(
-        <div
-          className="fixed px-3 py-2 text-[0.8rem] leading-relaxed text-ed-ink rounded-lg
-                     shadow-lg z-[100] max-w-[20rem] pointer-events-none"
-          style={{
-            left: pos.x,
-            top: pos.y,
-            background: 'var(--sidebar-bg, #faf9f5)',
-            border: '1px solid var(--border-default, #e5e5e5)',
-          }}
-        >
-          {text}
-        </div>,
-        document.body,
-      )}
+      </div>{/* /居中内容区 */}
     </div>
   );
 }
