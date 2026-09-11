@@ -454,8 +454,12 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* 顶部标题栏：独立背景色 */
-.ed-header { background-color: var(--color-ed-header); }
+.ed-header { background-color: var(--color-ed-header); user-select: none; }
 .ed-toolbar { background-color: var(--color-ed-toolbar); }
+
+/* 侧边栏：禁止文本选中 */
+.bg-ed-paper,
+.bg-ed-paper * { user-select: none; }
 
 /* 本地自带的无衬线字体（内网可用，public/fonts 随包分发） */
 @font-face {
