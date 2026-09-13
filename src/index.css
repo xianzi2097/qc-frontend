@@ -41,14 +41,14 @@
     /* 书架卡片系统色 — 随主题自动变 */
     --bookshelf-header-bg: color-mix(in oklch, var(--page-bg) 88%, transparent);
     --bookshelf-card-bg:   color-mix(in oklch, var(--page-bg) 92%, white);
-    --bookshelf-cover-bg:  var(--sidebar-bg);
+    --bookshelf-cover-bg:  oklch(0.93 0.015 var(--seed-hue));
     --bookshelf-filter-on: color-mix(in oklch, var(--page-bg) 85%, var(--accent));
     --bookshelf-filter-bg: color-mix(in oklch, var(--page-bg) 96%, var(--accent));
     --bookshelf-tag-bg:      var(--bookshelf-type-tag-bg);    /* 自定义标签底色 = 类型标签同色 */
     --bookshelf-tag-text:    var(--bookshelf-type-tag-text);  /* 自定义标签文字 = 类型标签同色 */
     --bookshelf-type-tag-bg: var(--bookshelf-filter-on);    /* 类型标签底色 = 选中胶囊同色 */
     --bookshelf-type-tag-text: var(--ed-ink);               /* 类型标签文字 = 选中胶囊同色 */
-    --bookshelf-shadow:    0 1.1rem 2.8rem oklch(0.22 0.03 var(--seed-hue) / 0.06);
+    --bookshelf-shadow:    0 0.4rem 0.8rem oklch(0.22 0.03 var(--seed-hue) / 0.06);
 
     /* 兼容旧 token（后台组件还在用） */
     --color-brand-orange: oklch(0.65 0.19 95);
@@ -494,4 +494,89 @@ input[type="range"]::-moz-range-thumb {
   .course-grid-ultrawide {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
+}
+
+/* ══════════════════════════════════════════════
+   Guided Tour — driver.js 样式覆盖
+   匹配 CodeNova 编辑器主题（暖白纸感）
+   ══════════════════════════════════════════════ */
+
+.driver-popover.codenova-tour {
+  background: var(--sidebar-bg, #faf9f5);
+  color: #16181d;
+  border: 1.5px solid var(--border-default, #e5e5e0);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif;
+  max-width: 280px;
+}
+
+.driver-popover.codenova-tour .driver-popover-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #16181d;
+  margin-bottom: 6px;
+}
+
+.driver-popover.codenova-tour .driver-popover-description {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.driver-popover.codenova-tour .driver-popover-footer {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.driver-popover.codenova-tour .driver-popover-btn {
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--border-default, #e5e5e0);
+  background: transparent;
+  color: #16181d;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.driver-popover.codenova-tour .driver-popover-btn:hover {
+  background: var(--accent, #f97316);
+  color: #fff;
+  border-color: var(--accent, #f97316);
+}
+
+.driver-popover.codenova-tour .driver-popover-close-btn {
+  color: #9ca3af;
+  font-size: 14px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.driver-popover.codenova-tour .driver-popover-close-btn:hover {
+  opacity: 1;
+}
+
+.driver-popover.codenova-tour .driver-popover-progress-text {
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+.driver-popover.codenova-tour .driver-popover-progress-bar {
+  background: var(--border-default, #e5e5e0);
+  height: 3px;
+  border-radius: 2px;
+}
+
+.driver-popover.codenova-tour .driver-popover-progress-bar-fill {
+  background: var(--accent, #f97316);
+  border-radius: 2px;
+}
+
+/* 遮罩层动画更柔和 */
+.driver-overlay {
+  transition: all 0.3s ease;
 }

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Code2, Download, ExternalLink, FileText, GraduationCap, Home, LayoutDashboard,
+  Code2, Download, ExternalLink, FileText, GraduationCap, HelpCircle, Home, LayoutDashboard,
   Library, LogIn, LogOut, Minus, PanelLeftClose, Plus, SquareLibrary, Terminal,
 } from 'lucide-react';
 import LogoMark from './LogoMark';
@@ -23,6 +23,8 @@ interface Props {
   onCompilerClick: (lang: 'python' | 'cpp' | 'html') => void;
   /** 清除课程选中态（切到其他板块时调用） */
   onClearCourse: () => void;
+  /** 启动引导 Tour */
+  onStartTour?: () => void;
   user: PortalUser | null;
   username: string;
   roleLabel: string;
@@ -62,7 +64,7 @@ const PROG_LANGS: { name: string; url?: string; compiler?: 'python' | 'cpp' | 'h
 export default function SideBar({
   section, onSection, featuredCourses, activeCourseId, onOpenCourse, onCompilerClick, onClearCourse,
   user, username, roleLabel, avatarIdx,
-  onAvatarClick, onLoginClick, onLogout,
+  onAvatarClick, onLoginClick, onLogout, onStartTour,
 }: Props) {
   const [folded, setFolded] = useState(false); // 在学课程子目录折叠状态
   const [progOpen, setProgOpen] = useState(false); // 在线编程分组默认折叠
@@ -194,6 +196,7 @@ export default function SideBar({
       <aside
         onMouseOver={handleOver}
         onMouseOut={handleOut}
+      data-tour="sidebar"
       className={`${rail ? 'w-14' : 'w-60'} flex-shrink-0 flex flex-col bg-ed-paper border-r-[1.5px] border-ed-line overflow-hidden transition-[width] duration-300 ease-in-out`}
     >
       {/* 顶部：图标栏仅 Logo（点击展开）；展开态为字标 + 收起开关 */}
@@ -248,6 +251,16 @@ export default function SideBar({
                   onSection(id as HomeSection);
                 }}
                 data-tip={rail ? (id === 'scratch' ? '在线编程 · Scratch' : label) : undefined}
+                data-tour={
+                  id === 'courses' ? 'courses' :
+                  id === 'featured' ? 'featured' :
+                  id === 'resources' ? 'resources' :
+                  id === 'docs' ? 'docs' :
+                  id === 'scratch' ? 'programming' :
+                  id === 'downloads' ? 'downloads' :
+                  id === 'html-sandbox' ? 'html-sandbox' :
+                  undefined
+                }
                 className={rowCls(active)}
               >
                 <Icon className={`w-5 h-5 shrink-0 ${iconCls(active)}`} strokeWidth={1.8} />
@@ -333,8 +346,19 @@ export default function SideBar({
         })}
       </nav>
 
-      {/* 底部：色条 + 账号区（整体推到底） */}
+      {/* 底部：帮助按钮 + 色条 + 账号区（整体推到底） */}
       <div className="mt-auto">
+        {/* 使用帮助按钮 */}
+        {onStartTour && (
+          <button
+            onClick={onStartTour}
+            data-tip="使用帮助"
+            className={`w-full flex items-center gap-2 ${rail ? 'justify-center py-2' : 'px-3 py-2'} text-ed-muted hover:text-brand hover:bg-black/[0.04] rounded-lg transition-colors cursor-pointer text-sm`}
+          >
+            <HelpCircle className="w-4 h-4 shrink-0" />
+            {!rail && '使用帮助'}
+          </button>
+        )}
         {!rail && (
           <div className="flex h-1 cursor-pointer">
             {THEMES.map(t => (

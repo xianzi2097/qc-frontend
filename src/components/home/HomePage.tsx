@@ -15,6 +15,7 @@ import AvatarPicker, { AVATARS } from '../ui/AvatarPicker';
 import { fetchAllCourses, logoutRequest, updateAvatar } from '../../lib/api';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
+import { startHomePageTour } from '../../lib/guidedTour';
 
 interface Props {
   onLogin: (user: PortalUser, token?: string) => void;
@@ -111,6 +112,7 @@ export default function HomePage({ onLogin }: Props) {
         onAvatarClick={() => setShowAvatarPicker(true)}
         onLoginClick={() => setShowLogin(true)}
         onLogout={handleLogout}
+        onStartTour={() => startHomePageTour(handleSection)}
       />
 
       {/* ── 右侧内容区 ── */}

@@ -187,7 +187,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                     }}
                   >
                     {/* Cover */}
-                    <div className="relative w-full rounded-xl overflow-hidden" style={{ background: 'var(--bookshelf-cover-bg)', height: '11rem' }}>
+                    <div className="relative w-full rounded-xl overflow-hidden" style={{ background: 'var(--bookshelf-cover-bg)', height: '10rem' }}>
                       <span className="absolute z-10 top-3 left-4 font-serif text-base" style={{ color: 'var(--accent)' }}>
                         {String(i + 1).padStart(2, '0')}
                       </span>
