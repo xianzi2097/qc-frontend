@@ -199,9 +199,9 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                     </div>
                     {/* Info */}
                     <div className="flex-1 flex flex-col">
-                      <div className="flex flex-wrap gap-1.5 mb-2.5">
+                      <div className="flex gap-1.5 mb-2.5 overflow-hidden">
                         {[c.type, ...(c.tags || [])].map(t => (
-                          <span key={t} className="inline-flex items-center h-6 px-2.5 rounded-full text-xs font-semibold bg-[var(--bookshelf-type-tag-bg)] text-[var(--bookshelf-type-tag-text)]">
+                          <span key={t} className="inline-flex items-center h-6 px-2.5 rounded-full text-xs font-semibold bg-[var(--bookshelf-type-tag-bg)] text-[var(--bookshelf-type-tag-text)] shrink-0">
                             {t}
                           </span>
                         ))}

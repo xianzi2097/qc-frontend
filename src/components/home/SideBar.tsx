@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -71,67 +71,6 @@ export default function SideBar({
   const [selectedLang, setSelectedLang] = useState<string | null>(null); // 当前选中的编程语言
   // 图标栏模式：收窄为单图标宽度；localStorage 记忆，下次进入保持
   const [rail, setRail] = useState(() => localStorage.getItem('sidebarRail') === '1');
-
-  // ── 主题切换 ──
-  const THEMES = [
-    { id: '', label: '橙色', color: 'oklch(0.65 0.19 95)' },
-    { id: 'green', label: '绿色', color: 'oklch(0.65 0.19 155)' },
-    { id: 'blue', label: '蓝色', color: 'oklch(0.65 0.19 220)' },
-  ];
-  const [theme, setTheme] = useState(() => localStorage.getItem('codenova-theme') || '');
-  const [customHue, setCustomHue] = useState(() => localStorage.getItem('codenova-custom-hue-value') || '');
-  const [sliderOpen, setSliderOpen] = useState(() => localStorage.getItem('codenova-theme') === 'custom');
-
-  const switchTheme = useCallback((id: string) => {
-    setTheme(id);
-    setCustomHue('');
-    setSliderOpen(false);
-    document.documentElement.style.removeProperty('--custom-hue');
-    localStorage.removeItem('codenova-custom-hue-value');
-    if (id) {
-      document.documentElement.setAttribute('data-theme', id);
-      localStorage.setItem('codenova-theme', id);
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-      localStorage.setItem('codenova-theme', '');
-    }
-  }, []);
-
-  const toggleCustom = useCallback(() => {
-    setSliderOpen(v => {
-      const next = !v;
-      if (next && customHue) {
-        // 重新打开时恢复上次的自定义色
-        setTheme('custom');
-        document.documentElement.setAttribute('data-theme', 'custom');
-        document.documentElement.style.setProperty('--custom-hue', customHue);
-        localStorage.setItem('codenova-theme', 'custom');
-        localStorage.setItem('codenova-custom-hue-value', customHue);
-      } else if (!next) {
-        // 关闭时如果有自定义色就保留，没选过就回默认
-        if (!customHue) {
-          switchTheme('');
-        }
-      }
-      return next;
-    });
-  }, [customHue, switchTheme]);
-
-  /** 拖动中：只改 CSS 变量，零开销，不触发 React */
-  const handleHueInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
-    const hue = (e.target as HTMLInputElement).value;
-    document.documentElement.setAttribute('data-theme', 'custom');
-    document.documentElement.style.setProperty('--custom-hue', hue);
-  }, []);
-
-  /** 松手：才存 React 状态 + localStorage */
-  const handleHueCommit = useCallback((e: React.FormEvent<HTMLInputElement>) => {
-    const hue = (e.target as HTMLInputElement).value;
-    setCustomHue(hue);
-    setTheme('custom');
-    localStorage.setItem('codenova-theme', 'custom');
-    localStorage.setItem('codenova-custom-hue-value', hue);
-  }, []);
 
   const toggleRail = () =>
     setRail(v => {
@@ -344,61 +283,25 @@ export default function SideBar({
             </div>
           );
         })}
+        {/* ── 分割线 + 使用帮助（紧跟导航项） ── */}
+        {onStartTour && (
+          <div className="mt-1">
+            <div className={`${rail ? 'mx-2 border-t border-ed-line/40' : 'mx-3 border-t border-ed-line'} my-1`} />
+            <button
+              onClick={onStartTour}
+              data-tour="help"
+              data-tip={rail ? '使用帮助' : undefined}
+              className={rowCls(false)}
+            >
+              <HelpCircle className="w-5 h-5 shrink-0 text-ed-muted" strokeWidth={1.8} />
+              {!rail && '使用帮助'}
+            </button>
+          </div>
+        )}
       </nav>
 
-      {/* 底部：帮助按钮 + 色条 + 账号区（整体推到底） */}
+      {/* 底部：账号区（整体推到底） */}
       <div className="mt-auto">
-        {/* 使用帮助按钮 */}
-        {onStartTour && (
-          <button
-            onClick={onStartTour}
-            data-tip="使用帮助"
-            className={`w-full flex items-center gap-2 ${rail ? 'justify-center py-2' : 'px-3 py-2'} text-ed-muted hover:text-brand hover:bg-black/[0.04] rounded-lg transition-colors cursor-pointer text-sm`}
-          >
-            <HelpCircle className="w-4 h-4 shrink-0" />
-            {!rail && '使用帮助'}
-          </button>
-        )}
-        {!rail && (
-          <div className="flex h-1 cursor-pointer">
-            {THEMES.map(t => (
-              <button
-                key={t.label}
-                onClick={() => switchTheme(t.id)}
-                className={`flex-1 border-r border-white/30 transition-all ${
-                  theme === t.id && !customHue ? 'opacity-100 ring-1 ring-inset ring-black/20' : 'opacity-60 hover:opacity-80'
-                }`}
-                style={{ background: t.color }}
-                title={t.label}
-              />
-            ))}
-            <button
-              onClick={toggleCustom}
-              className={`flex-1 transition-all ${
-                customHue ? 'opacity-100 ring-1 ring-inset ring-black/20' : 'opacity-60 hover:opacity-80'
-              }`}
-              style={{ background: customHue || 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
-              title="自定义"
-            />
-          </div>
-        )}
-        {sliderOpen && (
-          <div className="px-3 py-1.5 border-t border-ed-line animate-fadeIn">
-            <input
-              type="range"
-              min="0"
-              max="360"
-              value={customHue || '95'}
-              onInput={handleHueInput}
-              onChange={handleHueCommit}
-              className="w-full h-1.5 rounded-full cursor-pointer appearance-none"
-              style={{
-                background: 'linear-gradient(to right, hsl(0,80%,60%), hsl(60,80%,60%), hsl(120,80%,60%), hsl(180,80%,60%), hsl(240,80%,60%), hsl(300,80%,60%), hsl(360,80%,60%))',
-              }}
-              title={customHue ? `色相 ${customHue}°` : '拖动选择颜色'}
-            />
-          </div>
-        )}
         <div className={`border-t border-ed-line ${rail ? 'p-1.5' : 'px-3 py-2'}`}>
         {user ? (
           rail ? (
