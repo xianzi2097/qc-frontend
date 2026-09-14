@@ -38,15 +38,16 @@ export default function ResourceFileTree({ resource, onBack }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <header className="ed-header flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
+      <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
+        style={{ background: 'var(--bookshelf-header-bg)' }}>
         <button
           onClick={onBack}
-          className="group flex items-center gap-1.5 text-xs text-ed-muted hover:text-brand transition-colors cursor-pointer"
+          className="group flex items-center gap-1.5 text-xs text-ed-muted hover:text-brand transition-colors cursor-pointer flex-shrink-0"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
           返回
         </button>
-        <h2 className="text-ed-title font-semibold text-ed-ink truncate">{resource.name}</h2>
+        <span className="text-ed-title font-semibold text-ed-ink truncate">{resource.name}</span>
       </header>
 
       <div className="flex-1 min-h-0 relative bg-card">

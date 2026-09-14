@@ -28,9 +28,10 @@ export default function HtmlSandbox() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      <header className="ed-header flex items-center justify-end px-8 pt-2 pb-2 border-b border-ed-line">
-        <h2 className="text-ed-title font-semibold text-ed-ink">HTML 演示</h2>
-        <div className="flex items-center gap-3">
+      <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
+        style={{ background: 'var(--bookshelf-header-bg)' }}>
+        <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">HTML 演示</span>
+        <div className="flex items-center gap-3 ml-auto">
           <span className="text-xs text-ed-muted">编辑代码 → 右侧实时预览</span>
           <button
             onClick={() => {
