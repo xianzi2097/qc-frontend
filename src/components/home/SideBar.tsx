@@ -200,7 +200,7 @@ export default function SideBar({
       className={`${rail ? 'w-14' : 'w-60'} flex-shrink-0 flex flex-col bg-ed-paper border-r-[1.5px] border-ed-line overflow-hidden transition-[width] duration-300 ease-in-out`}
     >
       {/* 顶部：图标栏仅 Logo（点击展开）；展开态为字标 + 收起开关 */}
-      <div className={`flex-shrink-0 flex items-center pt-2 pb-2 ${rail ? 'justify-center px-2' : 'justify-between px-5'}`}>
+      <div className={`flex-shrink-0 flex items-center pt-3 pb-2 ${rail ? 'justify-center px-2' : 'justify-between px-5'}`}>
         {rail ? (
           // GPT/Gemini 式收起态：只留 Logo，点一下即展开
           <button
