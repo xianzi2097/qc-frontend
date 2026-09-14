@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft, ArrowUpRight, BookOpen, ChevronDown, ChevronRight,
+  ArrowUpRight, BookOpen, ChevronDown, ChevronRight,
   FileText, Folder, FolderOpen,
 } from 'lucide-react';
 import { fetchMaterials } from '../../lib/api';
@@ -10,14 +10,15 @@ import type { Course, Material, MaterialNode } from '../../types/course';
 
 interface Props {
   course: Course;
-  onBack: () => void;
+  /** 保留：header 已不显示返回按钮，返回由侧边栏接管 */
+  onBack?: () => void;
 }
 
 /**
  * 课程内容视图 — 供「课程目录点击」与「侧边栏在学课程直达」共用：
  * 电子书（已渲染）→ 无痕内嵌；未渲染成功 → 占位；其他 → 文件列表
  */
-export default function CourseDetail({ course, onBack }: Props) {
+export default function CourseDetail({ course }: Props) {
   const ebookOk = course.format === 'ebook' && course.publish?.status === 'success';
   const ebookFail = course.format === 'ebook' && course.publish?.status !== 'success';
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -38,15 +39,9 @@ export default function CourseDetail({ course, onBack }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <header className="ed-header flex-shrink-0 flex items-center justify-between gap-6 px-8 pt-2 pb-2 border-b border-ed-line">
-        <button
-          onClick={onBack}
-          className="group flex items-center gap-1.5 text-xs text-ed-muted hover:text-brand transition-colors cursor-pointer"
-        >
-          <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
-          返回
-        </button>
-        <h2 className="text-ed-title font-semibold text-ed-ink truncate">{course.name}</h2>
+      <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
+        style={{ background: 'var(--bookshelf-header-bg)' }}>
+        <span className="text-ed-title font-semibold text-ed-ink truncate">{course.name}</span>
       </header>
 
       <div className="flex-1 min-h-0 relative bg-card">

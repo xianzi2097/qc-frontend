@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import TextTabs from './TextTabs';
 import { injectSeamless } from './seamless';
 
 const DOC_TABS = [
@@ -47,6 +46,27 @@ export default function DocsFrame() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
+      <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
+        style={{ background: 'var(--bookshelf-header-bg)' }}>
+        <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">学习文档</span>
+        <div className="flex items-center gap-2">
+          {DOC_TABS.map(t => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => switchTab(t.value)}
+              className={`h-8 px-4 rounded-full text-sm transition-colors duration-150 cursor-pointer ${
+                active === t.value
+                  ? 'bg-[var(--bookshelf-filter-on)] text-ed-ink font-semibold'
+                  : 'text-ed-muted hover:text-ed-ink hover:bg-[var(--bookshelf-filter-bg)]'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </header>
+
       <div className="flex-1 min-h-0 relative bg-white">
         {!loaded && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">

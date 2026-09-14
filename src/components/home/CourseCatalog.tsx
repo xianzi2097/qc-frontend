@@ -98,7 +98,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
     <div className="flex-1 flex flex-col min-h-0">
       {/* ── Topbar：标题 + 筛选 pill + 数量 ── */}
       <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
-        style={{ background: 'var(--bookshelf-header-bg)', backdropFilter: 'blur(14px)' }}>
+        style={{ background: 'var(--bookshelf-header-bg)' }}>
         <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">{title}</span>
         <div className="flex items-center gap-2">
           {FILTERS.map(f => (

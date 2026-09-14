@@ -95,8 +95,8 @@ export function injectSeamless(frame: HTMLIFrameElement | null): void {
       syncPadding(); syncTheme();
       if (W) {
         W.addEventListener('resize', syncPadding);
-        // 主题变化时同步（MutationObserver 监听 data-theme 变化）
-        new MutationObserver(syncTheme).observe(W.document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+        // 主题变化时同步（data-theme 切换 / 自定义色相拖动都会触发）
+        new MutationObserver(syncTheme).observe(W.document.documentElement, {attributes: true, attributeFilter: ['data-theme', 'style']});
       }
       // SPA 切换页面时 .has-sidebar 会变，重新同步 padding（避免旧页面残留）
       var vpContent = document.querySelector('.VPContent');

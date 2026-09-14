@@ -39,7 +39,7 @@
     --scrollbar-thumb: oklch(0.88 0.015 var(--seed-hue));
 
     /* 书架卡片系统色 — 随主题自动变 */
-    --bookshelf-header-bg: color-mix(in oklch, var(--page-bg) 88%, transparent);
+    --bookshelf-header-bg: var(--page-bg);
     --bookshelf-card-bg:   color-mix(in oklch, var(--page-bg) 92%, white);
     --bookshelf-cover-bg:  oklch(0.93 0.015 var(--seed-hue));
     --bookshelf-filter-on: color-mix(in oklch, var(--page-bg) 85%, var(--accent));
