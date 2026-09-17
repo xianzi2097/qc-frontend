@@ -3,7 +3,7 @@ import {
   BookOpen, Clock, GraduationCap, MonitorPlay, Palette, SquareLibrary,
   Star, Terminal, FileText, Sparkles,
 } from 'lucide-react';
-import { fetchRecent, fetchAllCourses } from '../../lib/api';
+import { fetchRecent } from '../../lib/api';
 import type { RecentItem } from '../../lib/api';
 import type { Course } from '../../types/course';
 import type { HomeSection } from './SideBar';
@@ -64,14 +64,11 @@ export default function Overview({ onGoCourses, onGoFeatured, onOpenCourse, onGo
   const props = { onGoCourses, onGoFeatured, onOpenCourse, onGoSection, onGoCompiler };
   const [visible, setVisible] = useState(false);
   const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
-  const [allCourses, setAllCourses] = useState<Course[]>([]);
-
   useEffect(() => { setVisible(true); }, []);
 
-  // 拉取最近访问 + 精选课程
+  // 拉取最近访问
   useEffect(() => {
     fetchRecent().then(setRecentItems).catch(() => {});
-    fetchAllCourses().then(list => setAllCourses(list.filter(c => c.featured))).catch(() => {});
   }, []);
 
   // 用户信息
@@ -302,32 +299,6 @@ export default function Overview({ onGoCourses, onGoFeatured, onOpenCourse, onGo
             </div>
           </div>
         </div>
-
-        {/* ═══ 推荐课程（横向滚动） ═══ */}
-        {allCourses.length > 0 && (
-          <>
-            <div className="text-[0.72rem] font-semibold text-ed-muted tracking-widest uppercase mb-3">推荐课程</div>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-              {allCourses.slice(0, 6).map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => onOpenCourse(c)}
-                  className="flex-shrink-0 w-48 bg-card border border-ed-line rounded-xl p-4 cursor-pointer transition-all hover:border-brand hover:shadow-sm hover:-translate-y-0.5 text-left group"
-                >
-                  <div className="w-full h-16 rounded-lg bg-brand-50 mb-3 flex items-center justify-center">
-                    <BookOpen size={24} className="text-brand opacity-40" />
-                  </div>
-                  <div className="text-[0.82rem] font-semibold text-ed-ink mb-0.5 truncate group-hover:text-brand transition-colors">
-                    {c.name}
-                  </div>
-                  <div className="text-[0.7rem] text-ed-muted truncate">
-                    {c.description || c.type}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
       </div>
     </div>
   );
