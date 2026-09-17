@@ -4,6 +4,7 @@ import {
   Star, Terminal, FileText, Sparkles,
 } from 'lucide-react';
 import type { HomeSection } from './SideBar';
+import { fetchUserSettings, updateUserSettings } from '../../lib/api';
 
 interface Props {
   onGoCourses: () => void;
@@ -36,23 +37,47 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
   const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
   const weekDay = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][now.getDay()];
 
-  // ── 主题色（精简版） ──
-  const [theme, setTheme] = useState(() => localStorage.getItem('codenova-theme') || '');
-  const [customHue, setCustomHue] = useState(() => localStorage.getItem('codenova-custom-hue-value') || '');
+  // ── 主题色（用户设置持久化到后端） ──
+  const [theme, setTheme] = useState('');
+  const [customHue, setCustomHue] = useState('');
   const [showThemePanel, setShowThemePanel] = useState(false);
+
+  // 首次加载：从后端拉设置，同步到 DOM + state
+  useEffect(() => {
+    fetchUserSettings().then(s => {
+      setTheme(s.theme);
+      setCustomHue(s.customHue);
+      if (s.theme) {
+        document.documentElement.setAttribute('data-theme', s.theme);
+      }
+      if (s.customHue) {
+        document.documentElement.style.setProperty('--custom-hue', s.customHue);
+      }
+    }).catch(() => {
+      // 未登录或失败，回退 localStorage
+      const t = localStorage.getItem('codenova-theme') || '';
+      const h = localStorage.getItem('codenova-custom-hue-value') || '';
+      setTheme(t);
+      setCustomHue(h);
+      if (t) document.documentElement.setAttribute('data-theme', t);
+      if (h) document.documentElement.style.setProperty('--custom-hue', h);
+    });
+  }, []);
 
   const switchTheme = useCallback((id: string) => {
     setTheme(id);
     setCustomHue('');
     document.documentElement.style.removeProperty('--custom-hue');
-    localStorage.removeItem('codenova-custom-hue-value');
     if (id) {
       document.documentElement.setAttribute('data-theme', id);
-      localStorage.setItem('codenova-theme', id);
     } else {
       document.documentElement.removeAttribute('data-theme');
-      localStorage.setItem('codenova-theme', '');
     }
+    // 持久化到后端（登录态）或 localStorage（未登录）
+    updateUserSettings({ theme: id, customHue: '' }).catch(() => {
+      localStorage.setItem('codenova-theme', id);
+      localStorage.removeItem('codenova-custom-hue-value');
+    });
   }, []);
 
   const handleHueInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
@@ -65,8 +90,11 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
     const hue = (e.target as HTMLInputElement).value;
     setCustomHue(hue);
     setTheme('custom');
-    localStorage.setItem('codenova-theme', 'custom');
-    localStorage.setItem('codenova-custom-hue-value', hue);
+    document.documentElement.setAttribute('data-theme', 'custom');
+    updateUserSettings({ theme: 'custom', customHue: hue }).catch(() => {
+      localStorage.setItem('codenova-theme', 'custom');
+      localStorage.setItem('codenova-custom-hue-value', hue);
+    });
   }, []);
 
   // ── 快捷操作 ──
@@ -114,15 +142,15 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
               <Palette size={14} className="text-ed-muted" />
               <span className="text-sm font-semibold text-ed-ink">主题配色</span>
             </div>
-            <div className="flex gap-2 mb-2">
+            <div className="flex gap-2">
               {THEMES.map(t => (
                 <button
                   key={t.label}
                   onClick={() => switchTheme(t.id)}
-                  className={`h-9 px-4 rounded-lg transition-all cursor-pointer border text-sm font-medium ${
+                  className={`h-9 px-4 rounded-lg transition-all cursor-pointer border text-sm font-medium text-white ${
                     theme === t.id && !customHue
-                      ? 'border-ed-ink/30 ring-2 ring-inset ring-ed-ink/10 shadow-sm text-ed-ink'
-                      : 'border-transparent hover:border-ed-line opacity-70 hover:opacity-100 text-ed-muted'
+                      ? 'border-ed-ink/30 ring-2 ring-inset ring-ed-ink/10 shadow-sm'
+                      : 'border-transparent hover:border-ed-line opacity-70 hover:opacity-100'
                   }`}
                   style={{ background: t.color }}
                 >
@@ -136,14 +164,13 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
                     setTheme('custom');
                     document.documentElement.setAttribute('data-theme', 'custom');
                     document.documentElement.style.setProperty('--custom-hue', customHue || '95');
-                    localStorage.setItem('codenova-theme', 'custom');
-                    if (customHue) localStorage.setItem('codenova-custom-hue-value', customHue);
+                    updateUserSettings({ theme: 'custom', customHue: customHue || '95' }).catch(() => {});
                   }
                 }}
-                className={`h-9 px-4 rounded-lg transition-all cursor-pointer border text-sm font-medium ${
+                className={`h-9 px-4 rounded-lg transition-all cursor-pointer border text-sm font-medium text-white ${
                   theme === 'custom'
-                    ? 'border-ed-ink/30 ring-2 ring-inset ring-ed-ink/10 shadow-sm text-white'
-                    : 'border-transparent hover:border-ed-line opacity-70 hover:opacity-100 text-white'
+                    ? 'border-ed-ink/30 ring-2 ring-inset ring-ed-ink/10 shadow-sm'
+                    : 'border-transparent hover:border-ed-line opacity-70 hover:opacity-100'
                 }`}
                 style={{ background: customHue ? `hsl(${customHue}, 70%, 55%)` : 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
               >
@@ -151,12 +178,14 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
               </button>
             </div>
             {theme === 'custom' && (
-              <input
-                type="range" min="0" max="360" value={customHue || '95'}
-                onInput={handleHueInput} onChange={handleHueCommit}
-                className="w-full h-1.5 rounded-full cursor-pointer appearance-none mt-2"
-                style={{ background: 'linear-gradient(to right, hsl(0,80%,60%), hsl(60,80%,60%), hsl(120,80%,60%), hsl(180,80%,60%), hsl(240,80%,60%), hsl(300,80%,60%), hsl(360,80%,60%))' }}
-              />
+              <div className="mt-3" style={{ width: 'calc(5 * 2.5rem + 4 * 0.5rem)' }}>
+                <input
+                  type="range" min="0" max="360" value={customHue || '95'}
+                  onInput={handleHueInput} onChange={handleHueCommit}
+                  className="w-full h-1.5 rounded-full cursor-pointer appearance-none"
+                  style={{ background: 'linear-gradient(to right, hsl(0,80%,60%), hsl(60,80%,60%), hsl(120,80%,60%), hsl(180,80%,60%), hsl(240,80%,60%), hsl(300,80%,60%), hsl(360,80%,60%))' }}
+                />
+              </div>
             )}
           </div>
         )}

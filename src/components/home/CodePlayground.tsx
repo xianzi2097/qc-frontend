@@ -15,6 +15,7 @@ import { LANGUAGE_CONFIG, submitCode, checkJudgeStatus } from './compilerApi';
 import type { JudgeStatus, CompileResult } from './compilerApi';
 import { CheckCircle, XCircle, Clock, HardDrive } from 'lucide-react';
 import { CODE_TEMPLATES } from './compilerTemplates';
+import { fetchUserSettings, updateUserSettings } from '../../lib/api';
 
 // ── 浅色语法高亮 ─────────────────────────────────────────
 const lightHighlighting = HighlightStyle.define([
@@ -85,15 +86,30 @@ export default function CodePlayground({ language: initLang }: Props) {
   const [running, setRunning] = useState(false);
   const [judgeStatus, setJudgeStatus] = useState<JudgeStatus>('unconfigured');
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
-  const [fontSize, setFontSize] = useState(() => {
-    try { return parseInt(localStorage.getItem('codePlayground_fontSize') || '16', 10); }
-    catch { return 16; }
-  });
+  const [fontSize, setFontSize] = useState(16);
   const MIN_FONT = 12, MAX_FONT = 28, DEFAULT_FONT = 16;
+
+  // 从后端加载用户字体设置
+  useEffect(() => {
+    fetchUserSettings().then(s => {
+      if (s.fontSize && s.fontSize >= MIN_FONT && s.fontSize <= MAX_FONT) {
+        setFontSize(s.fontSize);
+      }
+    }).catch(() => {
+      // 回退 localStorage
+      try {
+        const v = parseInt(localStorage.getItem('codePlayground_fontSize') || '16', 10);
+        if (v >= MIN_FONT && v <= MAX_FONT) setFontSize(v);
+      } catch { /* ignore */ }
+    });
+  }, []);
+
   const updateFontSize = (size: number) => {
     const clamped = Math.max(MIN_FONT, Math.min(MAX_FONT, size));
     setFontSize(clamped);
-    localStorage.setItem('codePlayground_fontSize', String(clamped));
+    updateUserSettings({ fontSize: clamped }).catch(() => {
+      localStorage.setItem('codePlayground_fontSize', String(clamped));
+    });
   };
 
   const editorRef = useRef<HTMLDivElement>(null);

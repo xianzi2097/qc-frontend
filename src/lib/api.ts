@@ -128,5 +128,29 @@ export async function setFeatured(courseId: string, featured: boolean): Promise<
   if (data.status !== 'success') throw new Error(data.detail || '操作失败');
 }
 
+// ═══ 用户设置 ═══
+
+export interface UserSettings {
+  theme: string;
+  customHue: string;
+  fontSize: number;
+}
+
+export async function fetchUserSettings(): Promise<UserSettings> {
+  const res = await fetch(`/api/user/settings?${nocache()}`);
+  const data = await res.json();
+  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16 };
+}
+
+export async function updateUserSettings(patch: Partial<UserSettings>): Promise<UserSettings> {
+  const res = await fetch('/api/user/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  const data = await res.json();
+  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16 };
+}
+
 
 
