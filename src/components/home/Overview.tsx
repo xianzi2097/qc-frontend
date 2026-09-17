@@ -26,7 +26,6 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
   // 用户信息
   const storedUser = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
   const username = storedUser?.username || '游客';
-  const role = storedUser?.role || '';
 
   // 时间问候
   const hour = new Date().getHours();
@@ -101,7 +100,7 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
             {dateStr} · {weekDay}
           </p>
           <h3 className="ed-serif text-[2rem] leading-snug font-extrabold text-ed-ink mb-3 tracking-tight">
-            {timeGreet}，{username}{role === 'teacher' ? ' 老师' : ''}
+            {timeGreet}，{username}
           </h3>
           <p className="text-[0.88rem] text-ed-body leading-relaxed max-w-[40rem]">
             现在想创作点什么？
