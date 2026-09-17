@@ -12,7 +12,7 @@ import Resources from './Resources';
 
 import LoginPanel from './LoginPanel';
 import AvatarPicker, { AVATARS } from '../ui/AvatarPicker';
-import { fetchAllCourses, logoutRequest, updateAvatar, postRecent } from '../../lib/api';
+import { fetchAllCourses, logoutRequest, updateAvatar } from '../../lib/api';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
 import { startHomePageTour } from '../../lib/guidedTour';
@@ -50,7 +50,6 @@ export default function HomePage({ onLogin }: Props) {
   // 打开课程时记录最近访问
   const handleOpenCourse = (c: Course) => {
     setOpenCourse(c);
-    postRecent('course', c.id, c.name).catch(() => {});
   };
 
   // 首屏拉一次全量课程，筛出精选挂到侧边栏
@@ -60,15 +59,9 @@ export default function HomePage({ onLogin }: Props) {
       .catch(() => {});
   }, []);
 
-  // 切换栏目时收起打开的课程 + 记录最近访问
-  const SECTION_LABELS: Record<HomeSection, string> = {
-    overview: '开始', courses: '书架', featured: '精选课程', resources: '资料',
-    docs: '学习文档', downloads: '软件下载', 'html-sandbox': 'HTML 演示', compiler: '在线编程', scratch: 'Scratch',
-  };
   const handleSection = (s: HomeSection) => {
     setOpenCourse(null);
     setSection(s);
-    if (s !== 'overview') postRecent('section', s, SECTION_LABELS[s] || s).catch(() => {});
   };
 
   // 每次渲染重读 localStorage——头像更新后无需手动刷新状态
@@ -137,7 +130,6 @@ export default function HomePage({ onLogin }: Props) {
               <Overview
                 onGoCourses={() => setSection('courses')}
                 onGoFeatured={() => setSection('featured')}
-                onOpenCourse={handleOpenCourse}
                 onGoSection={handleSection}
                 onGoCompiler={() => setSection('compiler')}
               />

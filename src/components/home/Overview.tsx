@@ -1,56 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  BookOpen, Clock, GraduationCap, MonitorPlay, Palette, SquareLibrary,
+  Palette, SquareLibrary,
   Star, Terminal, FileText, Sparkles,
 } from 'lucide-react';
-import { fetchRecent } from '../../lib/api';
-import type { RecentItem } from '../../lib/api';
-import type { Course } from '../../types/course';
 import type { HomeSection } from './SideBar';
+
 interface Props {
   onGoCourses: () => void;
   onGoFeatured: () => void;
-  onOpenCourse: (c: Course) => void;
   onGoSection: (s: HomeSection) => void;
   onGoCompiler: () => void;
-}
-
-/* ── 相对时间 ── */
-function relativeTime(ts: number): string {
-  const diff = Date.now() - ts;
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return '刚刚';
-  if (min < 60) return `${min}分钟前`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}小时前`;
-  const day = Math.floor(hr / 24);
-  if (day < 7) return `${day}天前`;
-  return `${Math.floor(day / 7)}周前`;
-}
-
-/* ── 类型标签颜色映射 ── */
-const TYPE_STYLES: Record<string, { label: string; cls: string }> = {
-  course:   { label: '课程',   cls: 'bg-brand-50 text-brand' },
-  section:  { label: '栏目',   cls: 'bg-blue-50 text-blue-600' },
-  resource: { label: '资料',   cls: 'bg-emerald-50 text-emerald-600' },
-};
-
-/* ── section → 图标 + 跳转动作 ── */
-function resolveRecentAction(item: RecentItem, props: Props) {
-  if (item.type === 'course') {
-    return { icon: BookOpen, onClick: () => props.onOpenCourse({ id: item.id, name: item.title } as Course) };
-  }
-  if (item.id === 'compiler-python') return { icon: Terminal, onClick: () => props.onGoCompiler() };
-  if (item.id === 'compiler-cpp')    return { icon: Terminal, onClick: () => props.onGoCompiler() };
-  if (item.id === 'compiler-html')   return { icon: Terminal, onClick: () => props.onGoCompiler() };
-  if (item.id === 'courses')    return { icon: SquareLibrary, onClick: () => props.onGoSection('courses' as HomeSection) };
-  if (item.id === 'featured')   return { icon: Star,          onClick: () => props.onGoSection('featured' as HomeSection) };
-  if (item.id === 'resources')  return { icon: FileText,      onClick: () => props.onGoSection('resources' as HomeSection) };
-  if (item.id === 'docs')       return { icon: GraduationCap, onClick: () => props.onGoSection('docs' as HomeSection) };
-  if (item.id === 'compiler')   return { icon: Terminal,      onClick: () => props.onGoSection('compiler' as HomeSection) };
-  if (item.id === 'downloads')  return { icon: MonitorPlay,   onClick: () => props.onGoSection('downloads' as HomeSection) };
-  if (item.id === 'html-sandbox') return { icon: MonitorPlay, onClick: () => props.onGoSection('html-sandbox' as HomeSection) };
-  return { icon: BookOpen, onClick: () => {} };
 }
 
 /* ── 主题色 ── */
@@ -60,16 +19,9 @@ const THEMES = [
   { id: 'blue', label: '蓝色', color: 'oklch(0.65 0.19 220)' },
 ];
 
-export default function Overview({ onGoCourses, onGoFeatured, onOpenCourse, onGoSection, onGoCompiler }: Props) {
-  const props = { onGoCourses, onGoFeatured, onOpenCourse, onGoSection, onGoCompiler };
+export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoCompiler }: Props) {
   const [visible, setVisible] = useState(false);
-  const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
   useEffect(() => { setVisible(true); }, []);
-
-  // 拉取最近访问
-  useEffect(() => {
-    fetchRecent().then(setRecentItems).catch(() => {});
-  }, []);
 
   // 用户信息
   const storedUser = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
@@ -151,15 +103,9 @@ export default function Overview({ onGoCourses, onGoFeatured, onOpenCourse, onGo
           <h3 className="ed-serif text-[2rem] leading-snug font-extrabold text-ed-ink mb-3 tracking-tight">
             {timeGreet}，{username}{role === 'teacher' ? ' 老师' : ''}
           </h3>
-          {recentItems.length > 0 ? (
-            <p className="text-[0.88rem] text-ed-body leading-relaxed max-w-[40rem]">
-              上次你在看「{recentItems[0].title}」，要继续吗？
-            </p>
-          ) : (
-            <p className="text-[0.88rem] text-ed-body leading-relaxed max-w-[40rem]">
-              现在想创作点什么？
-            </p>
-          )}
+          <p className="text-[0.88rem] text-ed-body leading-relaxed max-w-[40rem]">
+            现在想创作点什么？
+          </p>
         </div>
 
         {/* ═══ 主题配色面板（展开时显示） ═══ */}
@@ -216,61 +162,8 @@ export default function Overview({ onGoCourses, onGoFeatured, onOpenCourse, onGo
           </div>
         )}
 
-        {/* ═══ 两大卡片：最近访问 + 快捷操作 ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6 max-w-[64rem]">
-
-          {/* ── 最近访问 ── */}
-          <div className="bg-card border border-ed-line rounded-2xl p-5 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-brand-50 text-brand flex items-center justify-center">
-                  <Clock size={16} />
-                </div>
-                <span className="text-[0.88rem] font-semibold text-ed-ink">最近访问</span>
-              </div>
-              {recentItems.length > 0 && (
-                <span className="text-[0.62rem] text-ed-muted bg-brand-50 text-brand px-2 py-0.5 rounded-full font-medium">自动记录</span>
-              )}
-            </div>
-
-            {recentItems.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center py-8 text-center">
-                <div className="text-2xl mb-2 opacity-30">📂</div>
-                <p className="text-[0.82rem] text-ed-muted leading-relaxed">
-                  还没有访问记录<br />从下方快捷入口开始探索吧
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-0.5 flex-1 min-h-0">
-                {recentItems.slice(0, 6).map((item, i) => {
-                  const action = resolveRecentAction(item, props);
-                  const Icon = action.icon;
-                  const style = TYPE_STYLES[item.type] || TYPE_STYLES.section;
-                  return (
-                    <button
-                      key={`${item.type}-${item.id}-${i}`}
-                      onClick={action.onClick}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-black/[0.03] transition-colors cursor-pointer text-left group"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0" />
-                      <Icon size={14} className="text-ed-muted flex-shrink-0" strokeWidth={1.8} />
-                      <span className="flex-1 text-[0.84rem] font-medium text-ed-ink truncate group-hover:text-brand transition-colors">
-                        {item.title}
-                      </span>
-                      <span className={`text-[0.62rem] px-1.5 py-0.5 rounded ${style.cls} flex-shrink-0`}>
-                        {style.label}
-                      </span>
-                      <span className="text-[0.7rem] text-ed-muted flex-shrink-0 w-14 text-right">
-                        {relativeTime(item.ts)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* ── 快捷操作 ── */}
+        {/* ═══ 快捷操作 ═══ */}
+        <div className="max-w-[32rem]">
           <div className="bg-card border border-ed-line rounded-2xl p-5 flex flex-col">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
