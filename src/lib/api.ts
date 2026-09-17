@@ -128,3 +128,28 @@ export async function setFeatured(courseId: string, featured: boolean): Promise<
   if (data.status !== 'success') throw new Error(data.detail || '操作失败');
 }
 
+// ═══ 最近访问记录 ═══
+
+export interface RecentItem {
+  type: 'course' | 'section' | 'resource';
+  id: string;
+  title: string;
+  ts: number;
+}
+
+/** 获取当前用户的最近访问记录 */
+export async function fetchRecent(): Promise<RecentItem[]> {
+  const res = await fetch(`/api/recent?${nocache()}`);
+  const data = await res.json();
+  return data.status === 'success' ? data.items : [];
+}
+
+/** 写入一条最近访问记录（后端自动去重 + LRU 淘汰） */
+export async function postRecent(type: string, id: string, title: string): Promise<void> {
+  await fetch('/api/recent', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, id, title }),
+  });
+}
+

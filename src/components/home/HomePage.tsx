@@ -9,10 +9,10 @@ import Downloads from './Downloads';
 import HtmlSandbox from './HtmlSandbox';
 import CodePlayground from './CodePlayground';
 import Resources from './Resources';
-import type { Language } from './compilerApi';
+
 import LoginPanel from './LoginPanel';
 import AvatarPicker, { AVATARS } from '../ui/AvatarPicker';
-import { fetchAllCourses, logoutRequest, updateAvatar } from '../../lib/api';
+import { fetchAllCourses, logoutRequest, updateAvatar, postRecent } from '../../lib/api';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
 import { startHomePageTour } from '../../lib/guidedTour';
@@ -41,12 +41,17 @@ export default function HomePage({ onLogin }: Props) {
   const [section, setSection] = useState<HomeSection>(() =>
     new URLSearchParams(window.location.search).get('view') === 'courses' ? 'courses' : 'overview',
   );
-  const [compilerLang, setCompilerLang] = useState<Language>('python');
   const [showLogin, setShowLogin] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   // 在学课程（精选）：侧边栏直达列表 + 当前打开的课程
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
+
+  // 打开课程时记录最近访问
+  const handleOpenCourse = (c: Course) => {
+    setOpenCourse(c);
+    postRecent('course', c.id, c.name).catch(() => {});
+  };
 
   // 首屏拉一次全量课程，筛出精选挂到侧边栏
   useEffect(() => {
@@ -55,17 +60,15 @@ export default function HomePage({ onLogin }: Props) {
       .catch(() => {});
   }, []);
 
-  // 切换栏目时收起打开的课程
+  // 切换栏目时收起打开的课程 + 记录最近访问
+  const SECTION_LABELS: Record<HomeSection, string> = {
+    overview: '开始', courses: '书架', featured: '精选课程', resources: '资料',
+    docs: '学习文档', downloads: '软件下载', 'html-sandbox': 'HTML 演示', compiler: '在线编程', scratch: 'Scratch',
+  };
   const handleSection = (s: HomeSection) => {
     setOpenCourse(null);
     setSection(s);
-  };
-
-  // 点击编译器语言
-  const handleCompilerClick = (lang: Language) => {
-    setOpenCourse(null);       // 清除课程选中态，否则 CourseDetail 会盖住编译器
-    setCompilerLang(lang);
-    setSection('compiler');
+    if (s !== 'overview') postRecent('section', s, SECTION_LABELS[s] || s).catch(() => {});
   };
 
   // 每次渲染重读 localStorage——头像更新后无需手动刷新状态
@@ -102,8 +105,7 @@ export default function HomePage({ onLogin }: Props) {
         onSection={handleSection}
         featuredCourses={featuredCourses}
         activeCourseId={openCourse?.id}
-        onOpenCourse={setOpenCourse}
-        onCompilerClick={handleCompilerClick}
+        onOpenCourse={handleOpenCourse}
         onClearCourse={() => setOpenCourse(null)}
         user={storedUser}
         username={username}
@@ -130,11 +132,14 @@ export default function HomePage({ onLogin }: Props) {
             {section === 'docs' && <DocsFrame />}
             {section === 'downloads' && <Downloads />}
             {section === 'html-sandbox' && <HtmlSandbox />}
-            {section === 'compiler' && <CodePlayground key={compilerLang} language={compilerLang} />}
+            {section === 'compiler' && <CodePlayground />}
             {section === 'overview' && (
               <Overview
                 onGoCourses={() => setSection('courses')}
                 onGoFeatured={() => setSection('featured')}
+                onOpenCourse={handleOpenCourse}
+                onGoSection={handleSection}
+                onGoCompiler={() => setSection('compiler')}
               />
             )}
           </>

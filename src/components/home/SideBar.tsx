@@ -10,7 +10,7 @@ import { AVATARS } from '../ui/AvatarPicker';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
 
-export type HomeSection = 'overview' | 'courses' | 'featured' | 'resources' | 'docs' | 'downloads' | 'html-sandbox' | 'compiler';
+export type HomeSection = 'overview' | 'courses' | 'featured' | 'resources' | 'docs' | 'downloads' | 'html-sandbox' | 'compiler' | 'scratch';
 
 interface Props {
   section: HomeSection;
@@ -19,8 +19,6 @@ interface Props {
   featuredCourses: Course[];
   activeCourseId?: string;
   onOpenCourse: (c: Course) => void;
-  /** 点击在线编译器语言 */
-  onCompilerClick: (lang: 'python' | 'cpp' | 'html') => void;
   /** 清除课程选中态（切到其他板块时调用） */
   onClearCourse: () => void;
   /** 启动引导 Tour */
@@ -34,27 +32,21 @@ interface Props {
   onLogout: () => void;
 }
 
-/** 导航定义：scratch 为可展开的「在线编程」分组，其余为页内板块 */
-const NAV: { id: HomeSection | 'scratch'; label: string; icon: typeof Home }[] = [
+/** 导航定义：scratch 独立顶级项（外链），其余为页内板块 */
+const NAV: { id: HomeSection; label: string; icon: typeof Home }[] = [
   { id: 'overview', label: '开始', icon: Home },
   { id: 'courses', label: '书架', icon: SquareLibrary },
   { id: 'featured', label: '课程', icon: Library },
   { id: 'resources', label: '资料', icon: FileText },
   { id: 'docs', label: '学习文档', icon: GraduationCap },
-  { id: 'scratch', label: '在线编程', icon: Terminal },
+  { id: 'scratch', label: 'Scratch 4.0e', icon: Code2 },
+  { id: 'compiler', label: '在线编程', icon: Terminal },
   { id: 'downloads', label: '软件下载', icon: Download },
   { id: 'html-sandbox', label: 'HTML 演示', icon: Code2 },
 ];
 
-// ── 二级目录行样式：在学课程与在线编程子列表共用；字号/缩进/间距微调只改这里 ──
+// ── 二级目录行样式：在学课程子列表共用；字号/缩进/间距微调只改这里 ──
 const SUB_ITEM = 'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-lg text-[0.86rem]';
-/** 在线编程语言子项 */
-const PROG_LANGS: { name: string; url?: string; compiler?: 'python' | 'cpp' | 'html' }[] = [
-  { name: 'Scratch', url: '/Scratch/index.html' },
-  { name: 'Python', compiler: 'python' },
-  { name: 'C++', compiler: 'cpp' },
-  { name: 'HTML', compiler: 'html' },
-];
 
 /**
  * 左侧控制台 — ChatGPT 式布局：
@@ -62,15 +54,13 @@ const PROG_LANGS: { name: string; url?: string; compiler?: 'python' | 'cpp' | 'h
  * 导航 + 在学课程子目录（可折叠）+ 底部账号区。
  */
 export default function SideBar({
-  section, onSection, featuredCourses, activeCourseId, onOpenCourse, onCompilerClick, onClearCourse,
+  section, onSection, featuredCourses, activeCourseId, onOpenCourse, onClearCourse,
   user, username, roleLabel, avatarIdx,
   onAvatarClick, onLoginClick, onLogout, onStartTour,
 }: Props) {
   const [folded, setFolded] = useState(false); // 在学课程子目录折叠状态
-  const [progOpen, setProgOpen] = useState(false); // 在线编程分组默认折叠
-  const [selectedLang, setSelectedLang] = useState<string | null>(null); // 当前选中的编程语言
-  // 图标栏模式：收窄为单图标宽度；localStorage 记忆，下次进入保持
-  const [rail, setRail] = useState(() => localStorage.getItem('sidebarRail') === '1');
+  // 图标栏模式：收窄为单图标宽度；localStorage 记忆，默认收起
+  const [rail, setRail] = useState(() => localStorage.getItem('sidebarRail') !== '0');
 
   const toggleRail = () =>
     setRail(v => {
@@ -169,33 +159,26 @@ export default function SideBar({
       {/* 导航 —— 外链与页内项统一由 NAV 数据驱动渲染 */}
       <nav className={`flex-1 min-h-0 overflow-y-auto scrollbar-none space-y-0.5 ${rail ? 'px-2' : 'px-3'}`}>
         {NAV.map(({ id, label, icon: Icon }) => {
-          const active = id !== 'scratch' && section === (id as HomeSection);
+          const active = section === id;
           return (
             <div key={id}>
               <button
                 onClick={() => {
-                  if (id === 'scratch') {
-                    if (rail) window.open('/Scratch/index.html', '_blank');
-                    else setProgOpen(v => !v);
-                    return;
-                  }
-                  // 统一规则：切到非编程页面时清除所有子选中
-                  setSelectedLang(null);
                   onClearCourse();
-                  if (id === 'downloads' || id === 'html-sandbox') {
-                    onSection(id as HomeSection);
+                  if (id === 'scratch') {
+                    window.open('/Scratch/index.html', '_blank');
                     return;
                   }
                   if (id === 'featured') setFolded(false);
-                  onSection(id as HomeSection);
+                  onSection(id);
                 }}
-                data-tip={rail ? (id === 'scratch' ? '在线编程 · Scratch' : label) : undefined}
+                data-tip={rail ? label : undefined}
                 data-tour={
                   id === 'courses' ? 'courses' :
                   id === 'featured' ? 'featured' :
                   id === 'resources' ? 'resources' :
                   id === 'docs' ? 'docs' :
-                  id === 'scratch' ? 'programming' :
+                  id === 'compiler' ? 'programming' :
                   id === 'downloads' ? 'downloads' :
                   id === 'html-sandbox' ? 'html-sandbox' :
                   undefined
@@ -204,6 +187,7 @@ export default function SideBar({
               >
                 <Icon className={`w-5 h-5 shrink-0 ${iconCls(active)}`} strokeWidth={1.8} />
                 {!rail && label}
+                {!rail && id === 'scratch' && <ExternalLink className="w-3 h-3 ml-auto opacity-40" />}
                 {!rail && id === 'featured' && featuredCourses.length > 0 && (
                   <span
                     onClick={(e) => { e.stopPropagation(); setFolded(v => !v); }}
@@ -213,23 +197,13 @@ export default function SideBar({
                     {folded ? <Plus className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
                   </span>
                 )}
-                {!rail && id === 'scratch' && (
-                  <span
-                    onClick={(e) => { e.stopPropagation(); setProgOpen(v => !v); }}
-                    data-tip={progOpen ? '收起编程语言' : '展开编程语言'}
-                    className="ml-auto flex items-center justify-center w-5 h-5 rounded text-ed-muted hover:text-brand hover:bg-black/[0.06] transition-colors cursor-pointer"
-                  >
-                    {progOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                  </span>
-                )}
-                {/* 软件下载不显示 +/- */}
               </button>
               {!rail && id === 'featured' && !folded && featuredCourses.length > 0 && (
                 <div className="mt-0.5 mb-1 space-y-0.5">
                   {featuredCourses.map((c) => (
                     <button
                       key={c.id}
-                      onClick={() => { setSelectedLang(null); onSection('featured'); onOpenCourse(c); }}
+                      onClick={() => { onSection('featured'); onOpenCourse(c); }}
                       className={`${SUB_ITEM} cursor-pointer transition-colors ${
                         activeCourseId === c.id
                           ? 'bg-black/[0.06] text-brand font-semibold'
@@ -242,44 +216,6 @@ export default function SideBar({
                   ))}
                 </div>
               )}
-{/* 在线编程子目录 */}
-              {!rail && id === 'scratch' && progOpen && (
-                <div className="mt-0.5 mb-1 space-y-0.5">
-                  {PROG_LANGS.map(({ name, url, compiler }) => {
-                    const isSelected = compiler && selectedLang === name;
-                    return compiler ? (
-                      <button
-                        key={name}
-                        onClick={() => {
-                          setSelectedLang(name);
-                          onCompilerClick(compiler);
-                        }}
-                        className={`${SUB_ITEM} transition-colors cursor-pointer ${
-                          isSelected
-                            ? 'bg-black/[0.06] text-brand font-semibold'
-                            : 'text-ed-muted hover:bg-black/[0.04] hover:text-ed-body'
-                        }`}
-                      >
-                        <span className={`w-1 h-1 rounded-full flex-shrink-0 ${isSelected ? 'bg-brand' : 'bg-brand/50'}`} />
-                        <span className="truncate">{name}</span>
-                      </button>
-                    ) : (
-                      <a
-                        key={name}
-                        href={url}
-                        target={url ? '_blank' : undefined}
-                        rel={url ? 'noreferrer' : undefined}
-                        onClick={() => { setSelectedLang(name); onClearCourse(); }}
-                        className={`${SUB_ITEM} transition-colors no-underline cursor-pointer text-ed-muted hover:bg-black/[0.04] hover:text-ed-body`}
-                      >
-                        <span className="w-1 h-1 rounded-full bg-brand/50 flex-shrink-0" />
-                        <span className="truncate">{name}</span>
-                        {url && <ExternalLink className="w-3 h-3 ml-auto opacity-60" />}
-                      </a>
-                    );
-                  })}
-                </div>
-              )} 
             </div>
           );
         })}

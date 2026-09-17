@@ -62,16 +62,24 @@ function saveState(lang: Language, code: string, stdin: string) {
 }
 
 interface Props {
-  language: Language;
+  /** 初始语言（可选，默认 python） */
+  language?: Language;
 }
 
+const LANG_TABS: { key: Language; label: string }[] = [
+  { key: 'python', label: 'Python' },
+  { key: 'cpp', label: 'C++' },
+  { key: 'html', label: 'HTML' },
+];
+
 /**
- * 在线编译器 — 左侧代码编辑，右侧输入输出
+ * 在线编译器 — 顶部语言 Tab + 左代码右输入输出
  */
-export default function CodePlayground({ language }: Props) {
-  const langConf = LANGUAGE_CONFIG[language];
-  const saved = loadState(language);
-  const [code, setCode] = useState(saved?.code ?? CODE_TEMPLATES[language]);
+export default function CodePlayground({ language: initLang }: Props) {
+  const [activeLang, setActiveLang] = useState<Language>(initLang ?? 'python');
+  const langConf = LANGUAGE_CONFIG[activeLang];
+  const saved = loadState(activeLang);
+  const [code, setCode] = useState(saved?.code ?? CODE_TEMPLATES[activeLang]);
   const [stdin, setStdin] = useState(saved?.stdin ?? '');
   const [result, setResult] = useState<CompileResult | null>(null);
   const [running, setRunning] = useState(false);
@@ -98,15 +106,15 @@ export default function CodePlayground({ language }: Props) {
 
   // ── 自动保存到 localStorage（防抖 500ms） ────────────
   useEffect(() => {
-    const timer = setTimeout(() => saveState(language, code, stdin), 500);
+    const timer = setTimeout(() => saveState(activeLang, code, stdin), 500);
     return () => clearTimeout(timer);
-  }, [code, stdin, language]);
+  }, [code, stdin, activeLang]);
 
   // ── 初始化 CodeMirror ─────────────────────────────────
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const langExtension = language === 'python' ? python() : language === 'cpp' ? cpp() : htmlLang();
+    const langExtension = activeLang === 'python' ? python() : activeLang === 'cpp' ? cpp() : htmlLang();
 
     const state = EditorState.create({
       doc: code,
@@ -162,9 +170,21 @@ export default function CodePlayground({ language }: Props) {
       view.destroy();
       viewRef.current = null;
     };
-  }, [language, fontSize]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeLang, fontSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const isLocal = language === 'html';
+  const isLocal = activeLang === 'html';
+
+  // ── 切换语言时加载对应保存状态 ────────────────────────
+  const switchLang = (lang: Language) => {
+    if (lang === activeLang) return;
+    // 先保存当前语言的状态（auto-save 有防抖，这里立即写一次确保不丢）
+    saveState(activeLang, code, stdin);
+    setActiveLang(lang);
+    const saved = loadState(lang);
+    setCode(saved?.code ?? CODE_TEMPLATES[lang]);
+    setStdin(saved?.stdin ?? '');
+    setResult(null);
+  };
 
   // ── 运行代码 ─────────────────────────────────────────
   const handleRun = useCallback(async () => {
@@ -213,58 +233,75 @@ export default function CodePlayground({ language }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      {/* ── Header ── */}
-      <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
+      {/* ── Header + Language Tabs ── */}
+      <header className="flex-shrink-0 border-b border-ed-line"
         style={{ background: 'var(--bookshelf-header-bg)' }}>
-        <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">{isLocal ? 'HTML 演示' : '在线编译器'}</span>
-        <div className="flex items-center gap-4 ml-auto">
-          {!isLocal && <StatusIndicator status={judgeStatus} />}
-          {/* 字体大小调节 */}
-          <div className="flex items-center gap-1 text-xs">
-            <button
-              onClick={() => updateFontSize(fontSize - 2)}
-              disabled={fontSize <= MIN_FONT}
-              className="w-6 h-6 rounded flex items-center justify-center text-ed-muted hover:bg-black/[0.06] disabled:opacity-30 transition-colors cursor-pointer"
-            >
-              A-
-            </button>
-            <span className="w-8 text-center text-ed-body font-medium tabular-nums">{fontSize}</span>
-            <button
-              onClick={() => updateFontSize(fontSize + 2)}
-              disabled={fontSize >= MAX_FONT}
-              className="w-6 h-6 rounded flex items-center justify-center text-ed-muted hover:bg-black/[0.06] disabled:opacity-30 transition-colors cursor-pointer"
-            >
-              A+
-            </button>
-            {fontSize !== DEFAULT_FONT && (
+        <div className="flex items-center gap-4 px-6 h-14">
+          {/* 语言选项卡 */}
+          <div className="flex items-center gap-1">
+            {LANG_TABS.map(({ key, label }) => (
               <button
-                onClick={() => updateFontSize(DEFAULT_FONT)}
-                className="ml-1 text-ed-muted hover:text-brand transition-colors cursor-pointer"
-                title="恢复默认"
+                key={key}
+                onClick={() => switchLang(key)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  activeLang === key
+                    ? 'bg-brand/10 text-brand'
+                    : 'text-ed-muted hover:text-ed-body hover:bg-black/[0.04]'
+                }`}
               >
-                ↺
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-4 ml-auto">
+            {!isLocal && <StatusIndicator status={judgeStatus} />}
+            {/* 字体大小调节 */}
+            <div className="flex items-center gap-1 text-xs">
+              <button
+                onClick={() => updateFontSize(fontSize - 2)}
+                disabled={fontSize <= MIN_FONT}
+                className="w-6 h-6 rounded flex items-center justify-center text-ed-muted hover:bg-black/[0.06] disabled:opacity-30 transition-colors cursor-pointer"
+              >
+                A-
+              </button>
+              <span className="w-8 text-center text-ed-body font-medium tabular-nums">{fontSize}</span>
+              <button
+                onClick={() => updateFontSize(fontSize + 2)}
+                disabled={fontSize >= MAX_FONT}
+                className="w-6 h-6 rounded flex items-center justify-center text-ed-muted hover:bg-black/[0.06] disabled:opacity-30 transition-colors cursor-pointer"
+              >
+                A+
+              </button>
+              {fontSize !== DEFAULT_FONT && (
+                <button
+                  onClick={() => updateFontSize(DEFAULT_FONT)}
+                  className="ml-1 text-ed-muted hover:text-brand transition-colors cursor-pointer"
+                  title="恢复默认"
+                >
+                  ↺
+                </button>
+              )}
+            </div>
+            {!isLocal && (
+              <button
+                onClick={handleRun}
+                disabled={running}
+                className="text-xs px-4 py-1.5 rounded-lg bg-brand text-white hover:bg-brand/90 disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                {running ? (
+                  <>
+                    <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    运行中
+                  </>
+                ) : (
+                  '▶ 运行'
+                )}
               </button>
             )}
           </div>
-          {!isLocal && (
-          <button
-            onClick={handleRun}
-            disabled={running}
-            className="text-xs px-4 py-1.5 rounded-lg bg-brand text-white hover:bg-brand/90 disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5"
-          >
-            {running ? (
-              <>
-                <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                运行中
-              </>
-            ) : (
-              '▶ 运行'
-            )}
-          </button>
-          )}
         </div>
       </header>
 
