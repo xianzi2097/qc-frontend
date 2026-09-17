@@ -123,11 +123,10 @@ export default function Overview({ onGoCourses, onGoFeatured, onOpenCourse, onGo
 
   // ── 快捷操作 ──
   const quickActions = [
-    { icon: GraduationCap, label: '去上课', onClick: onGoCourses, color: 'accent' },
-    { icon: Star, label: '逛精选', onClick: onGoFeatured, color: 'accent' },
-    { icon: Terminal, label: '在线编程', onClick: () => onGoCompiler(), color: 'blue' },
     { icon: SquareLibrary, label: '书架', onClick: onGoCourses, color: 'green' },
-    { icon: FileText, label: '资料管理', onClick: () => onGoSection('resources'), color: 'amber' },
+    { icon: Star, label: '课程', onClick: onGoFeatured, color: 'accent' },
+    { icon: Terminal, label: '在线编程', onClick: () => onGoCompiler(), color: 'blue' },
+    { icon: FileText, label: '资料', onClick: () => onGoSection('resources'), color: 'amber' },
     { icon: Palette, label: '主题配色', onClick: () => setShowThemePanel(v => !v), color: 'blue' },
   ];
 
