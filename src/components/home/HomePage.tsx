@@ -77,6 +77,8 @@ export default function HomePage({ onLogin }: Props) {
     logoutRequest();
     localStorage.removeItem('user');
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('codenova-theme');
+    localStorage.removeItem('codenova-custom-hue-value');
     window.location.reload();
   };
 
