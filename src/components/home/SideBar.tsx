@@ -3,7 +3,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Code2, Download, ExternalLink, FileText, GraduationCap, HelpCircle, Home, LayoutDashboard,
-  Library, LogIn, LogOut, Minus, PanelLeftClose, Plus, SquareLibrary, Terminal,
+  Library, LogIn, LogOut, Minus, PanelLeftClose, Puzzle, Plus, SquareLibrary, Terminal,
 } from 'lucide-react';
 import LogoMark from './LogoMark';
 import { AVATARS } from '../ui/AvatarPicker';
@@ -39,7 +39,7 @@ const NAV: { id: HomeSection; label: string; icon: typeof Home }[] = [
   { id: 'featured', label: '课程', icon: Library },
   { id: 'resources', label: '资料', icon: FileText },
   { id: 'docs', label: '学习文档', icon: GraduationCap },
-  { id: 'scratch', label: 'Scratch 4.0e', icon: Code2 },
+  { id: 'scratch', label: 'Scratch 4.0e', icon: Puzzle },
   { id: 'compiler', label: '在线编程', icon: Terminal },
   { id: 'downloads', label: '软件下载', icon: Download },
   { id: 'html-sandbox', label: 'HTML 演示', icon: Code2 },
