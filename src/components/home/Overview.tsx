@@ -68,16 +68,15 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
     setTheme(id);
     setCustomHue('');
     document.documentElement.style.removeProperty('--custom-hue');
+    localStorage.setItem('codenova-theme', id);
+    localStorage.removeItem('codenova-custom-hue-value');
     if (id) {
       document.documentElement.setAttribute('data-theme', id);
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
-    // 持久化到后端（登录态）或 localStorage（未登录）
-    updateUserSettings({ theme: id, customHue: '' }).catch(() => {
-      localStorage.setItem('codenova-theme', id);
-      localStorage.removeItem('codenova-custom-hue-value');
-    });
+    // 持久化到后端
+    updateUserSettings({ theme: id, customHue: '' }).catch(() => {});
   }, []);
 
   const handleHueInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
@@ -91,10 +90,9 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
     setCustomHue(hue);
     setTheme('custom');
     document.documentElement.setAttribute('data-theme', 'custom');
-    updateUserSettings({ theme: 'custom', customHue: hue }).catch(() => {
-      localStorage.setItem('codenova-theme', 'custom');
-      localStorage.setItem('codenova-custom-hue-value', hue);
-    });
+    localStorage.setItem('codenova-theme', 'custom');
+    localStorage.setItem('codenova-custom-hue-value', hue);
+    updateUserSettings({ theme: 'custom', customHue: hue }).catch(() => {});
   }, []);
 
   // ── 快捷操作 ──
@@ -161,10 +159,13 @@ export default function Overview({ onGoCourses, onGoFeatured, onGoSection, onGoC
                 onClick={() => {
                   if (theme === 'custom' && customHue) { switchTheme(''); }
                   else {
+                    const h = customHue || '95';
                     setTheme('custom');
                     document.documentElement.setAttribute('data-theme', 'custom');
-                    document.documentElement.style.setProperty('--custom-hue', customHue || '95');
-                    updateUserSettings({ theme: 'custom', customHue: customHue || '95' }).catch(() => {});
+                    document.documentElement.style.setProperty('--custom-hue', h);
+                    localStorage.setItem('codenova-theme', 'custom');
+                    localStorage.setItem('codenova-custom-hue-value', h);
+                    updateUserSettings({ theme: 'custom', customHue: h }).catch(() => {});
                   }
                 }}
                 className={`h-9 px-4 rounded-lg transition-all cursor-pointer border text-sm font-medium text-white ${
