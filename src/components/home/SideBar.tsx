@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import LogoMark from './LogoMark';
 import { AVATARS } from '../ui/AvatarPicker';
+import { fetchUserSettings, updateUserSettings } from '../../lib/api';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
 
@@ -62,10 +63,23 @@ export default function SideBar({
   // 图标栏模式：收窄为单图标宽度；localStorage 记忆，默认收起
   const [rail, setRail] = useState(() => localStorage.getItem('sidebarRail') !== '0');
 
+  // 登录后从后端加载侧边栏设置（覆盖 localStorage 缓存）
+  useEffect(() => {
+    if (!user) return;
+    fetchUserSettings().then(s => {
+      const expanded = s.sidebarExpanded !== false; // 默认展开
+      setRail(!expanded);
+      localStorage.setItem('sidebarRail', expanded ? '0' : '1');
+    }).catch(() => { /* 网络失败保持 localStorage 缓存 */ });
+  }, [user]);
+
   const toggleRail = () =>
     setRail(v => {
-      localStorage.setItem('sidebarRail', v ? '0' : '1');
-      return !v;
+      const next = !v;
+      localStorage.setItem('sidebarRail', next ? '1' : '0');
+      // 同步到后端：rail=true 表示收起，sidebarExpanded=true 表示展开，语义相反
+      updateUserSettings({ sidebarExpanded: !next }).catch(() => {});
+      return next;
     });
 
   // ── 美化提示：悬停带 data-tip 的元素弹出统一气泡；移开即消失 ──
