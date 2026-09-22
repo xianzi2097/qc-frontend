@@ -3,7 +3,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Code2, Download, ExternalLink, FileText, GraduationCap, HelpCircle, Home, LayoutDashboard,
-  Library, LogIn, LogOut, Minus, PanelLeftClose, Puzzle, Plus, SquareLibrary, Terminal,
+  Library, LogIn, LogOut, Minus, Newspaper, PanelLeftClose, Puzzle, Plus, SquareLibrary, Terminal,
 } from 'lucide-react';
 import LogoMark from './LogoMark';
 import { AVATARS } from '../ui/AvatarPicker';
@@ -233,10 +233,10 @@ export default function SideBar({
             </div>
           );
         })}
-        {/* ── 分割线 + 使用帮助（紧跟导航项） ── */}
-        {onStartTour && (
-          <div className="mt-1">
-            <div className={`${rail ? 'mx-2 border-t border-ed-line/40' : 'mx-3 border-t border-ed-line'} my-1`} />
+        {/* ── 分割线 + 使用帮助 / 站长博客（紧跟导航项） ── */}
+        <div className="mt-1">
+          <div className={`${rail ? 'mx-2 border-t border-ed-line/40' : 'mx-3 border-t border-ed-line'} my-1`} />
+          {onStartTour && (
             <button
               onClick={onStartTour}
               data-tour="help"
@@ -246,8 +246,19 @@ export default function SideBar({
               <HelpCircle className="w-5 h-5 shrink-0 text-ed-muted" strokeWidth={1.8} />
               {!rail && '使用帮助'}
             </button>
-          </div>
-        )}
+          )}
+          <a
+            href="https://blog.codenova.cn"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-tip={rail ? '站长博客' : undefined}
+            className={`${rowCls(false)} no-underline`}
+          >
+            <Newspaper className="w-5 h-5 shrink-0 text-ed-muted" strokeWidth={1.8} />
+            {!rail && '站长博客'}
+            {!rail && <ExternalLink className="w-3 h-3 ml-auto opacity-40" />}
+          </a>
+        </div>
       </nav>
 
       {/* 底部：账号区（整体推到底） */}
