@@ -469,6 +469,21 @@ input[type="range"]::-moz-range-thumb {
   font-display: swap;
 }
 
+/* 本地自带的粉笔手写字体（原 Google Fonts 外链改自托管，内网可用） */
+@font-face {
+  font-family: 'Patrick Hand';
+  src: url('/fonts/PatrickHand-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ma Shan Zheng';
+  src: url('/fonts/MaShanZheng-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
 .ed-root {
   font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif;
 }
