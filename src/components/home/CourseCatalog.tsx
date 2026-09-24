@@ -177,7 +177,7 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                     tabIndex={0}
                     onClick={() => setSelected(c)}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setSelected(c); }}
-                    className="group shrink-0 w-60 flex flex-col p-3 gap-3 rounded-2xl cursor-pointer
+                    className="group shrink-0 w-64 flex flex-col p-3 gap-3 rounded-2xl cursor-pointer
                                transition-all duration-200 ease-out
                                hover:-translate-y-1 hover:border-border-hover
                                hover:shadow-[var(--bookshelf-shadow)]"
@@ -206,7 +206,11 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                           </span>
                         ))}
                       </div>
-                      <h3 className="m-0 ed-serif text-base font-medium leading-snug tracking-tight line-clamp-2 text-ed-ink">
+                      <h3
+                        className="m-0 ed-serif text-sm font-medium leading-snug tracking-tight
+                                   whitespace-nowrap overflow-hidden text-ellipsis text-ed-ink"
+                        title={c.name}
+                      >
                         {c.name}
                       </h3>
                       <p className="mt-1.5 text-xs leading-relaxed text-ed-muted line-clamp-2 h-10">
