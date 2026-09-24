@@ -134,12 +134,13 @@ export interface UserSettings {
   theme: string;
   customHue: string;
   fontSize: number;
+  sidebarExpanded: boolean;
 }
 
 export async function fetchUserSettings(): Promise<UserSettings> {
   const res = await fetch(`/api/user/settings?${nocache()}`);
   const data = await res.json();
-  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16 };
+  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: true };
 }
 
 export async function updateUserSettings(patch: Partial<UserSettings>): Promise<UserSettings> {
@@ -149,7 +150,7 @@ export async function updateUserSettings(patch: Partial<UserSettings>): Promise<
     body: JSON.stringify(patch),
   });
   const data = await res.json();
-  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16 };
+  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: true };
 }
 
 
