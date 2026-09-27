@@ -44,7 +44,7 @@ export default function CourseDetail({ course }: Props) {
         <span className="text-ed-title font-semibold text-ed-ink truncate">{course.name}</span>
       </header>
 
-      <div className="flex-1 min-h-0 relative bg-card">
+      <div className="flex-1 min-h-0 relative bg-card overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
         {ebookOk ? (
           <>
             {!ebookLoaded && (
