@@ -37,10 +37,12 @@ const SHAPES = [
 interface Props {
   /** main=在线课程（未精选的主线课）；featured=精选课程（老师勾选的选读内容） */
   mode?: 'main' | 'featured';
+  /** 目录内点击课程时通知父级（开始页记录最近打开）；详情仍由目录自行渲染 */
+  onOpenCourse?: (c: Course) => void;
 }
 
 /** 课程目录 — 内容区视图：编号条目 + hairline 分隔；点击条目进入 CourseDetail 内容视图 */
-export default function CourseCatalog({ mode = 'main' }: Props) {
+export default function CourseCatalog({ mode = 'main', onOpenCourse }: Props) {
   const [courseType, setCourseType] = useState('全部');
   const [searchQuery, setSearchQuery] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
@@ -175,8 +177,8 @@ export default function CourseCatalog({ mode = 'main' }: Props) {
                     key={c.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setSelected(c)}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setSelected(c); }}
+                    onClick={() => { setSelected(c); onOpenCourse?.(c); }}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { setSelected(c); onOpenCourse?.(c); } }}
                     className="group shrink-0 w-64 flex flex-col p-3 gap-3 rounded-2xl cursor-pointer
                                transition-all duration-200 ease-out
                                hover:-translate-y-1 hover:border-border-hover

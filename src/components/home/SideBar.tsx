@@ -33,17 +33,17 @@ interface Props {
   onLogout: () => void;
 }
 
-/** 导航定义：scratch 独立顶级项（外链），其余为页内板块 */
-const NAV: { id: HomeSection; label: string; icon: typeof Home }[] = [
-  { id: 'overview', label: '开始', icon: Home },
-  { id: 'courses', label: '书架', icon: SquareLibrary },
-  { id: 'featured', label: '课程', icon: Library },
-  { id: 'resources', label: '资料', icon: FileText },
-  { id: 'docs', label: '学习文档', icon: GraduationCap },
-  { id: 'scratch', label: 'Scratch 4.0e', icon: Puzzle },
-  { id: 'compiler', label: '在线编程', icon: Terminal },
-  { id: 'downloads', label: '软件下载', icon: Download },
-  { id: 'html-sandbox', label: 'HTML 演示', icon: Code2 },
+/** 导航定义：scratch 独立顶级项（外链），其余为页内板块。导出给开始页磁贴/最近打开复用图标与文案 */
+export const NAV: { id: HomeSection; label: string; icon: typeof Home; color: string }[] = [
+  { id: 'overview', label: '开始', icon: Home, color: 'text-sky-500' },
+  { id: 'courses', label: '书架', icon: SquareLibrary, color: 'text-indigo-500' },
+  { id: 'featured', label: '课程', icon: Library, color: 'text-violet-500' },
+  { id: 'resources', label: '资料', icon: FileText, color: 'text-emerald-500' },
+  { id: 'docs', label: '学习文档', icon: GraduationCap, color: 'text-amber-500' },
+  { id: 'scratch', label: 'Scratch 4.0e', icon: Puzzle, color: 'text-orange-500' },
+  { id: 'compiler', label: '在线编程', icon: Terminal, color: 'text-cyan-600' },
+  { id: 'downloads', label: '软件下载', icon: Download, color: 'text-rose-500' },
+  { id: 'html-sandbox', label: 'HTML 演示', icon: Code2, color: 'text-teal-500' },
 ];
 
 // ── 二级目录行样式：在学课程子列表共用；字号/缩进/间距微调只改这里 ──
@@ -131,9 +131,6 @@ export default function SideBar({
         : 'text-ed-body hover:bg-black/[0.04]'
     }`;
 
-  const iconCls = (active: boolean) =>
-    `flex-shrink-0 ${active ? 'text-brand' : 'text-ed-muted'}`;
-
   return (
     <>
       <aside
@@ -172,17 +169,14 @@ export default function SideBar({
 
       {/* 导航 —— 外链与页内项统一由 NAV 数据驱动渲染 */}
       <nav className={`flex-1 min-h-0 overflow-y-auto scrollbar-none space-y-0.5 ${rail ? 'px-2' : 'px-3'}`}>
-        {NAV.map(({ id, label, icon: Icon }) => {
+        {NAV.map(({ id, label, icon: Icon, color }) => {
           const active = section === id;
           return (
             <div key={id}>
               <button
                 onClick={() => {
                   onClearCourse();
-                  if (id === 'scratch') {
-                    window.open('/Scratch/index.html', '_blank');
-                    return;
-                  }
+                  // scratch 外链也走 onSection：由 HomePage 统一 window.open + 记录最近打开
                   if (id === 'featured') setFolded(false);
                   onSection(id);
                 }}
@@ -199,7 +193,7 @@ export default function SideBar({
                 }
                 className={rowCls(active)}
               >
-                <Icon className={`w-5 h-5 shrink-0 ${iconCls(active)}`} strokeWidth={1.8} />
+                <Icon className={`w-5 h-5 shrink-0 ${color}`} strokeWidth={active ? 2.6 : 1.8} />
                 {!rail && label}
                 {!rail && id === 'scratch' && <ExternalLink className="w-3 h-3 ml-auto opacity-40" />}
                 {!rail && id === 'featured' && featuredCourses.length > 0 && (
@@ -243,7 +237,7 @@ export default function SideBar({
               data-tip={rail ? '使用帮助' : undefined}
               className={rowCls(false)}
             >
-              <HelpCircle className="w-5 h-5 shrink-0 text-ed-muted" strokeWidth={1.8} />
+              <HelpCircle className="w-5 h-5 shrink-0 text-fuchsia-500" strokeWidth={1.8} />
               {!rail && '使用帮助'}
             </button>
           )}
@@ -254,7 +248,7 @@ export default function SideBar({
             data-tip={rail ? '站长博客' : undefined}
             className={`${rowCls(false)} no-underline`}
           >
-            <Newspaper className="w-5 h-5 shrink-0 text-ed-muted" strokeWidth={1.8} />
+            <Newspaper className="w-5 h-5 shrink-0 text-blue-500" strokeWidth={1.8} />
             {!rail && '站长博客'}
             {!rail && <ExternalLink className="w-3 h-3 ml-auto opacity-40" />}
           </a>

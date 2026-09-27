@@ -130,17 +130,37 @@ export async function setFeatured(courseId: string, featured: boolean): Promise<
 
 // ═══ 用户设置 ═══
 
+export interface RecentOpen {
+  /** section=主页板块 / course=课程 */
+  kind: 'section' | 'course';
+  id: string;
+  label: string;
+  teacher?: string | null;
+  type?: string | null;
+  ts: number;
+}
+
 export interface UserSettings {
   theme: string;
   customHue: string;
   fontSize: number;
   sidebarExpanded: boolean;
+  recentOpens: RecentOpen[];
 }
 
 export async function fetchUserSettings(): Promise<UserSettings> {
   const res = await fetch(`/api/user/settings?${nocache()}`);
   const data = await res.json();
-  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: true };
+  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: true, recentOpens: [] };
+}
+
+/** 记录一次打开（服务端去重置顶 + 上限 6 条）；游客 401，由调用方静默吞掉 */
+export async function recordRecentOpen(entry: Omit<RecentOpen, 'ts'>): Promise<void> {
+  await fetch('/api/user/recent-opens', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry),
+  });
 }
 
 export async function updateUserSettings(patch: Partial<UserSettings>): Promise<UserSettings> {
@@ -150,7 +170,7 @@ export async function updateUserSettings(patch: Partial<UserSettings>): Promise<
     body: JSON.stringify(patch),
   });
   const data = await res.json();
-  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: true };
+  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: true, recentOpens: [] };
 }
 
 
