@@ -191,8 +191,6 @@ export default function HomePage({ onLogin }: Props) {
                 onGoSection={handleSection}
                 recentOpens={recentOpens}
                 onOpenRecent={openRecent}
-                featuredCourses={featuredCourses}
-                onOpenCourse={handleOpenCourse}
               />
             )}
           </>

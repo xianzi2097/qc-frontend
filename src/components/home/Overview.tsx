@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowRight, BookOpen, Clock, ExternalLink, Palette, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Clock, ExternalLink, Palette } from 'lucide-react';
 import { NAV } from './SideBar';
 import type { HomeSection } from './SideBar';
 import { fetchUserSettings, updateUserSettings } from '../../lib/api';
 import type { RecentOpen } from '../../lib/api';
 import { TYPE_LUCIDE, TYPE_OPTIONS } from '../../types/course';
-import type { Course } from '../../types/course';
 
 interface Props {
   /** 切换板块（scratch 由 HomePage 负责外链打开 + 记录） */
@@ -13,9 +12,6 @@ interface Props {
   /** 账号级「最近打开」；游客/新用户为空 → 整行隐藏 */
   recentOpens: RecentOpen[];
   onOpenRecent: (r: RecentOpen) => void;
-  /** 课程（老师标星、正在教的；数据复用「课程」页；空 → 本区隐藏） */
-  featuredCourses: Course[];
-  onOpenCourse: (course: Course) => void;
 }
 
 /* ── 主题色 ── */
@@ -26,9 +22,19 @@ const THEMES = [
 ];
 
 /* ── 快速入口磁贴：分组覆盖侧边栏全部 9 个入口（「开始」即本页，不设磁贴） ── */
-const TILE_GROUPS: { title: string; items: { id: HomeSection; desc: string }[] }[] = [
+const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; desc: string; large?: boolean }[] }[] = [
+  {
+    title: '创作',
+    layout: 'grid-cols-1 md:grid-cols-4',
+    items: [
+      { id: 'compiler', desc: '写代码，直接运行', large: true },
+      { id: 'scratch', desc: '积木编程，新窗口打开' },
+      { id: 'html-sandbox', desc: '左边写代码，右边看效果' },
+    ],
+  },
   {
     title: '学习',
+    layout: 'grid-cols-2 md:grid-cols-4',
     items: [
       { id: 'courses', desc: '机构开放的全部课程' },
       { id: 'featured', desc: '老师正在教的课' },
@@ -37,15 +43,8 @@ const TILE_GROUPS: { title: string; items: { id: HomeSection; desc: string }[] }
     ],
   },
   {
-    title: '创作',
-    items: [
-      { id: 'scratch', desc: '积木编程，新窗口打开' },
-      { id: 'compiler', desc: '写代码，直接运行' },
-      { id: 'html-sandbox', desc: '左边写代码，右边看效果' },
-    ],
-  },
-  {
     title: '工具',
+    layout: 'grid-cols-1 md:grid-cols-2',
     items: [{ id: 'downloads', desc: '安装包和常用工具' }],
   },
 ];
@@ -68,7 +67,7 @@ const TILE_BG: Record<string, string> = {
 /** 分组拍平（「全部工具」紧凑入口用） */
 const TILE_FLAT = TILE_GROUPS.flatMap(g => g.items);
 
-export default function Overview({ onGoSection, recentOpens, onOpenRecent, featuredCourses, onOpenCourse }: Props) {
+export default function Overview({ onGoSection, recentOpens, onOpenRecent }: Props) {
   const [visible, setVisible] = useState(false);
   useEffect(() => { setVisible(true); }, []);
 
@@ -234,16 +233,16 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, featu
           </div>
         )}
 
-        {/* ═══ 继续上次：最近打开前 2 条升为大卡（含大按钮），其余收成小 chip ═══ */}
+        {/* ═══ 最近：最近打开的条目，统一卡片（不再分大卡/小标签两级） ═══ */}
         {recentOpens.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-3">
               <Clock className="w-4 h-4 text-ed-muted" strokeWidth={1.8} />
-              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">继续上次</span>
+              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">最近</span>
               <div className="h-px flex-1 bg-ed-line/60" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-              {recentOpens.slice(0, 2).map(r => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              {recentOpens.map(r => {
                 const isCourse = r.kind === 'course';
                 const typeOpt = isCourse && r.type ? TYPE_OPTIONS.find(o => o.value === r.type) : undefined;
                 const Icon = isCourse
@@ -256,113 +255,84 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, featu
                   <button
                     key={`${r.kind}:${r.id}`}
                     onClick={() => onOpenRecent(r)}
-                    className="group flex items-center gap-4 p-5 rounded-2xl border border-ed-line bg-card hover:border-brand hover:shadow-md transition-all cursor-pointer text-left"
+                    className="group flex items-center gap-3 p-4 rounded-xl border border-transparent bg-card hover:border-ed-line hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer text-left"
                   >
                     <div
-                      className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${isCourse ? '' : TILE_BG[r.id] ?? 'bg-brand-50 text-brand'}`}
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isCourse ? '' : TILE_BG[r.id] ?? 'bg-brand-50 text-brand'}`}
                       style={isCourse ? { backgroundColor: `${typeOpt?.color ?? '#94a3b8'}1a`, color: typeOpt?.color ?? '#94a3b8' } : undefined}
                     >
-                      <Icon className="w-7 h-7" strokeWidth={1.8} />
+                      <Icon className="w-5 h-5" strokeWidth={1.8} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[0.74rem] text-ed-muted">{isCourse ? '课程' : '板块'}</div>
-                      <div className="text-[1.02rem] font-semibold text-ed-ink group-hover:text-brand transition-colors truncate">{r.label}</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[0.95rem] font-semibold text-ed-ink group-hover:text-brand transition-colors truncate">{r.label}</span>
+                        {r.kind === 'section' && r.id === 'scratch' && (
+                          <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-ed-muted opacity-40" />
+                        )}
+                      </div>
                       <div className="text-[0.78rem] text-ed-muted truncate mt-0.5">{desc}</div>
                     </div>
-                    <span className="flex-shrink-0 h-9 px-4 rounded-full bg-brand text-white text-[0.85rem] font-semibold flex items-center gap-1.5">
-                      继续
-                      <ArrowRight className="w-4 h-4" strokeWidth={2} />
-                    </span>
+                    <ArrowRight
+                      className="w-4 h-4 flex-shrink-0 text-ed-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                      strokeWidth={2}
+                    />
                   </button>
                 );
               })}
             </div>
-            {recentOpens.length > 2 && (
-              <div className="flex flex-wrap gap-2">
-                {recentOpens.slice(2).map(r => {
-                  const Icon = r.kind === 'course'
-                    ? (r.type ? TYPE_LUCIDE[r.type] ?? BookOpen : BookOpen)
-                    : NAV_MAP.get(r.id as HomeSection)?.icon ?? Clock;
-                  return (
-                    <button
-                      key={`${r.kind}:${r.id}`}
-                      onClick={() => onOpenRecent(r)}
-                      className="group flex items-center gap-2 h-9 px-3.5 rounded-full border border-ed-line bg-card text-[0.82rem] text-ed-body hover:border-brand hover:text-brand transition-all cursor-pointer"
-                    >
-                      <Icon className="w-4 h-4 text-ed-muted group-hover:text-brand transition-colors" strokeWidth={1.8} />
-                      <span className="max-w-40 truncate">{r.label}</span>
-                      {r.kind === 'section' && r.id === 'scratch' && (
-                        <ExternalLink className="w-3 h-3 text-ed-muted opacity-40 group-hover:opacity-80" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
         )}
 
-        {/* ═══ 课程：内容卡横排，点击直接进入（自动记录最近打开） ═══ */}
-        {featuredCourses.length > 0 && (
-          <div className="mb-8">
+        {/* ═══ 创作 / 学习 / 工具：分类磁贴 ═══ */}
+        {TILE_GROUPS.map(group => (
+          <div key={group.title} className="mb-8">
             <div className="flex items-center gap-3 mb-3">
-              <Sparkles className="w-4 h-4 text-ed-muted" strokeWidth={1.8} />
-              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">课程</span>
+              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">{group.title}</span>
               <div className="h-px flex-1 bg-ed-line/60" />
             </div>
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-              {featuredCourses.slice(0, 4).map(c => {
-                const CIcon = TYPE_LUCIDE[c.type] ?? BookOpen;
-                const color = TYPE_OPTIONS.find(o => o.value === c.type)?.color ?? '#94a3b8';
+            <div className={`grid gap-4 ${group.layout}`}>
+              {group.items.map(({ id, desc, large }) => {
+                const nav = NAV_MAP.get(id);
+                if (!nav) return null;
+                const Icon = nav.icon;
+
+                // 创作区大卡：占两列，突出重点入口
+                if (large) {
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => onGoSection(id)}
+                      className="group col-span-full md:col-span-2 flex flex-col items-start p-6 rounded-xl border border-ed-line bg-card hover:border-brand hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer text-left"
+                    >
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 mb-4 ${TILE_BG[id] ?? 'bg-brand-50 text-brand'}`}>
+                        <Icon className="w-6 h-6" strokeWidth={1.8} />
+                      </div>
+                      <div className="text-[1.3rem] font-bold text-ed-ink group-hover:text-brand transition-colors mb-1.5">{nav.label}</div>
+                      <div className="text-[0.86rem] text-ed-body leading-relaxed">{desc}</div>
+                    </button>
+                  );
+                }
+
                 return (
                   <button
-                    key={c.id}
-                    onClick={() => onOpenCourse(c)}
-                    className="group flex flex-col gap-3 p-4 rounded-2xl border border-ed-line bg-card hover:border-brand hover:shadow-sm transition-all cursor-pointer text-left"
+                    key={id}
+                    onClick={() => onGoSection(id)}
+                    className="group flex flex-col p-4 rounded-xl border border-transparent bg-card hover:border-ed-line hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer text-left"
                   >
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}1a`, color }}>
-                      <CIcon className="w-6 h-6" strokeWidth={1.8} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[0.9rem] font-semibold text-ed-ink group-hover:text-brand transition-colors truncate">{c.name}</div>
-                      <div className="text-[0.76rem] text-ed-muted truncate mt-0.5">
-                        {[TYPE_OPTIONS.find(o => o.value === c.type)?.label ?? c.type, c.teacher].filter(Boolean).join(' · ')}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${TILE_BG[id] ?? 'bg-brand-50 text-brand'}`}>
+                        <Icon className="w-5 h-5" strokeWidth={1.8} />
                       </div>
+                      <span className="text-[0.95rem] font-semibold text-ed-ink group-hover:text-brand transition-colors">{nav.label}</span>
+                      {id === 'scratch' && <ExternalLink className="w-3.5 h-3.5 text-ed-muted opacity-40" />}
                     </div>
+                    <div className="text-[0.78rem] text-ed-muted leading-relaxed">{desc}</div>
                   </button>
                 );
               })}
             </div>
           </div>
-        )}
-
-        {/* ═══ 全部工具：磁贴降级为紧凑入口（分组拍平成一行胶囊） ═══ */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">全部工具</span>
-            <div className="h-px flex-1 bg-ed-line/60" />
-          </div>
-          <div className="flex flex-wrap gap-2.5">
-            {TILE_FLAT.map(({ id }) => {
-              const nav = NAV_MAP.get(id);
-              if (!nav) return null;
-              const Icon = nav.icon;
-              return (
-                <button
-                  key={id}
-                  onClick={() => onGoSection(id)}
-                  className="group flex items-center gap-2 h-10 pl-3 pr-4 rounded-full border border-ed-line bg-card hover:border-brand transition-all cursor-pointer"
-                >
-                  <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${TILE_BG[id] ?? 'bg-brand-50 text-brand'}`}>
-                    <Icon className="w-3.5 h-3.5" strokeWidth={1.8} />
-                  </div>
-                  <span className="text-[0.85rem] font-medium text-ed-body group-hover:text-brand transition-colors">{nav.label}</span>
-                  {id === 'scratch' && <ExternalLink className="w-3 h-3 text-ed-muted opacity-40 flex-shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );

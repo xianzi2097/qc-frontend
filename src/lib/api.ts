@@ -151,7 +151,7 @@ export interface UserSettings {
 export async function fetchUserSettings(): Promise<UserSettings> {
   const res = await fetch(`/api/user/settings?${nocache()}`);
   const data = await res.json();
-  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: true, recentOpens: [] };
+  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: false, recentOpens: [] };
 }
 
 /** 记录一次打开（服务端去重置顶 + 上限 6 条）；游客 401，由调用方静默吞掉 */
@@ -170,7 +170,7 @@ export async function updateUserSettings(patch: Partial<UserSettings>): Promise<
     body: JSON.stringify(patch),
   });
   const data = await res.json();
-  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: true, recentOpens: [] };
+  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: false, recentOpens: [] };
 }
 
 

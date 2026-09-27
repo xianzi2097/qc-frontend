@@ -67,7 +67,7 @@ export default function SideBar({
   useEffect(() => {
     if (!user) return;
     fetchUserSettings().then(s => {
-      const expanded = s.sidebarExpanded !== false; // 默认展开
+      const expanded = s.sidebarExpanded === true; // 默认收起，手动展开过才记住展开
       setRail(!expanded);
       localStorage.setItem('sidebarRail', expanded ? '0' : '1');
     }).catch(() => { /* 网络失败保持 localStorage 缓存 */ });
