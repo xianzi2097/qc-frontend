@@ -40,7 +40,7 @@ export const NAV: { id: HomeSection; label: string; icon: typeof Home; color: st
   { id: 'featured', label: '课程', icon: Library, color: 'text-violet-500' },
   { id: 'resources', label: '资料', icon: FileText, color: 'text-emerald-500' },
   { id: 'docs', label: '学习文档', icon: GraduationCap, color: 'text-amber-500' },
-  { id: 'scratch', label: 'Scratch 4.0e', icon: Puzzle, color: 'text-orange-500' },
+  { id: 'scratch', label: 'Scratch 4.0-QC', icon: Puzzle, color: 'text-orange-500' },
   { id: 'compiler', label: '在线编程', icon: Terminal, color: 'text-cyan-600' },
   { id: 'downloads', label: '软件下载', icon: Download, color: 'text-rose-500' },
   { id: 'html-sandbox', label: 'HTML 演示', icon: Code2, color: 'text-teal-500' },

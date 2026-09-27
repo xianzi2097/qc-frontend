@@ -71,7 +71,7 @@ export default function HomePage({ onLogin }: Props) {
     if (s === 'scratch') {
       // scratch 是外链：新开窗口，不切板块；同样计入最近打开
       window.open('/Scratch/index.html', '_blank');
-      recordOpen({ kind: 'section', id: 'scratch', label: 'Scratch 4.0e' });
+      recordOpen({ kind: 'section', id: 'scratch', label: 'Scratch 4.0-QC' });
       return;
     }
     setOpenCourse(null);
