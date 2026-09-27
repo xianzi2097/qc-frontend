@@ -8,7 +8,7 @@ import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
 import type { Course, TreeNode } from '../../types/course';
-import { TYPE_LUCIDE, TYPE_OPTIONS, FORMAT_LABEL } from '../../types/course';
+import { FORMAT_LABEL } from '../../types/course';
 
 // ── 拖拽组件 ──
 function SortableItem({ id, children, className = '', dragHandle }: {
@@ -33,7 +33,7 @@ function SortableItem({ id, children, className = '', dragHandle }: {
   );
 }
 
-export default function ResourcesManager({ category }: { category: string }) {
+export default function ResourcesManager({ category, label }: { category: string; label: string }) {
   const { username } = useAuth();
   const { wrap } = useLoading();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -41,7 +41,6 @@ export default function ResourcesManager({ category }: { category: string }) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [newType, setNewType] = useState('scratch');
   const [newTags, setNewTags] = useState<string[]>([]);
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
@@ -65,9 +64,9 @@ export default function ResourcesManager({ category }: { category: string }) {
             setError(data.detail || '加载失败');
           }
         }),
-      '加载资料列表...'
+      `加载${label}列表...`
     ).catch(() => setError('无法连接服务器'));
-  }, [username]);
+  }, [username, category, label]);
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
 
@@ -77,7 +76,7 @@ export default function ResourcesManager({ category }: { category: string }) {
       const res = await fetch('/api/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher: username, name: newName.trim(), course_type: newType, format: 'folder', category, tags: newTags, description: newDesc.trim() }),
+        body: JSON.stringify({ teacher: username, name: newName.trim(), format: 'folder', category, tags: newTags, description: newDesc.trim() }),
       });
       const data = await res.json();
       if (data.status === 'success') {
@@ -101,7 +100,7 @@ export default function ResourcesManager({ category }: { category: string }) {
   };
 
   const handleDelete = async (course: Course) => {
-    if (!confirm(`确定删除资料「${course.name}」？此操作不可恢复。`)) return;
+    if (!confirm(`确定删除${label}「${course.name}」？删除后可在回收站恢复。`)) return;
     try {
       const res = await fetch(`/api/resources/${encodeURIComponent(course.id)}?teacher=${username}`, {
         method: 'DELETE',
@@ -139,7 +138,7 @@ export default function ResourcesManager({ category }: { category: string }) {
     loadCourses();
   };
 
-  // ── 上传文件到指定目录（path 相对资料根） ──
+  // ── 上传文件到指定目录（path 相对根目录） ──
   const handleUploadFile = async (path: string) => {
     if (!selectedCourse) return;
     const input = document.createElement('input');
@@ -244,11 +243,10 @@ export default function ResourcesManager({ category }: { category: string }) {
     );
   };
 
-  // ── 编辑资料弹窗 ──
+  // ── 编辑弹窗 ──
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
-  const [editType, setEditType] = useState('scratch');
   const [editTags, setEditTags] = useState<string[]>([]);
   const [editTagInput, setEditTagInput] = useState('');
   const [showEditTagInput, setShowEditTagInput] = useState(false);
@@ -257,7 +255,6 @@ export default function ResourcesManager({ category }: { category: string }) {
     setEditingCourse(course);
     setEditName(course.name);
     setEditDesc(course.description || '');
-    setEditType(course.type);
     setEditTags(course.tags || []);
     setEditTagInput('');
     setShowEditTagInput(false);
@@ -271,7 +268,7 @@ export default function ResourcesManager({ category }: { category: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editName.trim(), description: editDesc.trim(),
-          tags: editTags, course_type: editType, format: 'folder',
+          tags: editTags, format: 'folder',
         }),
       });
       const data = await res.json();
@@ -423,14 +420,14 @@ export default function ResourcesManager({ category }: { category: string }) {
     setRename(null);
   };
 
-  // ── 资料回收站 ──
+  // ── 回收站 ──
   const [trashItems, setTrashItems] = useState<any[]>([]);
   const [showTrash, setShowTrash] = useState(false);
 
   const loadTrash = useCallback(async () => {
     const res = await fetch(`/api/trash/items?username=${username}`);
     const data = await res.json();
-    if (data.status === 'success') setTrashItems(data.items.filter((i: any) => i.type === 'course'));
+    if (data.status === 'success') setTrashItems(data.items.filter((i: any) => i.type === 'resource'));
   }, [username]);
 
   const handleRestore = async (folder: string) => {
@@ -440,7 +437,7 @@ export default function ResourcesManager({ category }: { category: string }) {
   };
 
   const handlePermanentDelete = async (folder: string) => {
-    if (!confirm('永久删除此资料？不可恢复！')) return;
+    if (!confirm(`永久删除此${label}？不可恢复！`)) return;
     await fetch(`/api/trash/items/${encodeURIComponent(folder)}?username=${username}`, { method: 'DELETE' });
     loadTrash();
   };
@@ -504,7 +501,7 @@ export default function ResourcesManager({ category }: { category: string }) {
       {/* 标题栏 */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          <BookOpen className="text-brand-orange" size={20} /> 资料管理
+          <BookOpen className="text-brand-orange" size={20} /> {label}管理
         </h2>
         <div className="flex gap-2">
           <button
@@ -523,24 +520,24 @@ export default function ResourcesManager({ category }: { category: string }) {
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 text-xs bg-brand-orange hover:bg-brand-orange/90 text-black font-bold px-3 py-1.5 rounded-lg transition-colors"
           >
-            <Plus size={14} /> 上传资料
+            <Plus size={14} /> 上传{label}
           </button>
         </div>
       </div>
 
-      {/* 新建资料弹窗 */}
+      {/* 新建弹窗 */}
       {showCreate && (
         <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6">
-          <h3 className="text-sm font-bold text-white mb-4">上传资料</h3>
+          <h3 className="text-sm font-bold text-white mb-4">上传{label}</h3>
           <div className="space-y-2">
-            {/* 资料名称 + 描述（左右分栏） */}
+            {/* 名称 + 描述（左右分栏） */}
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-xs text-slate-400 block mb-1">资料名称</label>
+                <label className="text-xs text-slate-400 block mb-1">{label}名称</label>
                 <input
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  placeholder="输入资料名称"
+                  placeholder={`输入${label}名称`}
                   className="w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
                 />
                 {/* 标签放在名称下方 */}
@@ -577,29 +574,10 @@ export default function ResourcesManager({ category }: { category: string }) {
                       >+</button>
                     )}
                   </div>
-                <div>
-              <label className="text-xs text-slate-400 block mb-1 mt-2">资料类型</label>
-              <div className="flex gap-2">
-                {TYPE_OPTIONS.map(o => (
-                  <button
-                    key={o.value}
-                    onClick={() => setNewType(o.value)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                      newType === o.value
-                        ? 'border-current/50'
-                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
-                    }`}
-                    style={newType === o.value ? { color: o.color, backgroundColor: `${o.color}15` } : {}}
-                  >
-                    <o.Icon size={14} style={newType === o.value ? { color: o.color } : {}} /> {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
                 </div>
               </div>
               <div className="flex-1">
-                <label className="text-xs text-slate-400 block mb-1">资料描述</label>
+                <label className="text-xs text-slate-400 block mb-1">{label}描述</label>
                 <textarea
                   value={newDesc}
                   onChange={e => setNewDesc(e.target.value)}
@@ -633,16 +611,14 @@ export default function ResourcesManager({ category }: { category: string }) {
         </div>
       )}
 
-      {/* 资料列表 */}
+      {/* 列表 */}
       {courses.length === 0 ? (
         <div className="text-sm text-slate-500 bg-slate-900/50 border border-slate-600 rounded-2xl p-8 text-center">
-          暂无资料，点击「上传资料」开始创建
+          暂无{label}，点击「上传{label}」开始创建
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {courses.map(course => {
-            const TypeIcon = TYPE_LUCIDE[course.type];
-            const typeColor = TYPE_OPTIONS.find(o => o.value === course.type)?.color || '#94a3b8';
             return (
             <div
               key={course.id}
@@ -655,7 +631,7 @@ export default function ResourcesManager({ category }: { category: string }) {
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-2xl block mb-2">{TypeIcon ? <TypeIcon size={28} style={{ color: typeColor }} /> : <FolderOpen size={28} className="text-slate-400" />}</span>
+                  <span className="text-2xl block mb-2"><FolderOpen size={28} className="text-slate-400" /></span>
                   <h3 className="font-bold text-white text-sm mb-1">{course.name}</h3>
                   <p className="text-xs text-slate-500">
                     {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个文件
@@ -672,14 +648,14 @@ export default function ResourcesManager({ category }: { category: string }) {
                   <button
                     onClick={() => openEditCourse(course)}
                     className="text-slate-600 hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition-all p-1"
-                    title="编辑资料"
+                    title={`编辑${label}`}
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleDelete(course)}
                     className="text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all p-1"
-                    title="删除资料"
+                    title={`删除${label}`}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -691,7 +667,7 @@ export default function ResourcesManager({ category }: { category: string }) {
         </div>
       )}
 
-      {/* 文件详情（文件树：所有资料统一） */}
+      {/* 文件详情（文件树） */}
       {selectedCourse && (
         <div className="bg-slate-900/50 border border-slate-600 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
@@ -782,7 +758,7 @@ export default function ResourcesManager({ category }: { category: string }) {
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-slate-300 mb-2">把资料文件夹拖到这里，自动解析目录结构并上传</p>
+                  <p className="text-sm text-slate-300 mb-2">把{label}文件夹拖到这里，自动解析目录结构并上传</p>
                   <label className="text-xs text-brand-orange cursor-pointer underline">
                     或点击选择文件夹
                     <input
@@ -805,7 +781,7 @@ export default function ResourcesManager({ category }: { category: string }) {
               <input
                 value={newFolderName}
                 onChange={e => setNewFolderName(e.target.value)}
-                placeholder={newFolderParent ? `在「${newFolderParent}」下新建文件夹` : '在资料根目录新建文件夹'}
+                placeholder={newFolderParent ? `在「${newFolderParent}」下新建文件夹` : `在${label}根目录新建文件夹`}
                 className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange"
                 onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') setNewFolderParent(null); }}
                 autoFocus
@@ -832,13 +808,13 @@ export default function ResourcesManager({ category }: { category: string }) {
         </div>
       )}
 
-      {/* 资料回收站弹窗 */}
+      {/* 回收站弹窗 */}
       {showTrash && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
           onClick={e => { if (e.target === e.currentTarget) setShowTrash(false); }}>
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[500px] max-h-[70vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-600">
-              <span className="text-sm text-white font-bold flex items-center gap-2"><Trash2 size={16} /> 资料回收站</span>
+              <span className="text-sm text-white font-bold flex items-center gap-2"><Trash2 size={16} /> {label}回收站</span>
               <button onClick={() => setShowTrash(false)} className="text-slate-400 hover:text-white p-1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
             </div>
             <div className="flex-1 overflow-auto p-4 space-y-2">
@@ -848,7 +824,7 @@ export default function ResourcesManager({ category }: { category: string }) {
                 <div key={t._folder} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-sm text-white">📚 {t.original_path?.split('/').pop()}</span>
+                      <span className="text-sm text-white">📚 {t.name || t.original_path?.split('/').pop()}</span>
                       <span className="text-xs text-slate-500 ml-2">删除于 {t.deleted_at?.slice(0, 10)}</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -909,17 +885,17 @@ export default function ResourcesManager({ category }: { category: string }) {
         </div>
       )}
 
-      {/* ── 编辑资料弹窗 ── */}
+      {/* ── 编辑弹窗 ── */}
       {createPortal(editingCourse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setEditingCourse(null); }}>
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-[65vw] max-h-[85vh] overflow-auto p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-white mb-4">编辑资料</h3>
+            <h3 className="text-sm font-bold text-white mb-4">编辑{label}</h3>
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-slate-400 block mb-1">资料名称</label>
+                  <label className="text-xs text-slate-400 block mb-1">{label}名称</label>
                   <input value={editName} onChange={e => setEditName(e.target.value)}
-                    placeholder="输入资料名称"
+                    placeholder={`输入${label}名称`}
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-400 text-white" />
                               <div>
                 <label className="text-xs text-slate-400 block mb-1 mt-2">标签</label>
@@ -946,23 +922,11 @@ export default function ResourcesManager({ category }: { category: string }) {
                   )}
                 </div>
               </div>
-              <div>
-                <label className="text-xs text-slate-400 block mb-1 mt-2">资料类型</label>
-                <div className="flex gap-2">
-                  {TYPE_OPTIONS.map(o => (
-                    <button key={o.value} onClick={() => setEditType(o.value)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${editType === o.value ? 'border-current/50' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}
-                      style={editType === o.value ? { color: o.color, backgroundColor: `${o.color}15` } : {}}>
-                      <o.Icon size={14} style={editType === o.value ? { color: o.color } : {}} /> {o.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
                 
                 </div>
                 
                 <div className="flex-1">
-                  <label className="text-xs text-slate-400 block mb-1">资料描述</label>
+                  <label className="text-xs text-slate-400 block mb-1">{label}描述</label>
                   <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={10}
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 resize-none" />
                 </div>
