@@ -35,7 +35,7 @@ const SHAPES = [
 ];
 
 interface Props {
-  /** main=在线课程（未精选的主线课）；featured=精选课程（老师勾选的选读内容） */
+  /** main=书架（收纳的课）；featured=课程（老师标星、正在教的） */
   mode?: 'main' | 'featured';
   /** 目录内点击课程时通知父级（开始页记录最近打开）；详情仍由目录自行渲染 */
   onOpenCourse?: (c: Course) => void;

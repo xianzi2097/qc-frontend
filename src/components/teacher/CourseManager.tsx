@@ -703,7 +703,7 @@ export default function CourseManager() {
                   </p>
                   {course.featured && (
                     <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-400/10 text-amber-400 mt-1">
-                      <Star size={9} className="fill-current" /> 精选
+                      <Star size={9} className="fill-current" /> 课程
                     </span>
                   )}
                   {course.tags && course.tags.length > 0 && (
@@ -718,7 +718,7 @@ export default function CourseManager() {
                   <button
                     onClick={() => handleToggleFeatured(course)}
                     className={`p-1 transition-all ${course.featured ? 'text-amber-400' : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'}`}
-                    title={course.featured ? '取消精选（从「精选课程」栏目移除）' : '设为精选（显示在主页「精选课程」栏目）'}
+                    title={course.featured ? '移出「课程」（从主页侧边栏收进书架）' : '加入「课程」（显示在主页侧边栏）'}
                   >
                     <Star size={14} className={course.featured ? 'fill-current' : ''} />
                   </button>

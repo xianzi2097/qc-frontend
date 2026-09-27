@@ -44,7 +44,7 @@ export default function HomePage({ onLogin }: Props) {
   );
   const [showLogin, setShowLogin] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-  // 全量课程：侧边栏精选列表派生 + 最近打开回跳按 id 查课
+  // 全量课程：侧边栏「课程」列表派生 + 最近打开回跳按 id 查课
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const featuredCourses = useMemo(() => allCourses.filter(c => c.featured === true), [allCourses]);
   const [openCourse, setOpenCourse] = useState<Course | null>(null);

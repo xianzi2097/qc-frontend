@@ -16,7 +16,7 @@ export type HomeSection = 'overview' | 'courses' | 'featured' | 'resources' | 'd
 interface Props {
   section: HomeSection;
   onSection: (s: HomeSection) => void;
-  /** 精选课程（在学课程）——直接列在侧边栏，点击直达内容 */
+  /** 课程（老师标星、正在教的）——直接列在侧边栏，点击直达内容 */
   featuredCourses: Course[];
   activeCourseId?: string;
   onOpenCourse: (c: Course) => void;

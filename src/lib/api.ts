@@ -117,7 +117,7 @@ export async function fetchAllCourses(): Promise<Course[]> {
   return fetchCourses(teachers, '全部');
 }
 
-/** 设置/取消精选（精选课程显示在「精选课程」栏目，从「在线课程」隐藏） */
+/** 设置/取消「课程」标记（标记的显示在侧边栏「课程」，未标记的收在「书架」） */
 export async function setFeatured(courseId: string, featured: boolean): Promise<void> {
   const res = await fetch(`/api/courses/${encodeURIComponent(courseId)}/featured`, {
     method: 'PUT',

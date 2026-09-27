@@ -13,7 +13,7 @@ interface Props {
   /** 账号级「最近打开」；游客/新用户为空 → 整行隐藏 */
   recentOpens: RecentOpen[];
   onOpenRecent: (r: RecentOpen) => void;
-  /** 精选课程（精选页数据复用；空 → 本区隐藏） */
+  /** 课程（老师标星、正在教的；数据复用「课程」页；空 → 本区隐藏） */
   featuredCourses: Course[];
   onOpenCourse: (course: Course) => void;
 }
@@ -302,12 +302,12 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, featu
           </div>
         )}
 
-        {/* ═══ 精选课程：内容卡横排，点击直接进入（自动记录最近打开） ═══ */}
+        {/* ═══ 课程：内容卡横排，点击直接进入（自动记录最近打开） ═══ */}
         {featuredCourses.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-3">
               <Sparkles className="w-4 h-4 text-ed-muted" strokeWidth={1.8} />
-              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">精选课程</span>
+              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">课程</span>
               <div className="h-px flex-1 bg-ed-line/60" />
             </div>
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">

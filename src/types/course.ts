@@ -13,7 +13,7 @@ export interface Course {
   material_count: number;
   teacher?: string;
   teacher_key?: string;
-  featured?: boolean;  // 精选课程（显示在「精选课程」栏目，从「在线课程」隐藏）
+  featured?: boolean;  // true=课程（显示在侧边栏「课程」栏目），false=书架
   publish?: { status?: string; error?: string; published_at?: string };
 }
 
