@@ -33,17 +33,18 @@ interface Props {
   onLogout: () => void;
 }
 
-/** 导航定义：scratch 独立顶级项（外链），其余为页内板块。导出给开始页磁贴/最近打开复用图标与文案 */
+/** 导航定义：scratch 独立顶级项（外链），其余为页内板块。导出给开始页磁贴/最近打开复用图标与文案
+ *  配色分组：核心导航=蓝 / 学习资源=翠绿 / 工具实践=紫 */
 export const NAV: { id: HomeSection; label: string; icon: typeof Home; color: string }[] = [
-  { id: 'overview', label: '开始', icon: Home, color: 'text-sky-500' },
-  { id: 'books', label: '书架', icon: SquareLibrary, color: 'text-indigo-500' },
-  { id: 'courses', label: '课程', icon: Library, color: 'text-violet-500' },
-  { id: 'resources', label: '资料', icon: FileText, color: 'text-emerald-500' },
-  { id: 'docs', label: '学习文档', icon: GraduationCap, color: 'text-amber-500' },
-  { id: 'scratch', label: 'Scratch 4.0-QC', icon: Puzzle, color: 'text-orange-500' },
-  { id: 'compiler', label: '在线编程', icon: Terminal, color: 'text-cyan-600' },
-  { id: 'downloads', label: '软件下载', icon: Download, color: 'text-rose-500' },
-  { id: 'html-sandbox', label: 'HTML 演示', icon: Code2, color: 'text-teal-500' },
+  { id: 'overview', label: '开始', icon: Home, color: 'text-blue-600' },
+  { id: 'books', label: '书架', icon: SquareLibrary, color: 'text-blue-600' },
+  { id: 'courses', label: '课程', icon: Library, color: 'text-blue-600' },
+  { id: 'resources', label: '资料', icon: FileText, color: 'text-emerald-600' },
+  { id: 'docs', label: '学习文档', icon: GraduationCap, color: 'text-emerald-600' },
+  { id: 'scratch', label: 'Scratch 4.0-QC', icon: Puzzle, color: 'text-violet-600' },
+  { id: 'compiler', label: '在线编程', icon: Terminal, color: 'text-violet-600' },
+  { id: 'downloads', label: '软件下载', icon: Download, color: 'text-violet-600' },
+  { id: 'html-sandbox', label: 'HTML 演示', icon: Code2, color: 'text-violet-600' },
 ];
 
 // ── 二级目录行样式：在学课程子列表共用；字号/缩进/间距微调只改这里 ──

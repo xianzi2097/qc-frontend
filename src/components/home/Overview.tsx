@@ -30,7 +30,7 @@ const THEMES = [
 const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; desc: string }[] }[] = [
   {
     title: '创作',
-    layout: 'grid-cols-1 md:grid-cols-3',
+    layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [
       { id: 'compiler', desc: '写代码，直接运行' },
       { id: 'scratch', desc: '积木编程，新窗口打开' },
@@ -39,7 +39,7 @@ const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; de
   },
   {
     title: '学习',
-    layout: 'grid-cols-2 md:grid-cols-4',
+    layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [
       { id: 'books', desc: '机构开放的全部课程' },
       { id: 'resources', desc: '练习题和课件素材' },
@@ -48,7 +48,7 @@ const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; de
   },
   {
     title: '工具',
-    layout: 'grid-cols-1 md:grid-cols-2',
+    layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [{ id: 'downloads', desc: '安装包和常用工具' }],
   },
 ];
