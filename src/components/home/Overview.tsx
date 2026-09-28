@@ -5,6 +5,7 @@ import type { HomeSection } from './SideBar';
 import { fetchUserSettings, updateUserSettings } from '../../lib/api';
 import type { RecentOpen } from '../../lib/api';
 import { TYPE_LUCIDE, TYPE_OPTIONS } from '../../types/course';
+import type { Course } from '../../types/course';
 
 interface Props {
   /** 切换板块（scratch 由 HomePage 负责外链打开 + 记录） */
@@ -12,6 +13,10 @@ interface Props {
   /** 账号级「最近打开」；游客/新用户为空 → 整行隐藏 */
   recentOpens: RecentOpen[];
   onOpenRecent: (r: RecentOpen) => void;
+  /** 「课程」栏：老师标星的课（shelf=courses），空 → 本区隐藏 */
+  courses: Course[];
+  /** 点课程行 → 直接进课程详情 */
+  onOpenCourse: (c: Course) => void;
 }
 
 /* ── 主题色 ── */
@@ -37,7 +42,6 @@ const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; de
     layout: 'grid-cols-2 md:grid-cols-4',
     items: [
       { id: 'books', desc: '机构开放的全部课程' },
-      { id: 'courses', desc: '老师正在教的课' },
       { id: 'resources', desc: '练习题和课件素材' },
       { id: 'docs', desc: '编程教程，在线学习' },
     ],
@@ -67,7 +71,7 @@ const TILE_BG: Record<string, string> = {
 /** 分组拍平（「全部工具」紧凑入口用） */
 const TILE_FLAT = TILE_GROUPS.flatMap(g => g.items);
 
-export default function Overview({ onGoSection, recentOpens, onOpenRecent }: Props) {
+export default function Overview({ onGoSection, recentOpens, onOpenRecent, courses, onOpenCourse }: Props) {
   const [visible, setVisible] = useState(false);
   useEffect(() => { setVisible(true); }, []);
 
@@ -232,6 +236,49 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent }: Pro
             现在想创作点什么？
           </p>
         </div>
+
+        {/* ═══ 课程：大标题 + 课件列表，点行直达课程详情（访客/学生首屏可见） ═══ */}
+        {courses.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-end justify-between mb-3">
+              <h3 className="ed-serif text-[1.5rem] leading-none font-bold text-ed-ink tracking-tight">课程</h3>
+              <button
+                type="button"
+                onClick={() => onGoSection('courses')}
+                className="flex items-center gap-1 text-[0.82rem] text-ed-muted hover:text-brand transition-colors cursor-pointer"
+              >
+                查看全部
+                <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+              </button>
+            </div>
+            <div className="rounded-xl border border-ed-line bg-card shadow-sm divide-y divide-ed-line/60 overflow-hidden">
+              {courses.map(c => {
+                const CIcon = TYPE_LUCIDE[c.type] ?? BookOpen;
+                const color = TYPE_OPTIONS.find(o => o.value === c.type)?.color ?? '#94a3b8';
+                const meta = [c.teacher, TYPE_OPTIONS.find(o => o.value === c.type)?.label ?? c.type]
+                  .filter(Boolean).join(' · ');
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => onOpenCourse(c)}
+                    className="group w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.03] transition-colors cursor-pointer"
+                  >
+                    <span className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}1a`, color }}>
+                      <CIcon className="w-5 h-5" strokeWidth={1.8} />
+                    </span>
+                    <span className="text-[0.95rem] font-semibold text-ed-ink group-hover:text-brand transition-colors truncate">{c.name}</span>
+                    <span className="text-[0.78rem] text-ed-muted truncate hidden sm:block">{meta}</span>
+                    <span className="ml-auto text-[0.75rem] text-ed-muted flex-shrink-0">{c.material_count} 个文件</span>
+                    <ArrowRight
+                      className="w-4 h-4 flex-shrink-0 text-ed-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                      strokeWidth={2}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ═══ 最近：最近打开的条目，统一卡片（不再分大卡/小标签两级） ═══ */}
         {recentOpens.length > 0 && (
