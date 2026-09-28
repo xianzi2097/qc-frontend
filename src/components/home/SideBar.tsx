@@ -11,13 +11,13 @@ import { fetchUserSettings, updateUserSettings } from '../../lib/api';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
 
-export type HomeSection = 'overview' | 'courses' | 'featured' | 'resources' | 'docs' | 'downloads' | 'html-sandbox' | 'compiler' | 'scratch';
+export type HomeSection = 'overview' | 'books' | 'courses' | 'resources' | 'docs' | 'downloads' | 'html-sandbox' | 'compiler' | 'scratch';
 
 interface Props {
   section: HomeSection;
   onSection: (s: HomeSection) => void;
   /** 课程（老师标星、正在教的）——直接列在侧边栏，点击直达内容 */
-  featuredCourses: Course[];
+  courses: Course[];
   activeCourseId?: string;
   onOpenCourse: (c: Course) => void;
   /** 清除课程选中态（切到其他板块时调用） */
@@ -36,8 +36,8 @@ interface Props {
 /** 导航定义：scratch 独立顶级项（外链），其余为页内板块。导出给开始页磁贴/最近打开复用图标与文案 */
 export const NAV: { id: HomeSection; label: string; icon: typeof Home; color: string }[] = [
   { id: 'overview', label: '开始', icon: Home, color: 'text-sky-500' },
-  { id: 'courses', label: '书架', icon: SquareLibrary, color: 'text-indigo-500' },
-  { id: 'featured', label: '课程', icon: Library, color: 'text-violet-500' },
+  { id: 'books', label: '书架', icon: SquareLibrary, color: 'text-indigo-500' },
+  { id: 'courses', label: '课程', icon: Library, color: 'text-violet-500' },
   { id: 'resources', label: '资料', icon: FileText, color: 'text-emerald-500' },
   { id: 'docs', label: '学习文档', icon: GraduationCap, color: 'text-amber-500' },
   { id: 'scratch', label: 'Scratch 4.0-QC', icon: Puzzle, color: 'text-orange-500' },
@@ -55,7 +55,7 @@ const SUB_ITEM = 'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-lg tex
  * 导航 + 在学课程子目录（可折叠）+ 底部账号区。
  */
 export default function SideBar({
-  section, onSection, featuredCourses, activeCourseId, onOpenCourse, onClearCourse,
+  section, onSection, courses, activeCourseId, onOpenCourse, onClearCourse,
   user, username, roleLabel, avatarIdx,
   onAvatarClick, onLoginClick, onLogout, onStartTour,
 }: Props) {
@@ -177,13 +177,13 @@ export default function SideBar({
                 onClick={() => {
                   onClearCourse();
                   // scratch 外链也走 onSection：由 HomePage 统一 window.open + 记录最近打开
-                  if (id === 'featured') setFolded(false);
+                  if (id === 'courses') setFolded(false);
                   onSection(id);
                 }}
                 data-tip={rail ? label : undefined}
                 data-tour={
+                  id === 'books' ? 'books' :
                   id === 'courses' ? 'courses' :
-                  id === 'featured' ? 'featured' :
                   id === 'resources' ? 'resources' :
                   id === 'docs' ? 'docs' :
                   id === 'compiler' ? 'programming' :
@@ -196,7 +196,7 @@ export default function SideBar({
                 <Icon className={`w-5 h-5 shrink-0 ${color}`} strokeWidth={active ? 2.6 : 1.8} />
                 {!rail && label}
                 {!rail && id === 'scratch' && <ExternalLink className="w-3 h-3 ml-auto opacity-40" />}
-                {!rail && id === 'featured' && featuredCourses.length > 0 && (
+                {!rail && id === 'courses' && courses.length > 0 && (
                   <span
                     onClick={(e) => { e.stopPropagation(); setFolded(v => !v); }}
                     data-tip={folded ? '展开课程列表' : '折叠课程列表'}
@@ -206,12 +206,12 @@ export default function SideBar({
                   </span>
                 )}
               </button>
-              {!rail && id === 'featured' && !folded && featuredCourses.length > 0 && (
+              {!rail && id === 'courses' && !folded && courses.length > 0 && (
                 <div className="mt-0.5 mb-1 space-y-0.5">
-                  {featuredCourses.map((c) => (
+                  {courses.map((c) => (
                     <button
                       key={c.id}
-                      onClick={() => { onSection('featured'); onOpenCourse(c); }}
+                      onClick={() => { onSection('courses'); onOpenCourse(c); }}
                       className={`${SUB_ITEM} cursor-pointer transition-colors ${
                         activeCourseId === c.id
                           ? 'bg-black/[0.06] text-brand font-semibold'

@@ -16,6 +16,7 @@ import { fetchAllCourses, fetchUserSettings, logoutRequest, recordRecentOpen, up
 import type { RecentOpen } from '../../lib/api';
 import type { PortalUser } from '../../lib/useAuth';
 import type { Course } from '../../types/course';
+import { shelfOf } from '../../types/course';
 import { startHomePageTour } from '../../lib/guidedTour';
 
 interface Props {
@@ -32,21 +33,25 @@ function readStoredUser(): PortalUser | null {
 
 const ROLE_LABEL: Record<string, string> = { teacher: '教师', student: '学生', admin: '管理员' };
 
+/** 旧板块 id 只认这个时间点之前的「最近打开」记录（此前存 courses=书架 / featured=课程，此后存 books / courses） */
+const LEGACY_SECTION_CUTOFF = 1790560318327;
+
 /**
  * 主页 — 控制台式布局（类 ChatGPT）：
  * 左侧固定导航栏（概览 / 书架 / 课程 / 资源 / 学习文档 / 在线编程 + 底部账号区），
  * 右侧全部为内容区，按 section 切换。
  */
 export default function HomePage({ onLogin }: Props) {
-  // 当前板块；保留旧版 ?view=courses 直达课程广场的语义
-  const [section, setSection] = useState<HomeSection>(() =>
-    new URLSearchParams(window.location.search).get('view') === 'courses' ? 'courses' : 'overview',
-  );
+  // 当前板块；旧版 ?view=courses（课程广场链接）和新 ?view=books 都直达书架
+  const [section, setSection] = useState<HomeSection>(() => {
+    const v = new URLSearchParams(window.location.search).get('view');
+    return v === 'courses' || v === 'books' ? 'books' : 'overview';
+  });
   const [showLogin, setShowLogin] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   // 全量课程：侧边栏「课程」列表派生 + 最近打开回跳按 id 查课
   const [allCourses, setAllCourses] = useState<Course[]>([]);
-  const featuredCourses = useMemo(() => allCourses.filter(c => c.featured === true), [allCourses]);
+  const courses = useMemo(() => allCourses.filter(c => shelfOf(c) === 'courses'), [allCourses]);
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
 
   // ── 最近打开：账号级存后端 settings.json（游客不记录、不显示） ──
@@ -104,7 +109,7 @@ export default function HomePage({ onLogin }: Props) {
     if (r.kind === 'section') { handleSection(r.id as HomeSection); return; }
     const c = allCourses.find(x => x.id === r.id);
     if (!c) { setRecentOpens(prev => prev.filter(x => !(x.kind === r.kind && x.id === r.id))); return; }
-    setSection(c.featured === true ? 'featured' : 'courses');
+    setSection(shelfOf(c) === 'courses' ? 'courses' : 'books');
     setOpenCourse(c);
     recordOpen({ kind: 'course', id: c.id, label: c.name, teacher: c.teacher, type: c.type });
   };
@@ -122,7 +127,12 @@ export default function HomePage({ onLogin }: Props) {
   useEffect(() => {
     if (!username) { setRecentOpens([]); return; }
     fetchUserSettings().then(s => {
-      const server = s.recentOpens ?? [];
+      // 旧记录的板块 id（featured时代）换算成新 id：courses(旧=书架)→books，featured→courses
+      const server = (s.recentOpens ?? []).map(r =>
+        r.kind === 'section' && r.ts < LEGACY_SECTION_CUTOFF
+          ? { ...r, id: r.id === 'featured' ? 'courses' : r.id === 'courses' ? 'books' : r.id }
+          : r,
+      );
       setRecentOpens(prev => {
         if (prev.length === 0) return server.slice(0, 6);
         const serverIds = new Set(server.map(x => `${x.kind}:${x.id}`));
@@ -156,7 +166,7 @@ export default function HomePage({ onLogin }: Props) {
       <SideBar
         section={section}
         onSection={handleSection}
-        featuredCourses={featuredCourses}
+        courses={courses}
         activeCourseId={openCourse?.id}
         onOpenCourse={handleOpenCourse}
         onClearCourse={() => setOpenCourse(null)}
@@ -176,11 +186,11 @@ export default function HomePage({ onLogin }: Props) {
         className="flex-1 min-w-0 min-h-0 flex flex-col animate-fadeIn"
       >
         {openCourse ? (
-          <CourseDetail course={openCourse} onBack={() => { const back = openCourse.featured === true ? 'featured' : 'courses'; setOpenCourse(null); setSection(back); }} />
+          <CourseDetail course={openCourse} onBack={() => { const back = shelfOf(openCourse) === 'courses' ? 'courses' : 'books'; setOpenCourse(null); setSection(back); }} />
         ) : (
           <>
-            {section === 'courses' && <CourseCatalog onOpenCourse={handleCatalogOpen} />}
-            {section === 'featured' && <CourseCatalog mode="featured" onOpenCourse={handleCatalogOpen} />}
+            {section === 'books' && <CourseCatalog mode="books" onOpenCourse={handleCatalogOpen} />}
+            {section === 'courses' && <CourseCatalog mode="courses" onOpenCourse={handleCatalogOpen} />}
             {section === 'resources' && <Resources />}
             {section === 'docs' && <DocsFrame />}
             {section === 'downloads' && <Downloads />}

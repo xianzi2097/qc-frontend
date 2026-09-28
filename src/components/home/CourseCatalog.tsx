@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CourseDetail from './CourseDetail';
 import { fetchCourses, fetchTeacherNames } from '../../lib/api';
 import type { Course } from '../../types/course';
+import { shelfOf } from '../../types/course';
 
 const FILTERS = [
   { value: '全部', label: '全部' },
@@ -35,14 +36,14 @@ const SHAPES = [
 ];
 
 interface Props {
-  /** main=书架（收纳的课）；featured=课程（老师标星、正在教的） */
-  mode?: 'main' | 'featured';
+  /** books=书架（收纳的课）；courses=课程（老师标星、正在教的） */
+  mode?: 'books' | 'courses';
   /** 目录内点击课程时通知父级（开始页记录最近打开）；详情仍由目录自行渲染 */
   onOpenCourse?: (c: Course) => void;
 }
 
 /** 课程目录 — 内容区视图：编号条目 + hairline 分隔；点击条目进入 CourseDetail 内容视图 */
-export default function CourseCatalog({ mode = 'main', onOpenCourse }: Props) {
+export default function CourseCatalog({ mode = 'books', onOpenCourse }: Props) {
   const [courseType, setCourseType] = useState('全部');
   const [searchQuery, setSearchQuery] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
@@ -64,13 +65,13 @@ export default function CourseCatalog({ mode = 'main', onOpenCourse }: Props) {
   const visible = useMemo(() => {
     const kw = searchQuery.trim().toLowerCase();
     return courses.filter(c =>
-      (mode === 'featured' ? c.featured === true : c.featured !== true) &&
+      (mode === 'courses' ? shelfOf(c) === 'courses' : shelfOf(c) === 'books') &&
       (courseType === '全部' || c.type === courseType) &&
       (!kw || c.name.toLowerCase().includes(kw)),
     );
   }, [courses, courseType, mode, searchQuery]);
 
-  const title = mode === 'featured' ? '课程' : '书架';
+  const title = mode === 'courses' ? '课程' : '书架';
 
   const railRef = useRef<HTMLDivElement>(null);
   const scroll = useCallback((dir: -1 | 1) => {

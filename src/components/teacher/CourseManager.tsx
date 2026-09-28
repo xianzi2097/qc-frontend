@@ -8,7 +8,7 @@ import { useLoading } from '../../lib/useLoading';
 import { useAuth } from '../../lib/useAuth';
 
 import type { Course, TreeNode } from '../../types/course';
-import { TYPE_LUCIDE, TYPE_OPTIONS, FORMAT_OPTIONS, FORMAT_LABEL } from '../../types/course';
+import { TYPE_LUCIDE, TYPE_OPTIONS, FORMAT_OPTIONS, FORMAT_LABEL, shelfOf } from '../../types/course';
 
 // ── 拖拽组件 ──
 function SortableItem({ id, children, className = '', dragHandle }: {
@@ -122,17 +122,19 @@ export default function CourseManager() {
     }
   };
 
-  const handleToggleFeatured = async (course: Course) => {
+  const handleToggleShelf = async (course: Course) => {
+    // 星标 = 在「课程」和「书架」之间移动
+    const next: 'books' | 'courses' = shelfOf(course) === 'courses' ? 'books' : 'courses';
     try {
-      const res = await fetch(`/api/courses/${encodeURIComponent(course.id)}/featured`, {
+      const res = await fetch(`/api/courses/${encodeURIComponent(course.id)}/shelf`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ featured: !course.featured }),
+        body: JSON.stringify({ shelf: next }),
       });
       const data = await res.json();
       if (data.status === 'success') {
         // 本地先更新，开关即时反馈
-        setCourses(prev => prev.map(c => (c.id === course.id ? { ...c, featured: !course.featured } : c)));
+        setCourses(prev => prev.map(c => (c.id === course.id ? { ...c, shelf: next, featured: next === 'courses' } : c)));
       } else {
         alert(data.detail || '操作失败');
       }
@@ -701,7 +703,7 @@ export default function CourseManager() {
                   <p className="text-xs text-slate-500">
                     {FORMAT_LABEL[course.format || 'folder'] || course.format} · {course.material_count} 个文件
                   </p>
-                  {course.featured && (
+                  {shelfOf(course) === 'courses' && (
                     <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-400/10 text-amber-400 mt-1">
                       <Star size={9} className="fill-current" /> 课程
                     </span>
@@ -716,11 +718,11 @@ export default function CourseManager() {
                 </div>
                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                   <button
-                    onClick={() => handleToggleFeatured(course)}
-                    className={`p-1 transition-all ${course.featured ? 'text-amber-400' : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'}`}
-                    title={course.featured ? '移出「课程」（从主页侧边栏收进书架）' : '加入「课程」（显示在主页侧边栏）'}
+                    onClick={() => handleToggleShelf(course)}
+                    className={`p-1 transition-all ${shelfOf(course) === 'courses' ? 'text-amber-400' : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'}`}
+                    title={shelfOf(course) === 'courses' ? '移出「课程」（从主页侧边栏收进书架）' : '加入「课程」（显示在主页侧边栏）'}
                   >
-                    <Star size={14} className={course.featured ? 'fill-current' : ''} />
+                    <Star size={14} className={shelfOf(course) === 'courses' ? 'fill-current' : ''} />
                   </button>
                   <button
                     onClick={() => openEditCourse(course)}

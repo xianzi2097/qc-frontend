@@ -117,12 +117,12 @@ export async function fetchAllCourses(): Promise<Course[]> {
   return fetchCourses(teachers, '全部');
 }
 
-/** 设置/取消「课程」标记（标记的显示在侧边栏「课程」，未标记的收在「书架」） */
-export async function setFeatured(courseId: string, featured: boolean): Promise<void> {
-  const res = await fetch(`/api/courses/${encodeURIComponent(courseId)}/featured`, {
+/** 移动课程所在书架：'courses'=课程（主页侧边栏「课程」），'books'=书架 */
+export async function setShelf(courseId: string, shelf: 'books' | 'courses'): Promise<void> {
+  const res = await fetch(`/api/courses/${encodeURIComponent(courseId)}/shelf`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ featured }),
+    body: JSON.stringify({ shelf }),
   });
   const data = await res.json();
   if (data.status !== 'success') throw new Error(data.detail || '操作失败');

@@ -52,24 +52,24 @@ export function startHomePageTour(onSection: (s: HomeSection) => void) {
         },
       },
       {
-        element: '[data-tour="courses"]',
+        element: '[data-tour="books"]',
         popover: {
           title: iconTitle('squareLibrary', '书架'),
           description: '你上传的所有课件都在这里，按课程分类浏览和管理。',
           side: 'right',
           align: 'start',
         },
-        onHighlightStarted: () => onSection('courses'),
+        onHighlightStarted: () => onSection('books'),
       },
       {
-        element: '[data-tour="featured"]',
+        element: '[data-tour="courses"]',
         popover: {
           title: iconTitle('library', '课程'),
           description: '创建和管理课程，老师在这里上传、编辑课件内容。',
           side: 'right',
           align: 'start',
         },
-        onHighlightStarted: () => onSection('featured'),
+        onHighlightStarted: () => onSection('courses'),
       },
       {
         element: '[data-tour="resources"]',

@@ -13,9 +13,14 @@ export interface Course {
   material_count: number;
   teacher?: string;
   teacher_key?: string;
-  featured?: boolean;  // true=课程（显示在侧边栏「课程」栏目），false=书架
+  shelf?: 'books' | 'courses';  // 所在书架：books=书架（收纳），courses=课程（老师正在教）
+  featured?: boolean;  // 旧字段兼容（shelf==='courses' 的布尔形式）
   publish?: { status?: string; error?: string; published_at?: string };
 }
+
+/** 课程所在书架（后端同时发 shelf 和旧 featured，这里统一取值口径） */
+export const shelfOf = (c: Course): 'books' | 'courses' =>
+  c.shelf ?? (c.featured === true ? 'courses' : 'books');
 
 // 文件树节点（后台资源管理器）
 export interface TreeNode {
