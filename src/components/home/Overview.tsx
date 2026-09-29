@@ -26,12 +26,10 @@ const THEMES = [
   { id: 'blue', label: '蓝色', color: 'oklch(0.65 0.19 220)' },
 ];
 
-/* ── 快速入口磁贴：分组覆盖侧边栏全部 9 个入口（「开始」即本页，不设磁贴）
-   color 与侧边栏同组色：核心=蓝 / 学习资源=翠绿 / 工具实践=紫 ── */
-const TILE_GROUPS: { title: string; layout: string; color: string; items: { id: HomeSection; desc: string }[] }[] = [
+/* ── 快速入口磁贴：分组覆盖侧边栏全部 9 个入口（「开始」即本页，不设磁贴） ── */
+const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; desc: string }[] }[] = [
   {
     title: '创作',
-    color: 'text-violet-600',
     layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [
       { id: 'compiler', desc: '写代码，直接运行' },
@@ -41,7 +39,6 @@ const TILE_GROUPS: { title: string; layout: string; color: string; items: { id: 
   },
   {
     title: '学习',
-    color: 'text-emerald-600',
     layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [
       { id: 'books', desc: '机构开放的全部课程' },
@@ -51,7 +48,6 @@ const TILE_GROUPS: { title: string; layout: string; color: string; items: { id: 
   },
   {
     title: '工具',
-    color: 'text-violet-600',
     layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [{ id: 'downloads', desc: '安装包和常用工具' }],
   },
@@ -179,7 +175,7 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, cours
                       type="button"
                       title={t.label}
                       onClick={() => { switchTheme(t.id); setShowHue(false); }}
-                      className={`w-8 h-8 rounded-full cursor-pointer transition-transform hover:scale-110 ${
+                      className={`w-4 h-4 rounded-full cursor-pointer transition-transform hover:scale-110 ${
                         theme === t.id && !customHue ? 'ring-2 ring-offset-2 ring-ed-ink/50 ring-offset-card' : ''
                       }`}
                       style={{ background: t.color }}
@@ -199,7 +195,7 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, cours
                       updateUserSettings({ theme: 'custom', customHue: h }).catch(() => {});
                       setShowHue(true);
                     }}
-                    className={`w-8 h-8 rounded-full cursor-pointer transition-transform hover:scale-110 ${
+                    className={`w-4 h-4 rounded-full cursor-pointer transition-transform hover:scale-110 ${
                       theme === 'custom' ? 'ring-2 ring-offset-2 ring-ed-ink/50 ring-offset-card' : ''
                     }`}
                     style={{ background: customHue ? `hsl(${customHue}, 70%, 55%)` : 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
@@ -279,7 +275,7 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, cours
         {courses.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-[0.82rem] font-semibold text-blue-600 tracking-wide">课程</span>
+              <span className="text-[0.82rem] font-semibold text-brand tracking-wide">课程</span>
               <div className="h-px flex-1 bg-ed-line/60" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -312,7 +308,7 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, cours
         {TILE_GROUPS.map(group => (
           <div key={group.title} className="mb-8">
             <div className="flex items-center gap-3 mb-3">
-              <span className={`text-[0.82rem] font-semibold tracking-wide ${group.color}`}>{group.title}</span>
+              <span className="text-[0.82rem] font-semibold text-brand tracking-wide">{group.title}</span>
               <div className="h-px flex-1 bg-ed-line/60" />
             </div>
             <div className={`grid gap-4 ${group.layout}`}>
