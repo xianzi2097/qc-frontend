@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowRight, BookOpen, Clock, ExternalLink, Palette } from 'lucide-react';
+import { BookOpen, Clock, ExternalLink, Palette } from 'lucide-react';
 import { NAV } from './SideBar';
 import type { HomeSection } from './SideBar';
 import { fetchUserSettings, updateUserSettings } from '../../lib/api';
@@ -26,10 +26,12 @@ const THEMES = [
   { id: 'blue', label: '蓝色', color: 'oklch(0.65 0.19 220)' },
 ];
 
-/* ── 快速入口磁贴：分组覆盖侧边栏全部 9 个入口（「开始」即本页，不设磁贴） ── */
-const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; desc: string }[] }[] = [
+/* ── 快速入口磁贴：分组覆盖侧边栏全部 9 个入口（「开始」即本页，不设磁贴）
+   color 与侧边栏同组色：核心=蓝 / 学习资源=翠绿 / 工具实践=紫 ── */
+const TILE_GROUPS: { title: string; layout: string; color: string; items: { id: HomeSection; desc: string }[] }[] = [
   {
     title: '创作',
+    color: 'text-violet-600',
     layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [
       { id: 'compiler', desc: '写代码，直接运行' },
@@ -39,6 +41,7 @@ const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; de
   },
   {
     title: '学习',
+    color: 'text-emerald-600',
     layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [
       { id: 'books', desc: '机构开放的全部课程' },
@@ -48,6 +51,7 @@ const TILE_GROUPS: { title: string; layout: string; items: { id: HomeSection; de
   },
   {
     title: '工具',
+    color: 'text-violet-600',
     layout: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
     items: [{ id: 'downloads', desc: '安装包和常用工具' }],
   },
@@ -67,9 +71,6 @@ const TILE_BG: Record<string, string> = {
   'html-sandbox': 'bg-blue-50 text-blue-600',
   downloads: 'bg-purple-50 text-purple-600',
 };
-
-/** 分组拍平（「全部工具」紧凑入口用） */
-const TILE_FLAT = TILE_GROUPS.flatMap(g => g.items);
 
 export default function Overview({ onGoSection, recentOpens, onOpenRecent, courses, onOpenCourse }: Props) {
   const [visible, setVisible] = useState(false);
@@ -237,11 +238,48 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, cours
           </p>
         </div>
 
+        {/* ═══ 最近：胶囊标签，置于最上（点一下直达） ═══ */}
+        {recentOpens.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-3">
+              <Clock className="w-4 h-4 text-brand" strokeWidth={1.8} />
+              <span className="text-[0.82rem] font-semibold text-brand tracking-wide">最近</span>
+              <div className="h-px flex-1 bg-ed-line/60" />
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {recentOpens.map(r => {
+                const isCourse = r.kind === 'course';
+                const typeOpt = isCourse && r.type ? TYPE_OPTIONS.find(o => o.value === r.type) : undefined;
+                const Icon = isCourse
+                  ? (r.type ? TYPE_LUCIDE[r.type] ?? BookOpen : BookOpen)
+                  : NAV_MAP.get(r.id as HomeSection)?.icon ?? Clock;
+                return (
+                  <button
+                    key={`${r.kind}:${r.id}`}
+                    onClick={() => onOpenRecent(r)}
+                    className="group flex items-center gap-2 h-9 px-3.5 rounded-full border border-ed-line bg-card text-[0.85rem] text-ed-body hover:border-brand hover:text-brand transition-all cursor-pointer"
+                  >
+                    <Icon
+                      className={`w-4 h-4 flex-shrink-0 transition-colors ${isCourse ? '' : 'text-ed-muted group-hover:text-brand'}`}
+                      style={isCourse ? { color: typeOpt?.color ?? '#94a3b8' } : undefined}
+                      strokeWidth={1.8}
+                    />
+                    <span className="max-w-40 truncate">{r.label}</span>
+                    {r.kind === 'section' && r.id === 'scratch' && (
+                      <ExternalLink className="w-3 h-3 text-ed-muted opacity-40" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* ═══ 课程：与其他栏目同款（小标题+分割线+等宽短卡），点卡直达课程详情 ═══ */}
         {courses.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">课程</span>
+              <span className="text-[0.82rem] font-semibold text-blue-600 tracking-wide">课程</span>
               <div className="h-px flex-1 bg-ed-line/60" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -270,61 +308,11 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, cours
           </div>
         )}
 
-        {/* ═══ 最近：最近打开的条目，统一卡片（不再分大卡/小标签两级） ═══ */}
-        {recentOpens.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-3">
-              <Clock className="w-4 h-4 text-ed-muted" strokeWidth={1.8} />
-              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">最近</span>
-              <div className="h-px flex-1 bg-ed-line/60" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-              {recentOpens.map(r => {
-                const isCourse = r.kind === 'course';
-                const typeOpt = isCourse && r.type ? TYPE_OPTIONS.find(o => o.value === r.type) : undefined;
-                const Icon = isCourse
-                  ? (r.type ? TYPE_LUCIDE[r.type] ?? BookOpen : BookOpen)
-                  : NAV_MAP.get(r.id as HomeSection)?.icon ?? Clock;
-                const desc = isCourse
-                  ? [typeOpt?.label ?? r.type, r.teacher].filter(Boolean).join(' · ')
-                  : TILE_FLAT.find(t => t.id === r.id)?.desc ?? '快速进入';
-                return (
-                  <button
-                    key={`${r.kind}:${r.id}`}
-                    onClick={() => onOpenRecent(r)}
-                    className="group flex items-center gap-3 p-4 rounded-xl border border-ed-line bg-card shadow-sm hover:border-brand hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer text-left"
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isCourse ? '' : TILE_BG[r.id] ?? 'bg-brand-50 text-brand'}`}
-                      style={isCourse ? { backgroundColor: `${typeOpt?.color ?? '#94a3b8'}1a`, color: typeOpt?.color ?? '#94a3b8' } : undefined}
-                    >
-                      <Icon className="w-5 h-5" strokeWidth={1.8} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[0.95rem] font-semibold text-ed-ink group-hover:text-brand transition-colors truncate">{r.label}</span>
-                        {r.kind === 'section' && r.id === 'scratch' && (
-                          <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-ed-muted opacity-40" />
-                        )}
-                      </div>
-                      <div className="text-[0.78rem] text-ed-muted truncate mt-0.5">{desc}</div>
-                    </div>
-                    <ArrowRight
-                      className="w-4 h-4 flex-shrink-0 text-ed-muted opacity-0 group-hover:opacity-100 transition-opacity"
-                      strokeWidth={2}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ═══ 创作 / 学习 / 工具：分类磁贴 ═══ */}
+        {/* ═══ 创作 / 学习 / 工具：分类磁贴（标题按侧边栏分组着色） ═══ */}
         {TILE_GROUPS.map(group => (
           <div key={group.title} className="mb-8">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">{group.title}</span>
+              <span className={`text-[0.82rem] font-semibold tracking-wide ${group.color}`}>{group.title}</span>
               <div className="h-px flex-1 bg-ed-line/60" />
             </div>
             <div className={`grid gap-4 ${group.layout}`}>
