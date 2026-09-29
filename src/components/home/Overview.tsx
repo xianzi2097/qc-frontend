@@ -237,42 +237,32 @@ export default function Overview({ onGoSection, recentOpens, onOpenRecent, cours
           </p>
         </div>
 
-        {/* ═══ 课程：大标题 + 课件列表，点行直达课程详情（访客/学生首屏可见） ═══ */}
+        {/* ═══ 课程：与其他栏目同款（小标题+分割线+等宽短卡），点卡直达课程详情 ═══ */}
         {courses.length > 0 && (
           <div className="mb-8">
-            <div className="flex items-end justify-between mb-3">
-              <h3 className="ed-serif text-[1.5rem] leading-none font-bold text-ed-ink tracking-tight">课程</h3>
-              <button
-                type="button"
-                onClick={() => onGoSection('courses')}
-                className="flex items-center gap-1 text-[0.82rem] text-ed-muted hover:text-brand transition-colors cursor-pointer"
-              >
-                查看全部
-                <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
-              </button>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-[0.82rem] font-semibold text-ed-muted tracking-wide">课程</span>
+              <div className="h-px flex-1 bg-ed-line/60" />
             </div>
-            <div className="rounded-xl border border-ed-line bg-card shadow-sm divide-y divide-ed-line/60 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {courses.map(c => {
                 const CIcon = TYPE_LUCIDE[c.type] ?? BookOpen;
                 const color = TYPE_OPTIONS.find(o => o.value === c.type)?.color ?? '#94a3b8';
-                const meta = [c.teacher, TYPE_OPTIONS.find(o => o.value === c.type)?.label ?? c.type]
-                  .filter(Boolean).join(' · ');
+                // 只显示类型，不显示老师（同一位老师带多门课，学生会困惑）
+                const meta = TYPE_OPTIONS.find(o => o.value === c.type)?.label ?? c.type;
                 return (
                   <button
                     key={c.id}
                     onClick={() => onOpenCourse(c)}
-                    className="group w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.03] transition-colors cursor-pointer"
+                    className="group flex items-center gap-3 p-4 rounded-xl border border-ed-line bg-card shadow-sm hover:border-brand hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer text-left"
                   >
-                    <span className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}1a`, color }}>
+                    <span className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}1a`, color }}>
                       <CIcon className="w-5 h-5" strokeWidth={1.8} />
                     </span>
-                    <span className="text-[0.95rem] font-semibold text-ed-ink group-hover:text-brand transition-colors truncate">{c.name}</span>
-                    <span className="text-[0.78rem] text-ed-muted truncate hidden sm:block">{meta}</span>
-                    <span className="ml-auto text-[0.75rem] text-ed-muted flex-shrink-0">{c.material_count} 个文件</span>
-                    <ArrowRight
-                      className="w-4 h-4 flex-shrink-0 text-ed-muted opacity-0 group-hover:opacity-100 transition-opacity"
-                      strokeWidth={2}
-                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[0.95rem] font-semibold text-ed-ink truncate">{c.name}</div>
+                      <div className="text-[0.78rem] text-ed-muted truncate mt-0.5">{meta}</div>
+                    </div>
                   </button>
                 );
               })}
