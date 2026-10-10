@@ -85,21 +85,41 @@ export async function fetchResourceTree(resourceId: string, resourceUrl: string)
   }];
 }
 
-/** 登录；成功返回 user + token，失败抛错（消息为后端 detail 或默认文案） */
-export async function login(username: string, password: string): Promise<{ user: PortalUser; token?: string }> {
-  const res = await fetch('/api/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-  const data = await res.json();
-  if (data.status !== 'success') throw new Error(data.detail || '登录失败');
-  return { user: data.user, token: data.token };
+/** V2 信封错误：code!==0 时抛出，msg 可直接给用户看 */
+export class ApiError extends Error {
+  code: number;
+  constructor(code: number, message: string) {
+    super(message);
+    this.code = code;
+  }
 }
 
-/** 通知后端退出（尽力而为；本地状态由调用方清理） */
+/** V2 统一请求（信封拦截）：成功只返回 data，失败抛 ApiError(msg) */
+export async function apiV2<T = any>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...init });
+  const body = await res.json().catch(() => null);
+  if (!body || typeof body.code !== 'number' || body.code !== 0) {
+    throw new ApiError(body?.code ?? res.status, body?.msg ?? `请求失败(${res.status})`);
+  }
+  return body.data as T;
+}
+
+/** 登录（V2：POST /api/auth/login → {code,msg,data:{token,account}}） */
+export async function login(username: string, password: string): Promise<{ user: PortalUser; token?: string }> {
+  const data = await apiV2<any>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+  const a = data.account;
+  return {
+    user: { username: a.username, role: a.role, avatar_path: a.avatar_path },
+    token: data.token,
+  };
+}
+
+/** 通知后端退出（V2：/api/auth/logout；尽力而为，本地状态由调用方清理） */
 export function logoutRequest(): void {
-  fetch('/api/logout', { method: 'POST' }).catch(() => {});
+  apiV2('/api/auth/logout', { method: 'POST' }).catch(() => {});
 }
 
 /** 更新头像 */

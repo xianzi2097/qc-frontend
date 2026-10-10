@@ -99,13 +99,16 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
       .catch(console.error);
   };
 
-  // 从 API 获取真实用户数据
+  // 从 API 获取真实用户数据（V2：/api/auth/me 信封，descriptors 可能是 JSON 串）
   useEffect(() => {
-    fetch(`/api/user/profile?username=${username}`)
+    fetch('/api/auth/me')
       .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') {
-          const d = data.user.descriptors || {};
+      .then(body => {
+        if (body.code === 0) {
+          let d = body.data?.descriptors || {};
+          if (typeof d === 'string') {
+            try { d = JSON.parse(d); } catch { d = {}; }
+          }
           setProfile({
             points: d.points || 0,
             badges: d.badges || 0,

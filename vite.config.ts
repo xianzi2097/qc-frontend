@@ -20,7 +20,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/api': 'http://localhost:8001',   // M5 起 8001(V2) 为唯一正宫；8000=V1 老端口封存
       '/judge0': {
         target: 'http://192.168.2.158:2358',
         changeOrigin: true,

@@ -28,7 +28,7 @@ const origFetch = window.fetch.bind(window);
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   // 登录/注册接口不需要 token
   const url = typeof input === 'string' ? input : input instanceof Request ? input.url : input.toString();
-  if (url.includes('/api/login')) {
+  if (url.includes('/api/login') || url.includes('/api/auth/login')) {
     return origFetch(input, init);
   }
 
@@ -45,7 +45,7 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     // 403 权限不足：提示用户重新登录
     if (res.status === 403) {
       const data = await res.clone().json().catch(() => null);
-      alert(data?.detail || '权限不足，请重新登录');
+      alert(data?.msg || data?.detail || '权限不足，请重新登录');
       localStorage.removeItem('user');
       localStorage.removeItem('auth_token');
       window.location.reload();
@@ -76,8 +76,8 @@ export function useAuth() {
       return;
     }
 
-    // 用 /api/user/profile 验证 token 是否仍有效
-    fetch('/api/user/profile')
+    // 用 /api/auth/me 验证 token 是否仍有效（V2：信封 401 → 清登录态）
+    fetch('/api/auth/me')
       .then(res => {
         if (!res.ok) {
           // token 无效或用户已被删除，清除登录状态
@@ -99,7 +99,7 @@ export function useAuth() {
   }, []);
 
   const logout = useCallback(() => {
-    fetch('/api/logout', {
+    fetch('/api/auth/logout', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
     }).catch(() => {});
