@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 
 export interface PortalUser {
+  /** V2 身份主键（id 当身份，头像等接口用）；M5a 期间的存量登录态可能没有，由 /me 校验时补齐 */
+  id?: string;
   username: string;
   role: 'teacher' | 'student' | 'admin';
   avatar_path: string;
@@ -38,9 +40,13 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     headers.set('Authorization', `Bearer ${token}`);
     const res = await origFetch(input, { ...init, headers });
     if (res.status === 401) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('auth_token');
-      window.location.reload();
+      const data = await res.clone().json().catch(() => null);
+      // 2001=凭证错误（如改密时原密码错）：会话本身仍有效，交调用方展示错误，不踢人
+      if (data?.code !== 2001) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        window.location.reload();
+      }
     }
     // 403 权限不足：提示用户重新登录
     if (res.status === 403) {
@@ -78,12 +84,24 @@ export function useAuth() {
 
     // 用 /api/auth/me 验证 token 是否仍有效（V2：信封 401 → 清登录态）
     fetch('/api/auth/me')
-      .then(res => {
+      .then(async res => {
         if (!res.ok) {
           // token 无效或用户已被删除，清除登录状态
           localStorage.removeItem('user');
           localStorage.removeItem('auth_token');
           setUser(null);
+          return;
+        }
+        // 存量登录态（M5a 期间存的 user 没有 id）→ 用 me 的返回补齐（头像等接口需要 id）
+        const body = await res.json().catch(() => null);
+        const id = body?.data?.id as string | undefined;
+        if (id) {
+          const u = readUser();
+          if (u && u.id !== id) {
+            const nu = { ...u, id };
+            localStorage.setItem('user', JSON.stringify(nu));
+            setUser(nu);
+          }
         }
       })
       .catch(() => {

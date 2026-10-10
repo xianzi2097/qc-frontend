@@ -203,7 +203,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
                 {activeModule === 'notebook' && <Notebook username={username} />}
                 {activeModule === 'messages' && <Messages username={username} onMsgRead={refreshUnread} />}
 
-                {activeModule === 'settings' && <Settings username={username} />}
+                {activeModule === 'settings' && <Settings />}
                 {activeModule === 'projects' && (
                   <div className="h-full flex items-center justify-center">
                     <div className="text-center">

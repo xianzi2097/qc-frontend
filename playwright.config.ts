@@ -15,6 +15,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5173',
     channel: 'msedge',
+    headless: false,          // 有头模式：跑 e2e 时你能在屏幕上看全过程（用户拍板 2026-10-10）
     trace: 'retain-on-failure',
   },
   webServer: [

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import {
-  Terminal, Users, Cpu, LogOut, Mail, Calendar, BookOpen, Home, FolderOpen,
+  Terminal, Users, Cpu, LogOut, Mail, Calendar, BookOpen, Home, FolderOpen, KeyRound,
 } from 'lucide-react';
 import { getAvatarCfg } from '../ui/AvatarPicker';
+import ChangePasswordDialog from '../ui/ChangePassword';
 import TeacherDashboard from './TeacherDashboard';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 
 export default function TeacherDashboardWithSidebar({ username, role, logout }: Props) {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showPwd, setShowPwd] = useState(false);
 
   return (
     <div className="flex h-screen bg-cyber-bg text-slate-100 font-sans selection:bg-geek-green selection:text-black">
@@ -126,6 +128,13 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
             <p className="text-xs text-slate-600 font-mono">{role}</p>
           </div>
           <button
+            onClick={() => setShowPwd(true)}
+            className="text-slate-500 hover:text-cyan-400 transition-colors shrink-0"
+            title="修改密码"
+          >
+            <KeyRound size={16} />
+          </button>
+          <button
             onClick={logout}
             className="text-slate-500 hover:text-rose-400 transition-colors shrink-0"
             title="退出登录"
@@ -133,6 +142,8 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
             <LogOut size={16} />
           </button>
         </div>
+
+        <ChangePasswordDialog open={showPwd} onClose={() => setShowPwd(false)} />
       </div>
 
       {/* 主体内容 */}

@@ -112,7 +112,7 @@ export async function login(username: string, password: string): Promise<{ user:
   });
   const a = data.account;
   return {
-    user: { username: a.username, role: a.role, avatar_path: a.avatar_path },
+    user: { id: a.id, username: a.username, role: a.role, avatar_path: a.avatar_path },
     token: data.token,
   };
 }
@@ -122,12 +122,16 @@ export function logoutRequest(): void {
   apiV2('/api/auth/logout', { method: 'POST' }).catch(() => {});
 }
 
-/** 更新头像 */
-export async function updateAvatar(username: string, avatarPath: string): Promise<void> {
-  await fetch('/api/update-avatar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, avatar_path: avatarPath }),
+/** 换预设头像（V2：PUT /api/accounts/{id}/avatar/preset，{preset:"avatar_07"}；token 即身份） */
+export async function updateAvatar(avatarPath: string): Promise<void> {
+  let id: string | undefined;
+  try {
+    id = JSON.parse(localStorage.getItem('user') || '{}')?.id;
+  } catch { /* 交给下面抛错 */ }
+  if (!id) throw new Error('缺少账号 id，请重新登录后重试');
+  await apiV2(`/api/accounts/${encodeURIComponent(id)}/avatar/preset`, {
+    method: 'PUT',
+    body: JSON.stringify({ preset: avatarPath }),
   });
 }
 
@@ -148,7 +152,7 @@ export async function setShelf(courseId: string, shelf: 'books' | 'courses'): Pr
   if (data.status !== 'success') throw new Error(data.detail || '操作失败');
 }
 
-// ═══ 用户设置 ═══
+// ═══ 用户设置（V2：/api/settings · 字段改名 · D20 主题四值） ═══
 
 export interface RecentOpen {
   /** section=主页板块 / course=课程 */
@@ -168,29 +172,74 @@ export interface UserSettings {
   recentOpens: RecentOpen[];
 }
 
-export async function fetchUserSettings(): Promise<UserSettings> {
-  const res = await fetch(`/api/user/settings?${nocache()}`);
-  const data = await res.json();
-  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: false, recentOpens: [] };
+const DEFAULT_SETTINGS = (): UserSettings =>
+  ({ theme: '', customHue: '', fontSize: 16, sidebarExpanded: false, recentOpens: [] });
+
+/** V2 形状 → 前端形状：组件只认 camelCase，翻译收口在这一层（调用方组件零改动） */
+function fromV2(d?: {
+  theme?: string; hue?: number; font_size?: number; sidebar?: boolean; recent_opens?: string[];
+}): UserSettings {
+  const recentOpens: RecentOpen[] = [];
+  const seen = new Set<string>();                 // 按 (kind:id) 再兜一层，防历史脏数据双条
+  for (const item of d?.recent_opens ?? []) {
+    try {
+      const r = JSON.parse(item);
+      if (!r || typeof r.kind !== 'string' || typeof r.id !== 'string') continue;
+      const key = `${r.kind}:${r.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      // V2 的 item 不带 ts（去重要求串稳定）；缺省给最新值，避免被 HomePage 旧记录换算逻辑误伤
+      recentOpens.push({ ...r, ts: typeof r.ts === 'number' ? r.ts : Number.MAX_SAFE_INTEGER } as RecentOpen);
+    } catch { /* 脏条目丢弃 */ }
+  }
+  return {
+    theme: d?.theme ?? '',
+    customHue: d?.theme === 'custom' && typeof d?.hue === 'number' ? String(d.hue) : '',
+    fontSize: d?.font_size ?? 16,
+    sidebarExpanded: d?.sidebar === true,
+    recentOpens,
+  };
 }
 
-/** 记录一次打开（服务端去重置顶 + 上限 6 条）；游客 401，由调用方静默吞掉 */
+export async function fetchUserSettings(): Promise<UserSettings> {
+  try {
+    return fromV2(await apiV2(`/api/settings?${nocache()}`));
+  } catch {
+    return DEFAULT_SETTINGS();   // 游客 401 / 失败 → 默认值（与旧行为一致，调用方静默回退）
+  }
+}
+
+/** 记录一次打开（V2：item=不透明字符串 ≤200，服务端整串去重置顶、上限 6）
+ *  序列化不带 ts —— 同一 (kind,id) 重复打开必须是同一串，否则去重失效；超长先截标签 */
 export async function recordRecentOpen(entry: Omit<RecentOpen, 'ts'>): Promise<void> {
-  await fetch('/api/user/recent-opens', {
+  let label = entry.label;
+  const build = () => JSON.stringify({ ...entry, label });
+  let item = build();
+  while (item.length > 200 && label.length > 0) {
+    label = label.slice(0, Math.max(0, label.length - 5));
+    item = build();
+  }
+  if (item.length > 200) return;
+  await apiV2('/api/settings/recent-opens', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(entry),
+    body: JSON.stringify({ item }),
   });
 }
 
 export async function updateUserSettings(patch: Partial<UserSettings>): Promise<UserSettings> {
-  const res = await fetch('/api/user/settings', {
+  const body: Record<string, unknown> = {};
+  if (patch.theme !== undefined) body.theme = patch.theme;           // ''/green/blue/custom（D20）
+  if (patch.customHue) {                                             // 自定义色才带 hue；选预设不动旧值
+    const hue = parseInt(patch.customHue, 10);
+    if (!isNaN(hue) && hue >= 0 && hue <= 360) body.hue = hue;
+  }
+  if (patch.fontSize !== undefined) body.font_size = patch.fontSize; // 12–28（调用方已 clamp）
+  if (patch.sidebarExpanded !== undefined) body.sidebar = patch.sidebarExpanded;
+  const data = await apiV2(`/api/settings?${nocache()}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(patch),
+    body: JSON.stringify(body),
   });
-  const data = await res.json();
-  return data.status === 'success' ? data.settings : { theme: '', customHue: '', fontSize: 16, sidebarExpanded: false, recentOpens: [] };
+  return fromV2(data);
 }
 
 

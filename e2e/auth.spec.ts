@@ -51,8 +51,10 @@ test.describe('M5a 登录链', () => {
     await page.waitForURL('**/dashboard');
 
     await page.locator('[title="退出登录"]').click();
-    // useAuth.logout 清 localStorage，App 重渲染回主页侧栏的「登录」入口
-    await expect(page.locator('[data-tip="登录"]')).toBeVisible();
+    // useAuth.logout 清 localStorage，App 重渲染回主页「登录」入口（侧栏 rail/展开两模式通吃）
+    await expect(
+      page.locator('[data-tip="登录"]').or(page.getByRole('button', { name: '登录' })),
+    ).toBeVisible();
     const token = await page.evaluate(() => localStorage.getItem('auth_token'));
     expect(token).toBeNull();
   });

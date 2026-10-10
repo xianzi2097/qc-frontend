@@ -1,5 +1,7 @@
-import { Shield, LogOut, Home } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, LogOut, Home, KeyRound } from 'lucide-react';
 import { getAvatarCfg } from '../ui/AvatarPicker';
+import ChangePasswordDialog from '../ui/ChangePassword';
 import AdminDashboard from './AdminDashboard';
 
 interface Props {
@@ -9,6 +11,8 @@ interface Props {
 }
 
 export default function AdminDashboardWithSidebar({ username, role, logout }: Props) {
+  const [showPwd, setShowPwd] = useState(false);
+
   return (
     <div className="flex h-screen bg-cyber-bg text-slate-100 font-sans selection:bg-geek-green selection:text-black">
       <div className="w-64 bg-slate-900 border-r border-geek-green/10 flex flex-col justify-between p-4">
@@ -46,10 +50,19 @@ export default function AdminDashboardWithSidebar({ username, role, logout }: Pr
             <p className="text-sm font-semibold text-purple-400 truncate">{username}</p>
             <p className="text-xs text-slate-600 font-mono">{role}</p>
           </div>
+          <button
+            onClick={() => setShowPwd(true)}
+            className="text-slate-500 hover:text-cyan-400 transition-colors shrink-0"
+            title="修改密码"
+          >
+            <KeyRound size={16} />
+          </button>
           <button onClick={logout} className="text-slate-500 hover:text-rose-400 transition-colors shrink-0" title="退出登录">
             <LogOut size={16} />
           </button>
         </div>
+
+        <ChangePasswordDialog open={showPwd} onClose={() => setShowPwd(false)} />
       </div>
 
       <main className="flex-1 overflow-y-auto p-8">

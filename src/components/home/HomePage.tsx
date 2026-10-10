@@ -155,7 +155,7 @@ export default function HomePage({ onLogin }: Props) {
     try {
       storedUser.avatar_path = `avatar_${avatarId}`;
       localStorage.setItem('user', JSON.stringify(storedUser));
-      await updateAvatar(username, `avatar_${avatarId}`);
+      await updateAvatar(`avatar_${avatarId}`);
     } catch {}
     setShowAvatarPicker(false); // 触发重渲染，头像立即生效
   };
