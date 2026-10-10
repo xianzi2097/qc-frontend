@@ -99,6 +99,14 @@ test.describe('M5b-1 设置域', () => {
     await page.locator('button:has-text("A+")').click();
     await expect(page.locator('span.tabular-nums')).toHaveText('20');
 
+    // 等字号写进 V2 再刷新（updateFontSize 不 await，抢跑 reload 会读到旧值）
+    await page.waitForFunction(async () => {
+      const t = localStorage.getItem('auth_token');
+      const r = await fetch('/api/settings', { headers: { Authorization: 'Bearer ' + t } });
+      const b = await r.json().catch(() => null);
+      return b?.data?.font_size === 20;
+    }, undefined, { timeout: 5000 });
+
     await page.reload();
     await page.locator('[data-tour="programming"]').click();
     await expect(page.locator('span.tabular-nums'), '字号没从 V2 读回').toHaveText('20');

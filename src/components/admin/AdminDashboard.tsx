@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react';
-import { RotateCcw, UserX, Plus } from 'lucide-react';
+import { RotateCcw, UserX, Plus, UserCheck } from 'lucide-react';
 import { useLoading } from '../../lib/useLoading';
+import { apiV2 } from '../../lib/api';
+import { confirmDelete, confirmDisable } from '../ui/confirmDelete';
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('users');
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex items-center gap-2 border-b border-slate-600 pb-3">
+      <div className="flex items-center gap-2 border-b border-slate-300 pb-3">
         <button
           onClick={() => setTab('users')}
-          className={`text-sm px-4 py-2 rounded-lg transition-all ${tab === 'users' ? 'bg-geek-green text-black font-bold' : 'text-slate-400 hover:text-white'}`}
+          className={`text-sm px-4 py-2 rounded-lg transition-all ${tab === 'users' ? 'bg-geek-green text-black font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`}
         >
           👥 用户管理
         </button>
         <button
           onClick={() => setTab('trash')}
-          className={`text-sm px-4 py-2 rounded-lg transition-all ${tab === 'trash' ? 'bg-geek-green text-black font-bold' : 'text-slate-400 hover:text-white'}`}
+          className={`text-sm px-4 py-2 rounded-lg transition-all ${tab === 'trash' ? 'bg-geek-green text-black font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`}
         >
           🗑️ 垃圾桶
         </button>
@@ -36,9 +38,8 @@ function UserList() {
 
   const load = () => {
     wrap(
-      fetch('/api/users')
-        .then(r => r.json())
-        .then(d => { if (d.status === 'success') setUsers(d.users); }),
+      apiV2<{ items: { id: string; username: string; role: string; status: string }[] }>('/api/accounts')
+        .then(d => setUsers(d.items)),
       '加载用户列表...'
     ).catch(() => {});
   };
@@ -49,35 +50,45 @@ function UserList() {
     if (!newUser.username.trim()) return;
     setMsg('');
     try {
-      const r = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser),
-      });
-      const d = await r.json();
-      if (d.status === 'success') {
-        setShowCreate(false);
-        setNewUser({ username: '', password: '111111', role: 'teacher' });
-        load();
-      } else {
-        setMsg(d.detail || '创建失败');
-      }
-    } catch {
-      setMsg('请求失败');
+      await apiV2('/api/accounts', { method: 'POST', body: JSON.stringify(newUser) });
+      setShowCreate(false);
+      setNewUser({ username: '', password: '111111', role: 'teacher' });
+      load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '创建失败');
     }
   };
 
-  const handleDelete = async (username: string) => {
-    if (!confirm(`确定删除 ${username}？将移入垃圾桶`)) return;
-    await fetch(`/api/users/${username}`, { method: 'DELETE' });
-    load();
+  const handleDisable = async (u: { id: string; username: string }) => {
+    const ok = await confirmDisable(u.username);
+    if (!ok) return;
+    try {
+      await apiV2(`/api/accounts/${encodeURIComponent(u.id)}`, { method: 'DELETE' });
+      setMsg(`已停用 ${u.username}，可随时启用`);
+      load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '停用失败');
+    }
+  };
+
+  const handleEnable = async (u: { id: string; username: string }) => {
+    try {
+      await apiV2(`/api/accounts/${encodeURIComponent(u.id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'active' }),
+      });
+      setMsg(`已启用 ${u.username}`);
+      load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '启用失败');
+    }
   };
 
   return (
     <div className="space-y-3">
       {/* 创建老师 */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400">共 {users.length} 个用户</span>
+        <span className="text-xs text-slate-600">共 {users.length} 个用户</span>
         <button onClick={() => setShowCreate(!showCreate)}
           className="text-xs bg-geek-green text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
           <Plus size={14} /> 创建老师
@@ -85,42 +96,54 @@ function UserList() {
       </div>
 
       {showCreate && (
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center gap-3">
+        <div className="bg-white border border-slate-300 rounded-xl p-4 flex items-center gap-3">
           <input value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})}
-            placeholder="老师账号" className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white outline-none w-40" />
+            placeholder="老师账号" className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none w-40" />
           <input value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})}
-            placeholder="密码" className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white outline-none w-32" />
+            placeholder="密码" className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none w-32" />
           <button onClick={handleCreate}
             className="text-xs bg-brand-orange text-black font-bold px-4 py-1.5 rounded-lg">确定</button>
-          {msg && <span className="text-xs text-rose-400">{msg}</span>}
+          {msg && <span className="text-xs text-rose-600 font-bold">{msg}</span>}
         </div>
       )}
 
-      <div className="bg-slate-900 border border-slate-600 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-300 rounded-2xl overflow-hidden">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="bg-slate-950/50 text-slate-400 text-xs tracking-wider border-b border-slate-600">
+          <tr className="bg-slate-50 text-slate-500 text-xs tracking-wider border-b border-slate-300">
             <th className="p-4">ID</th>
             <th className="p-4">用户名</th>
             <th className="p-4">角色</th>
+            <th className="p-4">状态</th>
             <th className="p-4">操作</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800 text-sm">
+        <tbody className="divide-y divide-slate-200 text-sm">
           {users.map((u: any) => (
-            <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
-              <td className="p-4 text-slate-400 font-mono">{u.id}</td>
-              <td className="p-4 font-bold text-white">{u.username}</td>
+            <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+              <td className="p-4 text-slate-500 font-mono">{u.id}</td>
+              <td className="p-4 font-bold text-slate-900">{u.username}</td>
               <td className="p-4">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-400' : u.role === 'teacher' ? 'bg-brand-orange/20 text-brand-orange' : 'bg-cyan-400/20 text-cyan-400'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : u.role === 'teacher' ? 'bg-orange-100 text-orange-700' : 'bg-cyan-100 text-cyan-700'}`}>
                   {u.role === 'admin' ? '管理员' : u.role === 'teacher' ? '老师' : '学生'}
                 </span>
               </td>
               <td className="p-4">
-                {u.role !== 'admin' && (
-                  <button onClick={() => handleDelete(u.username)}
-                    className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
-                    <UserX size={14} /> 删除
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${u.status === 'deleted' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                  {u.status === 'deleted' ? '已停用' : '正常'}
+                </span>
+              </td>
+              <td className="p-4">
+                {u.role !== 'admin' && u.status === 'deleted' && (
+                  <button onClick={() => handleEnable(u)}
+                      className="text-xs text-emerald-700 hover:text-emerald-900 flex items-center gap-1 font-bold">
+                    <UserCheck size={14} /> 启用
+                  </button>
+                )}
+                {u.role !== 'admin' && u.status !== 'deleted' && (
+                  <button onClick={() => handleDisable(u)}
+                      className="text-xs text-rose-600 hover:text-rose-800 flex items-center gap-1 font-bold">
+                    <UserX size={14} /> 停用
                   </button>
                 )}
               </td>
@@ -133,44 +156,75 @@ function UserList() {
   );
 }
 
+const TRASH_TYPE_LABEL: Record<string, string> = { account: '账号', class: '班级', asset: '资产' };
+
+interface TrashItem {
+  id: string;
+  type: string;
+  name: string;
+  owner_id: string;
+  disk_path: string;
+  deleted_at: string;
+}
+
 function TrashList() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<TrashItem[]>([]);
+  const [msg, setMsg] = useState('');
   const { wrap } = useLoading();
 
   const load = () => {
     wrap(
-      fetch('/api/trash?username=admin')
-        .then(r => r.json())
-        .then(d => { if (d.status === 'success') setItems(d.trash); }),
+      apiV2<{ items: TrashItem[] }>('/api/trash').then(d => setItems(d.items)),
       '加载垃圾桶...'
     ).catch(() => {});
   };
 
   useEffect(() => { load(); }, []);
 
-  const handleRestore = async (id: number) => {
-    await fetch(`/api/trash/restore/${id}?username=admin`, { method: 'POST' });
-    load();
+  const handleRestore = async (id: string) => {
+    try {
+      await apiV2(`/api/trash/${encodeURIComponent(id)}/restore`, { method: 'POST' });
+      setMsg('已恢复');
+      load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '恢复失败');
+    }
   };
 
-  const handlePermanentDelete = async (id: number) => {
-    if (!confirm('永久删除？不可恢复！')) return;
-    await fetch(`/api/trash/${id}?username=admin`, { method: 'DELETE' });
-    load();
+  const handlePermanentDelete = async (t: { id: string; type: string; name: string }) => {
+    const ok = await confirmDelete({
+      what: `${TRASH_TYPE_LABEL[t.type] ?? t.type}「${t.name}」`,
+      recoverable: false,
+    });
+    if (!ok) return;
+    try {
+      await apiV2(`/api/trash/${encodeURIComponent(t.id)}`, { method: 'DELETE' });
+      setMsg('已彻底删除');
+      load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '删除失败');
+    }
   };
 
   const handleEmpty = async () => {
-    if (!confirm('清空整个垃圾桶？不可恢复！')) return;
-    await fetch('/api/trash?username=admin', { method: 'DELETE' });
-    load();
+    const ok = await confirmDelete({ what: '垃圾桶里的全部内容', recoverable: false });
+    if (!ok) return;
+    try {
+      const d = await apiV2<{ purged: number; kept: number }>('/api/trash', { method: 'DELETE' });
+      setMsg(`已清空 ${d.purged} 条${d.kept ? `，保留账号条目 ${d.kept} 条` : ''}`);
+      load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '清空失败');
+    }
   };
 
   return (
     <div className="space-y-3">
+      {msg && <div className="text-xs text-slate-700 font-bold px-1">{msg}</div>}
       {items.length > 0 && (
         <div className="flex justify-end">
           <button onClick={handleEmpty}
-            className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-1.5 hover:bg-rose-500/20">
+            className="text-xs text-rose-600 bg-rose-50 border border-rose-300 rounded-lg px-3 py-1.5 hover:bg-rose-100 font-bold">
             清空垃圾桶
           </button>
         </div>
@@ -178,31 +232,38 @@ function TrashList() {
       {items.length === 0 ? (
         <div className="text-center py-12 text-slate-500">垃圾桶为空</div>
       ) : (
-        <div className="bg-slate-900 border border-slate-600 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-slate-300 rounded-2xl overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950/50 text-slate-400 text-xs tracking-wider border-b border-slate-600">
-                <th className="p-4">用户名</th>
-                <th className="p-4">角色</th>
+              <tr className="bg-slate-50 text-slate-500 text-xs tracking-wider border-b border-slate-300">
+                <th className="p-4">名称</th>
+                <th className="p-4">类型</th>
                 <th className="p-4">删除时间</th>
                 <th className="p-4">操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 text-sm">
-              {items.map((t: any) => (
-                <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
-                  <td className="p-4 font-bold text-white">{t.username}</td>
-                  <td className="p-4 text-slate-400">{t.role}</td>
-                  <td className="p-4 text-slate-500 text-xs">{t.trashed_at}</td>
+            <tbody className="divide-y divide-slate-200 text-sm">
+              {items.map((t: TrashItem) => (
+                <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 font-bold text-slate-900">{t.name}</td>
+                  <td className="p-4">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${t.type === 'account' ? 'bg-purple-100 text-purple-700' : t.type === 'class' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>
+                      {TRASH_TYPE_LABEL[t.type] ?? t.type}
+                    </span>
+                  </td>
+                  <td className="p-4 text-slate-500 text-xs">{t.deleted_at}</td>
                   <td className="p-4 flex gap-1">
                     <button onClick={() => handleRestore(t.id)}
-                      className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
+                      className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-300 rounded-lg px-3 py-1.5 hover:bg-emerald-100 flex items-center gap-1 font-bold">
                       <RotateCcw size={12} /> 恢复
                     </button>
-                    <button onClick={() => handlePermanentDelete(t.id)}
-                      className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-1.5 hover:bg-rose-500/20">
-                      永久删除
-                    </button>
+                    {/* 账号条目只可恢复不可火化（后端 403；D25 后正常不产生账号条目） */}
+                    {t.type !== 'account' && (
+                      <button onClick={() => handlePermanentDelete(t)}
+                        className="text-xs text-rose-600 bg-rose-50 border border-rose-300 rounded-lg px-3 py-1.5 hover:bg-rose-100 font-bold">
+                        永久删除
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

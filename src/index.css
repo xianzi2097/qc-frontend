@@ -60,6 +60,10 @@
 
 /* ── Tailwind v4 @theme：把语义变量桥接到 Tailwind 工具类 ── */
 @theme {
+  /* 后台兼容 token 桥接（写在 base 块的同名变量 → 生成 bg/text/border 工具类） */
+  --color-geek-green: var(--color-geek-green);
+  --color-cyber-bg: var(--color-cyber-bg);
+
   /* 品牌色色阶 — 统一公式，跟随 --seed-hue */
   --color-brand-50:  oklch(0.97 0.018 var(--seed-hue));
   --color-brand-100: oklch(0.93 0.036 var(--seed-hue));

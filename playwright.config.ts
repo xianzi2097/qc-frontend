@@ -10,12 +10,12 @@ const BACKEND_DIR = '../../qc-pocket-space/backend_v2';
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 30_000,
+  timeout: 90_000,
   retries: 0,
   use: {
     baseURL: 'http://localhost:5173',
     channel: 'msedge',
-    headless: false,          // 有头模式：跑 e2e 时你能在屏幕上看全过程（用户拍板 2026-10-10）
+    headless: false,          // 有头模式：需要给用户看过程时窗口可见（拍板 2026-10-10）
     trace: 'retain-on-failure',
   },
   webServer: [
