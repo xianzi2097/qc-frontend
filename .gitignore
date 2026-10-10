@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 .github/
+
+# playwright e2e 产物
+test-results/
+playwright-report/
