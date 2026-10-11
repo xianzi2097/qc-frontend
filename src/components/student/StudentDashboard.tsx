@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BookOpen, NotebookText, Rocket, Award, Home, Star, Shield, Box, Mailbox, Settings as SettingsIcon,
+  NotebookText, Rocket, Award, Home, Star, Shield, Box, Mailbox, Settings as SettingsIcon,
 } from 'lucide-react';
 import Notebook from './Notebook';
 import Messages from './Messages';
@@ -57,7 +57,7 @@ function StudentCard({ nickname, isDev, profile }: { nickname: string; isDev: bo
       {/* 右边：名字 + 头像 */}
       <div className="flex items-center gap-4 text-right flex-shrink-0">
         <div className="min-w-0">
-          <h1 className="text-lg font-black tracking-wide flex items-center justify-end gap-2" style={{ color: 'var(--accent)' }}>
+          <h1 className="text-lg font-black tracking-wide flex items-center justify-end gap-2 text-cyan-400">
             {isDev && (
               <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded font-medium">DEV</span>
             )}
@@ -169,10 +169,9 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
           >
             <div className="flex items-center gap-3">
               <FloatingDock
-              dividerAfter={1}
+              dividerAfter={0}
               items={[
                 { title: '首页', icon: <Home size="2.4rem" className="text-neutral-400" />, onClick: () => navigate('/') },
-                { title: '文档', icon: <BookOpen size="2.4rem" className="text-neutral-400" />, onClick: () => { window.location.href = window.location.origin.replace(':5173', '') + '/docs/'; } },
                 { title: '笔记本', icon: <NotebookText size="2.4rem" style={activeModule === 'notebook' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'notebook' ? '' : 'text-neutral-500'}`} />, onClick: () => setActiveModule('notebook'), isActive: activeModule === 'notebook', activeBg: 'bg-[var(--accent)]/10' },
                 { title: '邮箱', icon: <div className="relative"><Mailbox size="2.4rem" style={activeModule === 'messages' ? { color: 'var(--accent)' } : {}} className={`transition-colors duration-[1000ms] ${activeModule === 'messages' ? '' : 'text-neutral-500'}`} />{unreadCount > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center shadow-[0_0_6px_rgba(244,63,94,0.6)]">{unreadCount > 9 ? '9+' : unreadCount}</span>}</div>, onClick: () => setActiveModule('messages'), isActive: activeModule === 'messages', activeBg: 'bg-[var(--accent)]/10' },
 
