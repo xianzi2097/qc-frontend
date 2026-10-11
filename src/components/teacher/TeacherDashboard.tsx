@@ -15,7 +15,7 @@ interface TeacherDashboardProps {
 
 export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
   const { username } = useAuth();
-  const { classes, loading, error, refresh } = useTeacherData(username);
+  const { classes, loading, error, refresh } = useTeacherData();
 
   // ── 切 tab 自动刷新数据 ──
   useEffect(() => { refresh(); }, [activeTab, refresh]);

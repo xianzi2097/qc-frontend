@@ -7,14 +7,22 @@ interface StudentOpt {
   username: string;
 }
 
+interface ClassOpt {
+  id: string;
+  name: string;
+}
+
 /**
  * 发送站内信（V2：POST /api/messages · {receiver_id, title, content}）
- * - 单发：学生名单取自 V2 /api/accounts?role=teacher 视角裁剪（id + username）
- * - 班级群发：灰色禁用按钮（P-a A 方案），M5b-5 班级域迁移后恢复
+ * - 单发：学生名单取自 V2 /api/accounts?role=student（id + username）
+ * - 班级群发（P6，M5b-5 恢复）：选班 → 取详情学生 → 前端循环单发（V2 无批量端点）
  * - 方向：仅 teacher 可发（V2 语义，admin 都不行）
  */
 export default function SendMessagePanel() {
   const [students, setStudents] = useState<StudentOpt[]>([]);
+  const [classes, setClasses] = useState<ClassOpt[]>([]);
+  const [blastClassId, setBlastClassId] = useState('');
+  const [blastStudents, setBlastStudents] = useState<StudentOpt[]>([]);
   const [recipient, setRecipient] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -25,7 +33,57 @@ export default function SendMessagePanel() {
     apiV2<{ items: StudentOpt[] }>('/api/accounts?role=student')
       .then(d => setStudents(d.items.filter(s => s.username)))
       .catch(() => {});
+    apiV2<{ items: ClassOpt[] }>('/api/classes')
+      .then(d => setClasses(d.items))
+      .catch(() => {});
   }, []);
+
+  /** 选班 → 拉详情学生（群发对象）；放事件里取，不在 effect 里 setState */
+  const handleSelectClass = async (id: string) => {
+    setBlastClassId(id);
+    if (!id) { setBlastStudents([]); return; }
+    try {
+      const d = await apiV2<{ students: StudentOpt[] }>(`/api/classes/${id}`);
+      setBlastStudents((d.students || []).filter(s => s.id));
+    } catch {
+      setBlastStudents([]);
+    }
+  };
+
+  /** P6：V2 无群发端点 → 前端循环单发，失败单独计数 */
+  const handleBlast = async () => {
+    setResult(null);
+    setSending(true);
+    try {
+      const cls = classes.find(c => c.id === blastClassId);
+      if (!cls || blastStudents.length === 0) {
+        setResult({ ok: false, text: '班级没有学生，无法群发' });
+        return;
+      }
+      let fail = 0;
+      for (const s of blastStudents) {
+        try {
+          await apiV2('/api/messages', {
+            method: 'POST',
+            body: JSON.stringify({ receiver_id: s.id, title: subject, content: body }),
+          });
+        } catch {
+          fail++;
+        }
+      }
+      if (fail === 0) {
+        setResult({ ok: true, text: `✅ 已群发给「${cls.name}」${blastStudents.length} 人` });
+        setSubject('');
+        setBody('');
+      } else {
+        setResult({ ok: false, text: `⚠ 群发完成 ${blastStudents.length - fail}/${blastStudents.length} 人，失败 ${fail} 人` });
+      }
+    } catch (e) {
+      setResult({ ok: false, text: e instanceof Error ? e.message : '群发失败' });
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handleSend = async () => {
     setResult(null);
@@ -80,16 +138,31 @@ export default function SendMessagePanel() {
                   <option key={s.id} value={s.username}>{s.username}</option>
                 ))}
               </select>
-              {/* P-a A 方案：班级群发留 M5b-5（班级域）恢复 */}
-              <button
-                disabled
-                title="班级群发待班级域迁移后开放"
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm bg-slate-200 text-slate-500 border border-slate-300 cursor-not-allowed opacity-70"
+            </div>
+            {/* 班级群发（P6，M5b-5 恢复）：选班 → 前端循环单发（V2 无批量端点） */}
+            <div className="flex gap-2 mt-2">
+              <select
+                value={blastClassId}
+                onChange={e => handleSelectClass(e.target.value)}
+                className="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-orange-400 transition-colors"
               >
-                <Users size={14} /> 班级群发（暂未开放）
+                <option value="">选择班级（群发）...</option>
+                {classes.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleBlast}
+                disabled={sending || !blastClassId || blastStudents.length === 0 || !subject || !body}
+                title={blastClassId
+                  ? `群发给「${classes.find(c => c.id === blastClassId)?.name ?? ''}」全班`
+                  : '先选择班级'}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm bg-orange-500 text-black font-bold hover:bg-orange-400 transition-colors disabled:bg-slate-200 disabled:text-slate-500 disabled:border disabled:border-slate-300 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <Users size={14} /> 班级群发（{blastStudents.length} 人）
               </button>
             </div>
-            <p className="text-[10px] text-slate-500 mt-1">方向：老师 → 学生（单发）；正文支持 Markdown</p>
+            <p className="text-[10px] text-slate-500 mt-1">方向：老师 → 学生；单发或选班群发；正文支持 Markdown</p>
           </div>
           <div>
             <label className="text-xs text-slate-500 mb-1 block">主题</label>

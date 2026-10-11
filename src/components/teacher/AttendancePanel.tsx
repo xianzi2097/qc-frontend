@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Users, Pencil, RotateCcw, CalendarDays } from 'lucide-react';
+import { apiV2 } from '../../lib/api';
 
 // ── 类型 ──
 
@@ -16,9 +17,17 @@ interface ClassSchedule {
 }
 
 interface ClassData {
+  id: string;
   name: string;
   schedule?: ClassSchedule;
   students: Student[];
+}
+
+/** V2：列表行只有计数，学生在详情里（§3.3） */
+interface ClassListItem { id: string; name: string }
+interface ClassDetail extends ClassListItem {
+  schedule?: ClassSchedule | Record<string, never> | null;
+  students: { id: string; username: string; avatar_path?: string }[];
 }
 
 interface SessionStudent {
@@ -344,6 +353,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
   // 编辑班级排课
   const [showEditClass, setShowEditClass] = useState(false);
+  const [editClassId, setEditClassId] = useState('');
   const [editClassName, setEditClassName] = useState('');
   const [editClassDays, setEditClassDays] = useState<string[]>([]);
   const [editClassTime, setEditClassTime] = useState('');
@@ -376,7 +386,13 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
   const handleRemoveStudent = async (studentId: string) => {
     if (!selectedClass || !confirm('确定从班级中移除此学生？')) return;
-    await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students/${studentId}?username=${username}`, { method: 'DELETE' });
+    try {
+      // V2：移出只删关系不删账号（后端语义）
+      await apiV2(`/api/classes/${selectedClass.id}/students/${studentId}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error('移出学生失败', e);
+      return;
+    }
     // 立即乐观更新 selectedClass，避免删除第二个学生时使用过期数据
     setSelectedClass(prev => prev ? {
       ...prev,
@@ -409,22 +425,31 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
   // ── 加载班级 ──
   const loadClasses = useCallback(async () => {
-    const res = await fetch(`/api/classes?username=${username}`);
-    const data = await res.json();
-    if (data.status === 'success') {
-      const transformed = data.classes.map((c: any) => ({
-        name: c.name,
-        schedule: c.schedule || { days: [], time: '', location: '' },
-        students: (c.students || []).map((s: any) => ({
-          id: String(s.user_id || ''),
-          name: s.name || s.username || '',
-          remark: '',
-          schedule: s.schedule || null,  // 个人上课日设置
-        })),
-      }));
+    try {
+      //列表只有 student_count → 逐班拉详情合并（§455 一次全量，点谁零请求）
+      const list = await apiV2<{ items: ClassListItem[] }>('/api/classes');
+      const details = await Promise.all(
+        list.items.map(c => apiV2<ClassDetail>(`/api/classes/${c.id}`).catch(() => null)),
+      );
+      const transformed: ClassData[] = details
+        .filter((d): d is ClassDetail => d !== null)
+        .map(d => ({
+          id: d.id,
+          name: d.name,
+          schedule: { days: [], time: '', location: '', ...(d.schedule || {}) },
+          students: d.students.map(s => ({
+            id: s.id,
+            name: s.username || s.id,   // V2 公开字段无 name → 显示名=username
+            remark: '',
+          })),
+        }));
       setClasses(transformed);
+      // 选中班跟着刷新（增删学生后计数/名单不脏）；班没了则清选中
+      setSelectedClass(prev => prev ? (transformed.find(c => c.id === prev.id) ?? null) : prev);
+    } catch (e) {
+      console.error('加载班级失败', e);
     }
-  }, [username]);
+  }, []);
 
   useEffect(() => { loadClasses(); }, [loadClasses]);
 
@@ -450,10 +475,15 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
       time: newClassTime,
       location: newClassLocation,
     };
-    await fetch(`/api/classes?username=${username}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newClassName, schedule }),
-    });
+    try {
+      await apiV2('/api/classes', {
+        method: 'POST',
+        body: JSON.stringify({ name: newClassName.trim(), schedule }),
+      });
+    } catch (e) {
+      console.error('创建班级失败', e);   // 重名 409（按老师隔离），失败不关表单
+      return;
+    }
     setNewClassName('');
     setNewClassDays([]);
     setNewClassTime('');
@@ -470,20 +500,22 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
       time: editClassTime,
       location: editClassLocation,
     };
-    await fetch(`/api/classes/${encodeURIComponent(editClassName)}?username=${username}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: editClassName, schedule }),
-    });
-    setShowEditClass(false);
-    loadClasses();
-    // 更新选中班级
-    if (selectedClass?.name === editClassName) {
-      setSelectedClass(prev => prev ? { ...prev, schedule } : prev);
+    try {
+      await apiV2(`/api/classes/${editClassId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name: editClassName, schedule }),
+      });
+    } catch (e) {
+      console.error('保存排课失败', e);   // 重名 409，失败不关弹窗改动不丢
+      return;
     }
+    setShowEditClass(false);
+    loadClasses();   // 内含选中班同步，标题栏排课即更新
   };
 
   // ── 打开班级排课编辑 ──
   const openEditClassSchedule = (c: ClassData) => {
+    setEditClassId(c.id);
     setEditClassName(c.name);
     setEditClassDays(c.schedule?.days || []);
     setEditClassTime(c.schedule?.time || '');
@@ -492,10 +524,15 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   };
 
   // ── 删除班级 ──
-  const handleDeleteClass = async (name: string) => {
-    if (!confirm(`确定删除班级「${name}」？`)) return;
-    await fetch(`/api/classes/${encodeURIComponent(name)}?username=${username}`, { method: 'DELETE' });
-    if (selectedClass?.name === name) { setSelectedClass(null); setSessions([]); }
+  const handleDeleteClass = async (c: ClassData) => {
+    if (!confirm(`确定删除班级「${c.name}」？`)) return;
+    try {
+      await apiV2(`/api/classes/${c.id}`, { method: 'DELETE' });   // V2：进回收站
+    } catch (e) {
+      console.error('删除班级失败', e);
+      return;
+    }
+    if (selectedClass?.id === c.id) { setSelectedClass(null); setSessions([]); }
     loadClasses();
   };
 
@@ -507,24 +544,29 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
   const [renameValue, setRenameValue] = useState('');
 
   const startAddStudent = async () => {
-    if (!newStudentName.trim() || !selectedClass) return;
+    const name = newStudentName.trim();
+    if (!name || !selectedClass) return;
     setAddError('');
     try {
-      const res = await fetch(`/api/classes/find-student?username=${username}&name=${encodeURIComponent(newStudentName)}`);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        setAddError(err.detail || `查询失败 (${res.status})`);
-        return;
-      }
-      const data = await res.json();
-      if (data.status === 'success' && data.matches && data.matches.length > 0) {
-        setDupCheck({ matches: data.matches, showDialog: true });
-        setRenameValue(newStudentName + '(1)');
+      // V1 find-student 的 V2 版：按用户名搜，已在班的才弹「跨班共享」
+      const found = await apiV2<{ items: { id: string; username: string; classes: { id: string; name: string }[] }[] }>(
+        `/api/students?q=${encodeURIComponent(name)}`);
+      const matches = found.items
+        .filter(s => s.username === name && s.classes.length > 0)
+        .map(s => ({
+          student_id: s.id,
+          name: s.username,
+          class_name: s.classes.map(c => c.name).join('、'),
+          remark: '',
+        }));
+      if (matches.length > 0) {
+        setDupCheck({ matches, showDialog: true });
+        setRenameValue(name + '(1)');
       } else {
         await addStudentDirect('');
       }
     } catch (e) {
-      setAddError('网络错误，请检查连接');
+      setAddError(e instanceof Error ? e.message : '查询失败');
     }
   };
 
@@ -532,27 +574,20 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     if (!selectedClass) return;
     setAddError('');
     try {
-      const res = await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students?username=${username}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newStudentName, existing_id: existingId, remark: '' }),
+      // P5：现场新建默认密码 111111（V1 行为）；已有号则后端按 username 自动挂接
+      await apiV2(`/api/classes/${selectedClass.id}/students`, {
+        method: 'POST',
+        body: JSON.stringify(existingId
+          ? { account_id: existingId }
+          : { username: newStudentName.trim(), password: '111111' }),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        setAddError(err.detail || `添加失败 (${res.status})`);
-        return;
-      }
       setNewStudentName('');
       setShowAddStudent(false);
       setDupCheck({ matches: [], showDialog: false });
-      await loadClasses();
-      const res2 = await fetch(`/api/classes?username=${username}`);
-      const data = await res2.json();
-      if (data.status === 'success') {
-        const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
-        if (updated) setSelectedClass(updated);
-      }
+      await loadClasses();   // 内含选中班同步；V1 那次重复重拉已删
     } catch (e) {
-      setAddError('网络错误，请检查连接');
+      setDupCheck({ matches: [], showDialog: false });   // 409 已在班内 → 关弹窗报错
+      setAddError(e instanceof Error ? e.message : '添加失败');
     }
   };
 
@@ -560,27 +595,17 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     if (!selectedClass) return;
     setAddError('');
     try {
-      const res = await fetch(`/api/classes/${encodeURIComponent(selectedClass.name)}/students?username=${username}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName.trim(), existing_id: '', remark: '' }),
+      await apiV2(`/api/classes/${selectedClass.id}/students`, {
+        method: 'POST',
+        body: JSON.stringify({ username: newName.trim(), password: '111111' }),   // P5
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        setAddError(err.detail || `添加失败 (${res.status})`);
-        return;
-      }
       setNewStudentName('');
       setShowAddStudent(false);
       setDupCheck({ matches: [], showDialog: false });
       await loadClasses();
-      const res2 = await fetch(`/api/classes?username=${username}`);
-      const data = await res2.json();
-      if (data.status === 'success') {
-        const updated = data.classes.find((c: ClassData) => c.name === selectedClass.name);
-        if (updated) setSelectedClass(updated);
-      }
     } catch (e) {
-      setAddError('网络错误，请检查连接');
+      setDupCheck({ matches: [], showDialog: false });
+      setAddError(e instanceof Error ? e.message : '添加失败');
     }
   };
 
@@ -718,7 +743,7 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
                   className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-cyan-400 p-0.5" title="排课">
                   <CalendarDays size={14} />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); handleDeleteClass(c.name); }}
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteClass(c); }}
                   className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-400 p-0.5" title="删除">
                   <Trash2 size={14} />
                 </button>

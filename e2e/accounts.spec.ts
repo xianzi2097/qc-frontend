@@ -116,8 +116,13 @@ test.describe('M5b-2 账号管理域', () => {
     // 停用的号在用户管理里标"已停用"
     await expect(row(page, name).getByText('已停用')).toBeVisible();
 
-    // 切垃圾桶：D25 后桶里不该有账号条目（开发库桶已清空 → 应为空）
+    // 切垃圾桶：D25 后停用的号不进桶。桶里允许有班级/资产等正常删除条目
+    // （M5b-5 起删班进桶），只断言「查无此人」，不再假设桶为空（脆弱假设已除账）
     await page.getByRole('button', { name: '垃圾桶' }).click();
-    await expect(page.getByText('垃圾桶为空'), '停用的号不该进垃圾桶').toBeVisible();
+    await expect(
+      page.getByText('垃圾桶为空').or(page.getByRole('columnheader', { name: '名称' })),
+      '垃圾桶视图没渲染出来',
+    ).toBeVisible();
+    await expect(page.getByText(name, { exact: true }), '停用的号不该进垃圾桶').toHaveCount(0);
   });
 });

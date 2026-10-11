@@ -1,6 +1,6 @@
-/** 后端返回的学生数据结构 */
+/** 后端返回的学生数据结构（V2：id 为字符串短 id） */
 export interface ApiStudent {
-  id: number;
+  id: string;
   username: string;
   name?: string;
   avatar_path: string;
