@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Mail, Copy, Check, ArrowLeft } from 'lucide-react';
 import { simpleMarkdown } from '../../lib/markdown';
+import { apiV2 } from '../../lib/api';
 import FolderTreePanel, {
   type FolderTreeConfig,
   type FolderTreeCallbacks,
@@ -9,6 +10,7 @@ import FolderTreePanel, {
 } from '../ui/FolderTreePanel';
 
 // ─── 数据适配层 ───
+// 前端内部保持 V1 形状（sender/subject/body/folder=name），V2 差异在请求层翻译收口
 
 interface Message {
   id: string;
@@ -20,8 +22,17 @@ interface Message {
   is_read: boolean;
 }
 
-interface MsgFolder extends TreeFolder { name: string; count: number; unread: number; }
+interface MsgFolder extends TreeFolder { id: string; builtin: boolean; unread: number; }
 interface MsgItem extends TreeItem { id: string; subject: string; created_at: string; is_read: boolean; }
+
+/** V2 列表项 → 前端 Message（列表无正文，content 在点开详情时取） */
+const v2ToMessages = (
+  items: { id: string; title: string; peer: string; is_read: boolean; created_at: string }[],
+  folderName: string,
+): Message[] => items.map(m => ({
+  id: m.id, sender: m.peer, subject: m.title, body: '',
+  folder: folderName, created_at: m.created_at, is_read: m.is_read,
+}));
 
 const messagesConfig: FolderTreeConfig<MsgFolder, MsgItem> = {
   titleIcon: <Mail size={16} className="text-slate-400" />,
@@ -32,7 +43,8 @@ const messagesConfig: FolderTreeConfig<MsgFolder, MsgItem> = {
   newFolderPlaceholder: '文件夹名，如 Scratch课堂',
   emptyText: '还没有消息',
   emptyActionText: '创建文件夹',
-  canDeleteFolder: (f) => f.name !== '收件箱',
+  canDeleteFolder: (f) => !f.builtin,
+  folderDeleteNote: '里面的邮件将退回收件箱，不会丢失',
   renderItemPrefix: (item) => (
     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
       style={!item.is_read
@@ -47,11 +59,10 @@ const messagesConfig: FolderTreeConfig<MsgFolder, MsgItem> = {
 // ─── 组件 ───
 
 interface MessagesProps {
-  username: string;
   onMsgRead?: () => void;
 }
 
-export default function Messages({ username, onMsgRead }: MessagesProps) {
+export default function Messages({ onMsgRead }: MessagesProps) {
   const [messagesMap, setMessagesMap] = useState<Map<string, Message[]>>(new Map());
   const [folders, setFolders] = useState<MsgFolder[]>([]);
   const [activeFolder, setActiveFolder] = useState('');
@@ -60,68 +71,65 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
   const [loadingFolders, setLoadingFolders] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
 
-  // ── 数据加载 ──
+  // ── name 是组件内部主键，发请求时转成 V2 的 id ──
+  const folderIdOf = useCallback(
+    (name: string) => folders.find(f => f.name === name)?.id,
+    [folders],
+  );
+
+  // ── 数据加载（V2：/api/message-folders，token 即身份）──
 
   const loadFolders = useCallback(() => {
-    fetch(`/api/messages/folders?username=${username}`)
-      .then(r => r.json()).then(d => { if (d.status === 'success') setFolders(d.folders); });
-  }, [username]);
+    apiV2<{ items: MsgFolder[] }>('/api/message-folders')
+      .then(d => setFolders(d.items))
+      .catch(() => {});
+  }, []);
   useEffect(() => { loadFolders(); }, [loadFolders]);
 
-  // ── 轮询：每5秒静默刷新消息 ──
+  const fetchInbox = useCallback((folderName: string) => {
+    const fid = folders.find(f => f.name === folderName)?.id;
+    if (!fid) return Promise.resolve();
+    return apiV2<{ items: Parameters<typeof v2ToMessages>[0] }>(
+      `/api/messages?box=inbox&folder=${encodeURIComponent(fid)}&page_size=100`,
+    )
+      .then(d => setMessagesMap(prev => new Map(prev).set(folderName, v2ToMessages(d.items, folderName))))
+      .catch(() => {});
+  }, [folders]);
+
+  // ── 轮询：每5秒静默刷新（夹列表角标 + 当前夹消息）──
   useEffect(() => {
     const timer = setInterval(() => {
-      // 刷新文件夹列表（更新未读数）
-      fetch(`/api/messages/folders?username=${username}`)
-        .then(r => r.json()).then(d => { if (d.status === 'success') setFolders(d.folders); });
-      // 后台刷新当前打开文件夹的消息，不干扰用户正在看的
-      if (activeFolder) {
-        fetch(`/api/messages/inbox?username=${username}&folder=${encodeURIComponent(activeFolder)}`)
-          .then(r => r.json())
-          .then(d => {
-            if (d.status === 'success') {
-              setMessagesMap(prev => new Map(prev).set(activeFolder, d.messages));
-            }
-          });
-      }
+      loadFolders();
+      if (activeFolder) fetchInbox(activeFolder);
     }, 5000);
     return () => clearInterval(timer);
-  }, [username, activeFolder]);
+  }, [activeFolder, loadFolders, fetchInbox]);
 
   const loadMessages = (folder: string) => {
     setLoadingFolders(prev => new Set(prev).add(folder));
-    fetch(`/api/messages/inbox?username=${username}&folder=${encodeURIComponent(folder)}`)
-      .then(r => r.json())
-      .then(d => { if (d.status === 'success') setMessagesMap(prev => new Map(prev).set(folder, d.messages)); })
+    fetchInbox(folder)
       .finally(() => setLoadingFolders(prev => { const n = new Set(prev); n.delete(folder); return n; }));
-  };
-
-  // ── 标记已读 ──
-
-  const markRead = async (msgId: string, folder: string) => {
-    await fetch(`/api/messages/${encodeURIComponent(msgId)}/read?username=${username}&folder=${encodeURIComponent(folder)}`, { method: 'POST' });
-    setMessagesMap(prev => {
-      const next = new Map(prev);
-      const msgs = next.get(folder);
-      if (msgs) next.set(folder, msgs.map(m => m.id === msgId ? { ...m, is_read: true } : m));
-      return next;
-    });
-    loadFolders();
-    onMsgRead?.();
   };
 
   // ── 消息操作 ──
 
   const moveToFolder = async (msgId: string, toFolder: string) => {
-    await fetch(`/api/messages/${encodeURIComponent(msgId)}/move?folder=${encodeURIComponent(toFolder)}&username=${username}`, { method: 'POST' });
+    const fid = folderIdOf(toFolder);
+    if (!fid) return;
+    await apiV2(`/api/messages/${encodeURIComponent(msgId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ folder_id: fid }),
+    }).catch(e => alert(e instanceof Error ? e.message : '移动失败'));
     setMessagesMap(prev => {
       const next = new Map(prev);
       const msgs = next.get(activeFolder);
       if (msgs) next.set(activeFolder, msgs.filter(m => m.id !== msgId));
+      next.delete(toFolder);   // 目标夹缓存失效，避免"移过去却看不见"
       return next;
     });
     setSelectedMsg(null);
     loadFolders();
+    loadMessages(toFolder);    // 目标夹正展开时立即看到移入的信
   };
 
   const copySource = async (text: string) => {
@@ -149,30 +157,64 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
     onSelectItem: (id, folderName) => {
       const msgs = messagesMap.get(folderName);
       const msg = msgs?.find(m => m.id === id);
-      if (msg) {
-        setActiveFolder(folderName);
-        setSelectedMsg(msg);
-        // 用 folderName 而不是 msg.folder（消息JSON里没有folder字段）
-        if (!msg.is_read) markRead(msg.id, folderName);
-      }
+      if (!msg) return;
+      setActiveFolder(folderName);
+      // V2：详情单独取，读即已读（替代原 /read 调用）
+      apiV2<{ sender_username: string; title: string; content: string }>(
+        `/api/messages/${encodeURIComponent(id)}`,
+      ).then(d => {
+        setSelectedMsg({ ...msg, sender: d.sender_username, subject: d.title, body: d.content, is_read: true });
+        if (!msg.is_read) {
+          setMessagesMap(prev => {
+            const next = new Map(prev);
+            const list = next.get(folderName);
+            if (list) next.set(folderName, list.map(m => m.id === id ? { ...m, is_read: true } : m));
+            return next;
+          });
+          loadFolders();
+          onMsgRead?.();
+        }
+      }).catch(e => alert(e instanceof Error ? e.message : '消息不存在'));
     },
 
     onCreateFolder: async (name) => {
-      const res = await fetch(`/api/messages/folders?username=${username}&folder=${encodeURIComponent(name)}`, { method: 'POST' });
-      const data = await res.json();
-      if (data.status !== 'success') alert(data.detail || '创建失败');
+      await apiV2('/api/message-folders', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      }).catch(e => alert(e instanceof Error ? e.message : '创建失败'));
       loadFolders();
     },
 
     onDeleteFolder: async (name) => {
-      await fetch(`/api/messages/folders/${encodeURIComponent(name)}?username=${username}`, { method: 'DELETE' });
-      if (activeFolder === name) { setActiveFolder(''); setSelectedMsg(null); }
-      setExpandedFolders(prev => { const n = new Set(prev); n.delete(name); return n; });
+      const fid = folderIdOf(name);
+      if (!fid) return;
+      await apiV2(`/api/message-folders/${encodeURIComponent(fid)}`, { method: 'DELETE' })
+        .catch(e => alert(e instanceof Error ? e.message : '删除失败'));
+      const wasActive = activeFolder === name;
+      // 失效被删夹与收件箱两份缓存（V2 删夹=信退回收件箱，旧缓存看不到回流）
+      setMessagesMap(prev => {
+        const n = new Map(prev);
+        n.delete(name);
+        n.delete('收件箱');
+        return n;
+      });
+      setExpandedFolders(prev => {
+        const s = new Set(prev);
+        s.delete(name);
+        if (wasActive) s.add('收件箱');
+        return s;
+      });
+      if (wasActive) {
+        setActiveFolder('收件箱');   // 正看着被删夹 → 自动跳回收件箱，直接看到信回流
+        setSelectedMsg(null);
+      }
       loadFolders();
+      loadMessages('收件箱');
     },
 
     onDeleteItem: async (msgId) => {
-      await fetch(`/api/messages/${encodeURIComponent(msgId)}?username=${username}&folder=${encodeURIComponent(activeFolder)}`, { method: 'DELETE' });
+      await apiV2(`/api/messages/${encodeURIComponent(msgId)}`, { method: 'DELETE' })
+        .catch(e => alert(e instanceof Error ? e.message : '删除失败'));
       if (selectedMsg?.id === msgId) setSelectedMsg(null);
       setMessagesMap(prev => {
         const next = new Map(prev);
@@ -185,7 +227,12 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
 
     onRenameFolder: async (oldName, newName) => {
       if (oldName === '收件箱') return;
-      await fetch(`/api/messages/folders/${encodeURIComponent(oldName)}?username=${username}&new_name=${encodeURIComponent(newName)}`, { method: 'PUT' });
+      const fid = folderIdOf(oldName);
+      if (!fid) return;
+      await apiV2(`/api/message-folders/${encodeURIComponent(fid)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name: newName }),
+      }).catch(e => alert(e instanceof Error ? e.message : '改名失败'));
       if (activeFolder === oldName) setActiveFolder(newName);
       setExpandedFolders(prev => { const n = new Set(prev); n.delete(oldName); n.add(newName); return n; });
       loadFolders();
@@ -218,8 +265,8 @@ export default function Messages({ username, onMsgRead }: MessagesProps) {
         isEmpty={isEmptyMsg}
       />
 
-      {/* ── 右侧：消息详情 ── */}
-      <div className="w-[70%] flex flex-col bg-slate-950 overflow-hidden">
+      {/* ── 右侧：消息详情（左列固定宽，这里吃满剩余宽度） ── */}
+      <div className="flex-1 min-w-0 flex flex-col bg-slate-950 overflow-hidden">
         {selectedMsg ? (
           <>
             <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 flex-shrink-0">

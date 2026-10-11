@@ -5,10 +5,14 @@ import { test, expect, type Page } from '@playwright/test';
 const ADMIN = 'admin';
 const ADMIN_PW = '111111';
 
-/** 打开主页并拉起登录面板（侧栏图标模式按钮无文本，靠 data-tip 定位） */
+/** 打开主页并拉起登录面板（侧栏 rail/展开两模式通吃） */
 async function openLoginPanel(page: Page) {
   await page.goto('/');
-  await page.locator('[data-tip="登录"]').click();
+  await page
+    .locator('[data-tip="登录"]')
+    .or(page.getByRole('button', { name: '登录', exact: true }))
+    .first()
+    .click();
   await expect(page.getByText('登入', { exact: true })).toBeVisible();
 }
 

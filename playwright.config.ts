@@ -12,6 +12,7 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 90_000,
   retries: 0,
+  workers: 1,               // 全局串行：多文件共享 e2e_student（密码重置/信箱），并行会互相踩
   use: {
     baseURL: 'http://localhost:5173',
     channel: 'msedge',

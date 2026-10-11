@@ -91,10 +91,10 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
   const nickname = portalUser?.username || '小极客';
 
   const refreshUnread = () => {
-    fetch(`/api/messages/unread-count?username=${username}`)
+    fetch('/api/messages/unread-count')
       .then(r => r.json())
       .then(data => {
-        if (data.status === 'success') setUnreadCount(data.count);
+        if (data.code === 0) setUnreadCount(data.data?.count ?? 0);
       })
       .catch(console.error);
   };
@@ -201,7 +201,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
             >
               <div className={`flex-1 rounded-2xl border ${moduleBorder[activeModule] || 'border-white/25'} bg-slate-900/80 backdrop-blur-sm overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.3)]`}>
                 {activeModule === 'notebook' && <Notebook username={username} />}
-                {activeModule === 'messages' && <Messages username={username} onMsgRead={refreshUnread} />}
+                {activeModule === 'messages' && <Messages onMsgRead={refreshUnread} />}
 
                 {activeModule === 'settings' && <Settings />}
                 {activeModule === 'projects' && (

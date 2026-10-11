@@ -58,14 +58,14 @@ function askConfirm(opts: {
   });
 }
 
-export function confirmDelete({ what, recoverable }: { what: string; recoverable: boolean }): Promise<boolean> {
+export function confirmDelete({ what, recoverable, note }: { what: string; recoverable: boolean; note?: string }): Promise<boolean> {
   return askConfirm({
     title: '确认删除',
     body: (
       <>
         确定删除 {what}？
         <span className={recoverable ? 'text-emerald-400' : 'text-rose-400'}>
-          {recoverable ? '可在回收站恢复。' : '此操作不可恢复！'}
+          {note ?? (recoverable ? '可在回收站恢复。' : '此操作不可恢复！')}
         </span>
       </>
     ),

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Trash2, ChevronRight, ChevronDown, FolderPlus, Pencil } from 'lucide-react';
+import { confirmDelete } from './confirmDelete';
 
 // ─── 类型定义 ───
 
@@ -24,6 +25,8 @@ export interface FolderTreeConfig<TFolder extends TreeFolder, TItem extends Tree
   emptyText: string;
   emptyActionText: string;
   canDeleteFolder?: (folder: TFolder) => boolean;
+  /** 删文件夹的确认文案（spec §7 第三档：夹没了内容怎么办——邮件=退回、笔记=M5b-4 时传"含全部笔记"） */
+  folderDeleteNote?: string;
 
   // ── 条目内容定制（子类填） ──
   /** 条目左侧前缀（如未读圆点），不填则不渲染 */
@@ -99,14 +102,21 @@ export default function FolderTreePanel<
   };
 
   const handleDeleteFolder = async (name: string) => {
-    if (!confirm(`确定删除${config.folderLabel}「${name}」及其所有${config.itemLabel}？`)) return;
+    const ok = await confirmDelete({
+      what: `${config.folderLabel}「${name}」`,
+      recoverable: false,
+      note: config.folderDeleteNote,
+    });
+    if (!ok) return;
     await callbacks.onDeleteFolder(name);
   };
 
   const handleDeleteItem = async (itemId: string, folderName: string) => {
     const folderItems = itemsByFolder.get(folderName) ?? [];
     const item = folderItems.find(i => i.id === itemId);
-    if (!item || !confirm(`确定删除「${config.renderItemLabel(item)}」？`)) return;
+    if (!item) return;
+    const ok = await confirmDelete({ what: config.renderItemLabel(item), recoverable: false });
+    if (!ok) return;
     await callbacks.onDeleteItem(itemId);
   };
 
