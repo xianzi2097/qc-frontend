@@ -199,7 +199,7 @@ export default function StudentDashboard({ portalUser }: StudentDashboardProps) 
               className="h-full flex flex-col"
             >
               <div className={`flex-1 rounded-2xl border ${moduleBorder[activeModule] || 'border-white/25'} bg-slate-900/80 backdrop-blur-sm overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.3)]`}>
-                {activeModule === 'notebook' && <Notebook username={username} />}
+                {activeModule === 'notebook' && <Notebook />}
                 {activeModule === 'messages' && <Messages onMsgRead={refreshUnread} />}
 
                 {activeModule === 'settings' && <Settings />}

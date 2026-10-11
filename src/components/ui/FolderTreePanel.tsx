@@ -210,7 +210,8 @@ export default function FolderTreePanel<
                 onClick={() => callbacks.onSelectFolder(f.name)}
                 className={`group flex items-center justify-between px-3 py-2 cursor-pointer ${
                   activeFolder === f.name
-                    ? 'bg-[var(--accent)]/10 border-l-2 border-[var(--accent)] text-white'
+                    // 选中本/夹 = 只加粗（2026-10-11 拍板：先去左侧竖条，再去蓝色底色——条目自身的高亮保持不动）
+                    ? 'border-l-2 border-transparent text-white font-bold'
                     : 'border-l-2 border-transparent text-slate-400 hover:bg-slate-800/60'
                 }`}
               >
