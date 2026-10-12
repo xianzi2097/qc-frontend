@@ -44,6 +44,16 @@ interface SessionRecord {
   students: SessionStudent[];
 }
 
+/** D27：V2 content = JSON.stringify(学生记录数组)，后端零改不透明存储；解析失败当空容错 */
+function parseSessionStudents(content: string): SessionStudent[] {
+  try {
+    const v = JSON.parse(content);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
 // ── 工具 ──
 
 function fmt(name: string, remark?: string): string {
@@ -453,17 +463,22 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
 
   useEffect(() => { loadClasses(); }, [loadClasses]);
 
-  // ── 选中班级时加载记录 ──
-  useEffect(() => {
+  // ── 加载课堂记录（V2 按月查，倒序；token 即身份，不再带 username） ──
+  const loadSessions = useCallback(async () => {
     if (!selectedClass) return;
     setLoadingSessions(true);
-    fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}?username=${username}&month=${currentMonth}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') setSessions(data.sessions);
-      })
-      .finally(() => setLoadingSessions(false));
-  }, [selectedClass, currentMonth, username]);
+    try {
+      const data = await apiV2<{ items: { date: string; content: string }[] }>(
+        `/api/class-records?class_id=${encodeURIComponent(selectedClass.id)}&month=${currentMonth}`);
+      setSessions(data.items.map(it => ({ date: it.date, students: parseSessionStudents(it.content) })));
+    } catch (e) {
+      console.error('加载课堂记录失败', e);
+    } finally {
+      setLoadingSessions(false);
+    }
+  }, [selectedClass, currentMonth]);
+
+  useEffect(() => { loadSessions(); }, [loadSessions]);
 
   // ── 创建班级 ──
   const ALL_DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
@@ -609,33 +624,35 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     }
   };
 
-  // ── 保存课堂记录 ──
+  // ── 保存课堂记录（V2 PUT 同日覆盖幂等；D27 content=JSON） ──
   const handleSaveSession = async (date: string, students: SessionStudent[]) => {
     if (!selectedClass) return;
     // 确保每个学生都有 id（老数据可能缺失）
     const safe = students.map(s => ({ ...s, id: s.id || String(Date.now()) }));
     setSaving(true);
     try {
-      const res = await fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}?username=${username}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, students: safe }),
+      await apiV2(`/api/class-records/${encodeURIComponent(selectedClass.id)}/${date}`, {
+        method: 'PUT',
+        body: JSON.stringify({ content: JSON.stringify(safe) }),
       });
-      const data = await res.json();
-      if (data.status === 'success') {
-        setEditModal(null);
-        const r = await fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}?username=${username}&month=${currentMonth}`);
-        const d = await r.json();
-        if (d.status === 'success') setSessions(d.sessions);
-      }
+      setEditModal(null);
+      await loadSessions();   // 保存后重拉并入统一入口（V1 那次二次 GET 删除）
+    } catch (e) {
+      console.error('保存课堂记录失败', e);
     } finally {
       setSaving(false);
     }
   };
 
-  // ── 删除课堂记录 ──
+  // ── 删除课堂记录（V2 删单日，不可恢复） ──
   const handleDeleteSession = async (date: string) => {
     if (!selectedClass || !confirm(`确定删除 ${date} 的记录？`)) return;
-    await fetch(`/api/sessions/${encodeURIComponent(selectedClass.name)}/${date}?username=${username}`, { method: 'DELETE' });
+    try {
+      await apiV2(`/api/class-records/${encodeURIComponent(selectedClass.id)}/${date}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error('删除课堂记录失败', e);
+      return;
+    }
     setSessions(prev => prev.filter(s => s.date !== date));
   };
 
