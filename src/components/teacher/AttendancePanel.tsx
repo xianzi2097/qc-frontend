@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Users, Pencil, RotateCcw, CalendarDays } from 'lucide-react';
 import { apiV2 } from '../../lib/api';
+import { confirmDelete } from '../ui/confirmDelete';
+import { useAuth } from '../../lib/useAuth';
 
 // ── 类型 ──
 
@@ -347,11 +349,8 @@ function EditSessionModal({
 
 // ── 主组件 ──
 
-interface AttendancePanelProps {
-  username: string;
-}
-
-export default function AttendancePanel({ username }: AttendancePanelProps) {
+export default function AttendancePanel() {
+  const { role } = useAuth();   // 永久删除仅 admin（V2 回收站权限）
   // 班级
   const [classes, setClasses] = useState<ClassData[]>([]);
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
@@ -411,25 +410,39 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
     await loadClasses();
   };
 
-  // ── 垃圾桶 ──
-  const [trashItems, setTrashItems] = useState<{ type: string; owner: string; original_path: string; deleted_at: string; _folder: string; _size: number }[]>([]);
+  // ── 垃圾桶（V2：/api/trash，M5b-8 收尾） ──
+  const [trashItems, setTrashItems] = useState<{ id: string; type: string; name: string; deleted_at: string }[]>([]);
   const [showTrash, setShowTrash] = useState(false);
 
   const loadTrash = useCallback(async () => {
-    const res = await fetch(`/api/trash/items?username=${username}`);
-    const data = await res.json();
-    if (data.status === 'success') setTrashItems(data.items);
-  }, [username]);
+    try {
+      const d = await apiV2<{ items: { id: string; type: string; name: string; deleted_at: string }[] }>('/api/trash');
+      setTrashItems(d.items.filter(i => i.type === 'class'));
+    } catch (e) {
+      console.error('加载回收站失败', e);
+    }
+  }, []);
 
-  const handleRestoreClass = async (folderName: string) => {
-    await fetch(`/api/trash/items/${encodeURIComponent(folderName)}/restore?username=${username}`, { method: 'POST' });
+  const handleRestoreClass = async (trashId: string) => {
+    try {
+      await apiV2(`/api/trash/${encodeURIComponent(trashId)}/restore`, { method: 'POST' });
+    } catch (e) {
+      console.error('恢复失败', e);
+      return;
+    }
     loadTrash();
     loadClasses();
   };
 
-  const handlePermanentDelete = async (folderName: string) => {
-    if (!confirm(`永久删除？此操作不可恢复！`)) return;
-    await fetch(`/api/trash/items/${encodeURIComponent(folderName)}?username=${username}`, { method: 'DELETE' });
+  const handlePermanentDelete = async (t: { id: string; name: string }) => {
+    const ok = await confirmDelete({ what: `班级「${t.name}」`, recoverable: false });
+    if (!ok) return;
+    try {
+      await apiV2(`/api/trash/${encodeURIComponent(t.id)}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error('彻底删除失败', e);
+      return;
+    }
     loadTrash();
   };
 
@@ -1026,25 +1039,27 @@ export default function AttendancePanel({ username }: AttendancePanelProps) {
               {trashItems.length === 0 ? (
                 <div className="text-center py-8 text-slate-500 text-sm">回收站为空</div>
               ) : trashItems.map(t => (
-                <div key={t._folder} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4">
+                <div key={t.id} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm">{t.type === 'class' ? '📋' : t.type === 'course' ? '📚' : '👤'}</span>
-                        <span className="text-sm text-white">{t.original_path}</span>
+                        <span className="text-sm text-white">{t.name}</span>
                         <span className="text-xs text-slate-500">{t.type === 'class' ? '班级' : t.type === 'course' ? '课程' : '用户'}</span>
                       </div>
                       <span className="text-xs text-slate-500 ml-6">删除于 {t.deleted_at?.slice(0, 10)}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => handleRestoreClass(t._folder)}
+                      <button onClick={() => handleRestoreClass(t.id)}
                         className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5 hover:bg-green-500/20 flex items-center gap-1">
                         <RotateCcw size={12} /> 恢复
                       </button>
-                      <button onClick={() => handlePermanentDelete(t._folder)}
-                        className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-1.5 hover:bg-rose-500/20">
-                        永久删除
-                      </button>
+                      {role === 'admin' && (
+                        <button onClick={() => handlePermanentDelete(t)}
+                          className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-1.5 hover:bg-rose-500/20">
+                          永久删除
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

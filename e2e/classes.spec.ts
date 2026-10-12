@@ -277,4 +277,34 @@ test.describe('M5b-5 班级学生域', () => {
     await page.getByRole('button', { name: '添加', exact: true }).click();
     await expect(page.getByText('1名学生'), '搜索加回应入班').toBeVisible();
   });
+
+  test('E33 班级回收站：删班进桶 → 垃圾桶恢复 → 回列表', async ({ page, request }) => {
+    await resetClasses(request);
+    // 清历史桶（历年测试软删的班全堆在回收站，先清干净再验本用例）
+    const ha = auth(await adminToken(request));
+    const trash = await (await request.get('/api/trash', { headers: ha })).json();
+    for (const t of trash.data.items as { id: string; type: string }[]) {
+      if (t.type === 'class') await request.delete(`/api/trash/${t.id}`, { headers: ha });
+    }
+    const cls = `e2e桶-${Date.now().toString(36)}`;
+    await apiCreateClass(request, cls);
+
+    await loginAs(page, TCHR, TCHR_PW);
+    await openClasses(page);
+    await page.getByText(cls, { exact: true }).first().click();
+
+    // 删班（原生 confirm → 软删进回收站）
+    page.on('dialog', d => d.accept());
+    await page.getByText(cls, { exact: true }).first().hover();
+    await page.locator('[title="删除"]').click();
+    await expect(page.getByText(cls, { exact: true }), '删除后列表该消失').toHaveCount(0);
+
+    // 垃圾桶（M5b-8 切 V2）：看到已删班 → 在目标行里点恢复
+    await page.getByRole('button', { name: '垃圾桶' }).click();
+    await expect(page.getByText(cls).first(), '垃圾桶里没看到已删班级').toBeVisible();
+    await page.locator('div.fixed.inset-0 div[class*="bg-slate-800"]').filter({ hasText: cls })
+      .getByRole('button', { name: '恢复', exact: true }).click();
+    await expect(page.locator('div.fixed.inset-0').getByText(cls, { exact: true }), '恢复后桶里该清掉').toHaveCount(0);
+    await expect(page.getByText(cls, { exact: true }).first(), '恢复后应回列表').toBeVisible();
+  });
 });

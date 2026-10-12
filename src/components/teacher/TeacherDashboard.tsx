@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Users, Award, Terminal, GraduationCap, Calendar, Mail } from 'lucide-react';
-import { useAuth } from '../../lib/useAuth';
 import { useTeacherData } from '../../lib/useTeacherData';
 import ErrorBoundary from '../ui/ErrorBoundary';
 import AttendancePanel from './AttendancePanel';
@@ -13,7 +12,6 @@ interface TeacherDashboardProps {
 }
 
 export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
-  const { username } = useAuth();
   const { classes, loading, error, refresh } = useTeacherData();
 
   // ── 切 tab 自动刷新数据 ──
@@ -35,7 +33,7 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
           </span>
         </div>
         <ErrorBoundary label="课堂记录">
-          <AttendancePanel username={username} />
+          <AttendancePanel />
         </ErrorBoundary>
       </div>
     );
