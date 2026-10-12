@@ -222,4 +222,59 @@ test.describe('M5b-5 班级学生域', () => {
     await page.getByText(/收件箱/).first().click();
     await expect(page.getByText(title, { exact: true }).first(), '学生没收到群发信').toBeVisible();
   });
+
+  test('E23 管理员新建学生：按钮在、建号成功、角色徽标=学生', async ({ page }) => {
+    const name = `e2eadm${Date.now().toString(36)}`.toLowerCase().slice(0, 20);
+    await loginAs(page, ADMIN, ADMIN_PW);
+    await page.getByRole('button', { name: '新建学生' }).click();
+    await page.getByPlaceholder('学生账号', { exact: true }).fill(name);
+    await page.getByPlaceholder(/密码/).fill('123456');   // 密码不预填（2026-10-12）
+    await page.getByRole('button', { name: '创建', exact: true }).click();
+    await expect(page.getByText(/已创建/).first(), '成功反馈没出现').toBeVisible();
+    await page.getByRole('button', { name: '完成' }).click();
+    const row = page.locator('tr').filter({ hasText: name }).first();
+    await expect(row, '新建学生没出现在用户列表').toBeVisible();
+    await expect(row.getByText('学生', { exact: true }), '角色徽标应为学生').toBeVisible();
+    await logout(page);
+  });
+
+  test('E24 班级管理：不选班新建学生（选初始班级）→ 自动入班 → 移出 → 搜索加回', async ({ page, request }) => {
+    await resetClasses(request);
+    const ts = Date.now().toString(36);
+    const cls = `e2e管-${ts}`;
+    const stu = `e2es7${ts}`.toLowerCase().slice(0, 20);
+    await loginAs(page, TCHR, TCHR_PW);
+    await page.getByRole('button', { name: '班级管理' }).click();
+
+    // a 建班
+    await page.locator('[title="新建班级"]').click();
+    await page.getByPlaceholder('班级名称').fill(cls);
+    await page.getByPlaceholder('班级名称').press('Enter');
+    await expect(page.getByText(cls, { exact: true }).first(), '班级没出现').toBeVisible();
+
+    // b 侧栏「新建学生」直接弹卡（可选初始班级）
+    await page.getByRole('button', { name: '新建学生', exact: true }).click();
+    await page.getByPlaceholder('学生账号', { exact: true }).fill(stu);
+    await page.getByPlaceholder(/密码/).fill('123456');   // 密码不预填（2026-10-12）
+    await page.locator('select').selectOption({ label: cls });
+    await page.getByRole('button', { name: '创建', exact: true }).click();
+    await expect(page.getByText(/已加入/), '带初始班级应提示入班').toBeVisible();
+    await page.getByRole('button', { name: '完成' }).click();   // 关卡 → 自动落在班级管理
+
+    // 自动入班：选班 → 1名学生、成员显示账号名
+    await page.getByText(cls, { exact: true }).first().click();
+    await expect(page.getByText('1名学生'), '初始班级应自动入班').toBeVisible();
+    await expect(page.getByText(stu, { exact: true }).first(), '成员应显示账号名').toBeVisible();
+
+    // 移出（只移关系不删号）
+    page.on('dialog', d => d.accept());
+    await page.getByRole('button', { name: '移出', exact: true }).click();
+    await expect(page.getByText('0名学生'), '移出后计数应回 0').toBeVisible();
+
+    // c1 搜索已有账号 → 点「添加」加回
+    await page.getByPlaceholder(/搜索已有学生账号/).fill(stu);
+    await page.getByRole('button', { name: '搜索', exact: true }).click();
+    await page.getByRole('button', { name: '添加', exact: true }).click();
+    await expect(page.getByText('1名学生'), '搜索加回应入班').toBeVisible();
+  });
 });

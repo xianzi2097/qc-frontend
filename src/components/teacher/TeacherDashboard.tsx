@@ -5,7 +5,7 @@ import { useTeacherData } from '../../lib/useTeacherData';
 import ErrorBoundary from '../ui/ErrorBoundary';
 import AttendancePanel from './AttendancePanel';
 import SendMessagePanel from './SendMessagePanel';
-import StudentListPanel from './StudentListPanel';
+import ClassManager from './ClassManager';
 import CourseManager from './CourseManager';
 import ResourcesManager from './ResourcesManager';
 
@@ -139,20 +139,20 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
     );
   }
 
-  // ── 学生管理 ──
+  // ── 班级管理（2026-10-11 重设计：原「学生管理」更名重做，见 ClassManager）──
   if (activeTab === 'students') {
     return (
       <div className="space-y-3 animate-fadeIn">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <Users className="text-cyan-400" size={20} /> 学生管理
+            <Users className="text-cyan-400" size={20} /> 班级管理
           </h2>
           <span className="text-xs bg-white border border-slate-300 px-3 py-1 rounded-full text-slate-600 font-mono">
-            共 {allStudents.length} 人
+            班级 {classes.length} 个 · 学生 {allStudents.length} 人
           </span>
         </div>
-        <ErrorBoundary label="学生管理">
-          <StudentListPanel classes={classes} loading={loading} error={error} attrKeys={attrKeys} username={username} />
+        <ErrorBoundary label="班级管理">
+          <ClassManager />
         </ErrorBoundary>
       </div>
     );

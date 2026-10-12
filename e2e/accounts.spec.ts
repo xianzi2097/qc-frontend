@@ -85,7 +85,8 @@ test.describe('M5b-2 账号管理域', () => {
     await page.getByRole('button', { name: '创建老师' }).click();
     await page.getByPlaceholder('老师账号').fill(name);
     await page.getByPlaceholder('密码').fill('123456');
-    await page.getByRole('button', { name: '确定' }).click();
+    await page.getByRole('button', { name: '创建', exact: true }).click();   // 2026-10-12 起走卡片（行内表单已删）
+    await page.getByRole('button', { name: '完成' }).click();                 // 卡片成功页
     await expect(row(page, name), '创建后列表没出现').toBeVisible();
     await expect(row(page, name).getByText('正常')).toBeVisible();
 

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import {
-  Terminal, Users, Cpu, LogOut, Mail, Calendar, BookOpen, Home, FolderOpen, KeyRound,
+  Terminal, Users, Cpu, LogOut, Mail, Calendar, BookOpen, Home, FolderOpen, KeyRound, UserPlus,
 } from 'lucide-react';
 import { getAvatarCfg } from '../ui/AvatarPicker';
 import ChangePasswordDialog from '../ui/ChangePassword';
+import NewAccountCard from '../ui/NewAccountCard';
 import TeacherDashboard from './TeacherDashboard';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 export default function TeacherDashboardWithSidebar({ username, role, logout }: Props) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showPwd, setShowPwd] = useState(false);
+  const [showNewStudent, setShowNewStudent] = useState(false);   // 侧栏「新建学生」直达卡片（2026-10-12）
 
   return (
     <div className="flex h-screen bg-slate-100 text-slate-900 font-sans selection:bg-geek-green selection:text-black">
@@ -48,6 +50,12 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
               <Terminal size={18} /> 数据看板
             </button>
             <button
+              onClick={() => setShowNewStudent(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            >
+              <UserPlus size={18} /> 新建学生
+            </button>
+            <button
               onClick={() => setActiveTab('students')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 activeTab === 'students'
@@ -55,7 +63,7 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <Users size={18} /> 学生管理
+              <Users size={18} /> 班级管理
             </button>
             <button
               onClick={() => setActiveTab('messages')}
@@ -150,6 +158,13 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
       <main className="w-[95%] overflow-y-auto p-8">
         <TeacherDashboard activeTab={activeTab} />
       </main>
+
+      {/* 侧栏「新建学生」直达卡片：成功后落回班级管理（新计数可见） */}
+      {showNewStudent && (
+        <NewAccountCard role="student"
+          onClose={() => setShowNewStudent(false)}
+          onCreated={() => setActiveTab('students')} />
+      )}
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { RotateCcw, UserX, Plus, UserCheck } from 'lucide-react';
+import { RotateCcw, UserX, Plus, UserCheck, UserPlus } from 'lucide-react';
 import { useLoading } from '../../lib/useLoading';
 import { apiV2 } from '../../lib/api';
 import { confirmDelete, confirmDisable } from '../ui/confirmDelete';
+import NewAccountCard from '../ui/NewAccountCard';
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('users');
@@ -32,8 +33,7 @@ export default function AdminDashboard() {
 function UserList() {
   const [users, setUsers] = useState<any[]>([]);
   const { wrap } = useLoading();
-  const [showCreate, setShowCreate] = useState(false);
-  const [newUser, setNewUser] = useState({ username: '', password: '111111', role: 'teacher' });
+  const [newRole, setNewRole] = useState<'teacher' | 'student' | null>(null);   // 新建账号卡片（2026-10-12 统一）
   const [msg, setMsg] = useState('');
 
   const load = () => {
@@ -46,18 +46,7 @@ function UserList() {
 
   useEffect(() => { load(); }, []);
 
-  const handleCreate = async () => {
-    if (!newUser.username.trim()) return;
-    setMsg('');
-    try {
-      await apiV2('/api/accounts', { method: 'POST', body: JSON.stringify(newUser) });
-      setShowCreate(false);
-      setNewUser({ username: '', password: '111111', role: 'teacher' });
-      load();
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : '创建失败');
-    }
-  };
+  // 创建账号：统一委托 ui/NewAccountCard 卡片（onCreated 里 load 刷新列表）
 
   const handleDisable = async (u: { id: string; username: string }) => {
     const ok = await confirmDisable(u.username);
@@ -86,25 +75,30 @@ function UserList() {
 
   return (
     <div className="space-y-3">
-      {/* 创建老师 */}
+      {/* 创建账号：老师 / 学生（2026-10-12 统一走卡片）*/}
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-600">共 {users.length} 个用户</span>
-        <button onClick={() => setShowCreate(!showCreate)}
-          className="text-xs bg-geek-green text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
-          <Plus size={14} /> 创建老师
-        </button>
-      </div>
-
-      {showCreate && (
-        <div className="bg-white border border-slate-300 rounded-xl p-4 flex items-center gap-3">
-          <input value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})}
-            placeholder="老师账号" className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none w-40" />
-          <input value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})}
-            placeholder="密码" className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none w-32" />
-          <button onClick={handleCreate}
-            className="text-xs bg-brand-orange text-black font-bold px-4 py-1.5 rounded-lg">确定</button>
-          {msg && <span className="text-xs text-rose-600 font-bold">{msg}</span>}
+        <div className="flex items-center gap-2">
+          <button onClick={() => { setMsg(''); setNewRole('teacher'); }}
+            className="text-xs bg-geek-green text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
+            <Plus size={14} /> 创建老师
+          </button>
+          <button onClick={() => { setMsg(''); setNewRole('student'); }}
+            className="text-xs bg-brand-orange text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
+            <UserPlus size={14} /> 新建学生
+          </button>
         </div>
+      </div>
+      {msg && <div className="text-xs text-emerald-700 font-bold px-1">{msg}</div>}
+
+      {/* 新建账号卡片（学生/老师通用：入职入学时间、备注、学生可选初始班级） */}
+      {newRole && (
+        <NewAccountCard role={newRole}
+          onClose={() => setNewRole(null)}
+          onCreated={({ username }) => {
+            setMsg(`账号「${username}」已创建`);
+            load();
+          }} />
       )}
 
       <div className="bg-white border border-slate-300 rounded-2xl overflow-hidden">
