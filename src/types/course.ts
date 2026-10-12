@@ -2,7 +2,10 @@
  * 课程相关的共享类型定义
  */
 
-// 课程类型
+/** 资产分类（V2 bucket 四值，取代旧 shelf/category 词汇） */
+export type Bucket = 'courses' | 'books' | 'reference' | 'download';
+
+// 资产类型（课程/书架/资料/软件共用一行形状，M5b-6）
 export interface Course {
   id: string;
   name: string;
@@ -10,24 +13,22 @@ export interface Course {
   format?: string;
   description: string;
   tags?: string[];
-  material_count: number;
-  teacher?: string;
-  teacher_key?: string;
-  shelf?: 'books' | 'courses';  // 所在书架：books=书架（收纳），courses=课程（老师正在教）
-  featured?: boolean;  // 旧字段兼容（shelf==='courses' 的布尔形式）
-  publish?: { status?: string; error?: string; published_at?: string };
+  bucket: Bucket;
+  teacher?: string;        // = V2 owner_name（前端沿用 teacher 叫法，零组件改动）
+  publish?: { state?: string; message?: string; error?: string; published_at?: string };
 }
 
-/** 课程所在书架（后端同时发 shelf 和旧 featured，这里统一取值口径） */
+/** 课程所在书架（bucket 直给，二值语义：books=收纳 / courses=正在教） */
 export const shelfOf = (c: Course): 'books' | 'courses' =>
-  c.shelf ?? (c.featured === true ? 'courses' : 'books');
+  c.bucket === 'books' ? 'books' : 'courses';
 
-// 文件树节点（后台资源管理器）
+// 文件树节点（V2 单层平铺；children 由前端逐层懒加载后填入）
 export interface TreeNode {
   name: string;
   type: 'dir' | 'file';
   children?: TreeNode[];
   size?: number;
+  mtime?: string;
 }
 
 // 教师类型
@@ -36,29 +37,12 @@ export interface Teacher {
   username: string;
 }
 
-// 课件树节点（folder 型课程的递归结构，后端 materials 接口的 tree 字段）
-export interface MaterialNode {
-  name: string;
-  type: 'dir' | 'file';
-  /** 文件大小（字节），仅 file 节点 */
-  size?: number;
-  /** 相对课件根目录的路径，仅 file 节点，如 "一级真题/2025-09/试卷.docx" */
-  path?: string;
-  /** 子节点，仅 dir 节点 */
-  children?: MaterialNode[];
-}
-
-// 素材类型
+// 课件（V2 /lessons 一行：目录名 + sb3 存在性，树另走 files?path=）
 export interface Material {
   name: string;
   has_main?: boolean;
   has_student?: boolean;
   sb3_count?: number;
-  files?: { name: string; size: number }[];
-  file_count?: number;
-  /** folder 型课程的递归目录树（后端返回；缺省时前端用 files 兜底） */
-  tree?: MaterialNode[];
-  url: string;
 }
 
 // 课程类型常量 - Lucide 图标映射

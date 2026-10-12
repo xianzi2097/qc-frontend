@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CourseDetail from './CourseDetail';
-import { fetchCourses, fetchTeacherNames } from '../../lib/api';
+import { fetchCourses } from '../../lib/api';
 import type { Course } from '../../types/course';
 import { shelfOf } from '../../types/course';
 
@@ -50,12 +50,11 @@ export default function CourseCatalog({ mode = 'books', onOpenCourse }: Props) {
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Course | null>(null);
 
-  // 进入目录页才加载所有老师的课程（不让学生筛选老师，系统自己记录归属）
+  // 进入目录页一次全量拉取（V2 /assets，不再逐师拉课；不让学生筛选老师）
   useEffect(() => {
     let stale = false;
     setLoading(true);
-    fetchTeacherNames()
-      .then(names => fetchCourses(names, '全部'))
+    fetchCourses()
       .then(list => { if (!stale) setCourses(list); })
       .catch(() => { if (!stale) setCourses([]); })
       .finally(() => { if (!stale) setLoading(false); });
@@ -219,8 +218,7 @@ export default function CourseCatalog({ mode = 'books', onOpenCourse }: Props) {
                       <p className="mt-1.5 text-xs leading-relaxed text-ed-muted line-clamp-2 h-10">
                         {c.description || '\u00A0'}
                       </p>
-                      <div className="mt-auto pt-3 flex items-center justify-between">
-                        <small className="text-xs text-ed-muted">{c.material_count} 个章节</small>
+                      <div className="mt-auto pt-3 flex items-center justify-end">
                         <span
                           className="grid place-items-center w-8 h-8 rounded-full text-white transition-all duration-200
                                      group-hover:bg-[var(--color-brand-orange)]"

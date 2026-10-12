@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, Code2, Cog, Download, Folder, Puzzle } from 'lucide-react';
 
 import ResourceFileTree from './ResourceFileTree';
-import { fetchResources, fetchTeacherNames } from '../../lib/api';
+import { fetchResources, zipHref } from '../../lib/api';
 import { FORMAT_LABEL } from '../../types/course';
 import type { Course } from '../../types/course';
 
@@ -18,12 +18,11 @@ export default function Downloads() {
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Course | null>(null);
 
-  // 进入目录页才加载所有老师的软件（不让学生筛选老师）
+  // 进入目录页一次全量拉取（V2 /assets?bucket=download）
   useEffect(() => {
     let stale = false;
     setLoading(true);
-    fetchTeacherNames()
-      .then(names => fetchResources(names, '全部', 'download'))
+    fetchResources('download')
       .then(list => { if (!stale) setCourses(list); })
       .catch(() => { if (!stale) setCourses([]); })
       .finally(() => { if (!stale) setLoading(false); });
@@ -77,13 +76,13 @@ export default function Downloads() {
                         {c.name}
                       </h3>
                       <p className="text-xs text-ed-muted mt-0.5">
-                        {c.material_count} 个文件{c.format && FORMAT_LABEL[c.format] ? ` · ${FORMAT_LABEL[c.format]}` : ''}
+                        {c.format && FORMAT_LABEL[c.format] ? FORMAT_LABEL[c.format] : ''}
                       </p>
                     </div>
                   </button>
                   {/* 直接下载整个资源，不用点进去 */}
                   <a
-                    href={`/api/resources/${encodeURIComponent(c.id)}/download`}
+                    href={zipHref(c.id)}
                     title={`下载「${c.name}」`}
                     className="p-1.5 text-ed-muted opacity-0 group-hover:opacity-100 hover:text-brand transition-all no-underline flex-shrink-0"
                   >

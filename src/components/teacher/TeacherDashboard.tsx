@@ -6,8 +6,7 @@ import ErrorBoundary from '../ui/ErrorBoundary';
 import AttendancePanel from './AttendancePanel';
 import SendMessagePanel from './SendMessagePanel';
 import ClassManager from './ClassManager';
-import CourseManager from './CourseManager';
-import ResourcesManager from './ResourcesManager';
+import AssetManager from './AssetManager';
 
 interface TeacherDashboardProps {
   activeTab: string;
@@ -42,34 +41,12 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
     );
   }
 
-  // ── 文件管理：独立页面 ──
-  if (activeTab === 'courses') {
+  // ── 资产管理：bucket 四选一（P1 合并页） ──
+  if (activeTab === 'assets') {
     return (
       <div className="h-full flex flex-col space-y-3 animate-fadeIn">
-        <ErrorBoundary label="文件管理">
-          <CourseManager />
-        </ErrorBoundary>
-      </div>
-    );
-  }
-
-  // ── 资料管理：固定 reference 类别 ──
-  if (activeTab === 'references') {
-    return (
-      <div className="h-full flex flex-col space-y-3 animate-fadeIn">
-        <ErrorBoundary label="资料管理">
-          <ResourcesManager category="reference" label="资料" />
-        </ErrorBoundary>
-      </div>
-    );
-  }
-
-  // ── 软件管理：同一组件，download 类别 ──
-  if (activeTab === 'software') {
-    return (
-      <div className="h-full flex flex-col space-y-3 animate-fadeIn">
-        <ErrorBoundary label="软件管理">
-          <ResourcesManager category="download" label="软件" />
+        <ErrorBoundary label="资产管理">
+          <AssetManager />
         </ErrorBoundary>
       </div>
     );

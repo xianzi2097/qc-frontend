@@ -4,86 +4,74 @@
  * 注意：useAuth 已劫持全局 fetch 自动附带 Bearer token（/api/login 除外），
  * 因此这里不需要手动处理鉴权头。
  */
-import type { Course, Material, MaterialNode } from '../types/course';
+import type { Course, Material, TreeNode, Bucket } from '../types/course';
 import type { PortalUser } from './useAuth';
 
 const nocache = () => `t=${Date.now()}`;
 
-/** 老师用户名列表（主页课程广场筛选用） */
-export async function fetchTeacherNames(): Promise<string[]> {
-  const res = await fetch(`/api/users?${nocache()}`);
-  const data = await res.json();
-  if (data.status !== 'success') return [];
-  return (data.users as { username: string; role: string }[])
-    .filter(u => u.role === 'teacher')
-    .map(u => u.username);
+// ═══ 资产族（V2：/api/assets · bucket 四值 · M5b-6） ═══
+
+/** V2 资产行（列表/详情的 data 一行；publish 仅 owner/admin 在详情额外得） */
+export interface AssetRow {
+  id: string;
+  owner_id: string;
+  owner_name: string;
+  bucket: Bucket;
+  name: string;
+  description: string;
+  tags: string[];
+  type: string;
+  format: string;
+  created_at: string;
+  publish?: { state?: string; message?: string; finished_at?: string };
 }
 
-/** 某位老师的课程列表 */
-async function fetchCoursesOf(teacher: string): Promise<Course[]> {
-  const res = await fetch(`/api/courses?teacher=${encodeURIComponent(teacher)}&${nocache()}`);
-  const data = await res.json();
-  if (data.status !== 'success') return [];
-  return (data.courses as Course[]).map(c => ({ ...c, teacher }));
+/** V2 行 → 前端 Course 形状（teacher=owner_name，调用组件零改动） */
+export const toCourse = (a: AssetRow): Course => ({
+  id: a.id, name: a.name, type: a.type, format: a.format,
+  description: a.description, tags: a.tags, bucket: a.bucket,
+  teacher: a.owner_name, publish: a.publish,
+});
+
+/** 课程+书架全量（一次取数，取代旧「老师名单→逐师拉课」N+1 链） */
+export async function fetchCourses(): Promise<Course[]> {
+  const d = await apiV2<{ items: AssetRow[] }>(`/api/assets?${nocache()}`);
+  return d.items.filter(a => a.bucket === 'books' || a.bucket === 'courses').map(toCourse);
 }
 
-/**
- * 课程列表。teacher 为 '全部' 时并发聚合所有老师的课程
- * （与旧版行为一致：后端不支持跨老师查询）。
- */
-export async function fetchCourses(teachers: string[], teacher: string): Promise<Course[]> {
-  if (teacher !== '全部') return fetchCoursesOf(teacher);
-  const results = await Promise.all(
-    teachers.map(t => fetchCoursesOf(t).catch(() => [] as Course[])),
-  );
-  return results.flat();
+/** 资料 / 软件下载 */
+export async function fetchResources(category: 'reference' | 'download'): Promise<Course[]> {
+  const d = await apiV2<{ items: AssetRow[] }>(`/api/assets?bucket=${category}&${nocache()}`);
+  return d.items.map(toCourse);
 }
 
-/** 课程课件/素材列表 */
-export async function fetchMaterials(courseId: string, teacher: string): Promise<Material[]> {
-  const res = await fetch(
-    `/api/courses/${encodeURIComponent(courseId)}/materials?teacher=${encodeURIComponent(teacher)}&${nocache()}`,
-  );
-  const data = await res.json();
-  return data.status === 'success' ? data.materials : [];
+/** 课件列表（仅课程族；V2 /lessons） */
+export async function fetchMaterials(courseId: string): Promise<Material[]> {
+  const d = await apiV2<{ items: Material[] }>(
+    `/api/assets/${encodeURIComponent(courseId)}/lessons?${nocache()}`);
+  return d.items;
 }
 
-/** 获取资源列表（按 teacher + category 筛选） */
-export async function fetchResources(_teachers: string[], teacher: string, category: string = ''): Promise<Course[]> {
-  const url = `/api/resources?${nocache()}` + (category ? `&category=${category}` : '') + (teacher !== '全部' ? `&teacher=${teacher}` : '');
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data.status !== 'success') return [];
-  const items = data.resources || data.courses || [];
-  return items.map((r: any) => ({
-    ...r,
-    type: r.type || 'reference',
-    format: r.format || 'folder',
-    material_count: r.material_count || 0,
-    teacher: r.teacher || '',
-  }));
+/** 单层目录（逐层加载 P2） */
+export async function fetchFileEntries(assetId: string, path: string = ''): Promise<TreeNode[]> {
+  const d = await apiV2<{ entries: TreeNode[] }>(
+    `/api/assets/${encodeURIComponent(assetId)}/files?path=${encodeURIComponent(path)}&${nocache()}`);
+  return d.entries;
 }
 
-/** 获取资源文件树（返回单个 Material，tree 字段为递归文件树） */
-export async function fetchResourceTree(resourceId: string, resourceUrl: string): Promise<Material[]> {
-  const res = await fetch(`/api/resources/${encodeURIComponent(resourceId)}/tree?${nocache()}`);
-  const data = await res.json();
-  if (data.status !== 'success') return [];
-  const tree = data.tree || [];
-  // 转成 MaterialNode[] 格式（name/type/size/path/children）
-  const toNodes = (nodes: any[]): MaterialNode[] => nodes.map(n => ({
-    name: n.name,
-    type: n.type === 'folder' || n.type === 'dir' ? 'dir' : 'file',
-    size: n.size || 0,
-    path: n.path,
-    children: n.children ? toNodes(n.children) : undefined,
-  }));
-  return [{
-    name: data.meta?.name || '资源文件',
-    url: resourceUrl,
-    tree: toNodes(tree),
-  }];
-}
+/** 路径按段编码（中文/空格/# 不断链），保留 / 分隔 */
+const encPath = (p: string) => p.split('/').map(encodeURIComponent).join('/');
+
+/** 单文件下载；也用作 Scratch 课件目录基址（Scratch 拼 main.sb3，零改动） */
+export const fileHref = (assetId: string, path: string) =>
+  `/api/assets/${encodeURIComponent(assetId)}/files/download?path=${encPath(path)}`;
+
+/** 目录/整包 zip 下载（仅资料族） */
+export const zipHref = (assetId: string, path: string = '') =>
+  `/api/assets/${encodeURIComponent(assetId)}/download${path ? `?path=${encPath(path)}` : ''}`;
+
+/** Scratch 课件目录：以 / 结尾，Scratch 拼 main.sb3 / student.sb3 后即为文件下载点 */
+export const scratchFolderHref = (assetId: string, lesson: string) => fileHref(assetId, `${lesson}/`);
 
 /** V2 信封错误：code!==0 时抛出，msg 可直接给用户看 */
 export class ApiError extends Error {
@@ -94,9 +82,13 @@ export class ApiError extends Error {
   }
 }
 
-/** V2 统一请求（信封拦截）：成功只返回 data，失败抛 ApiError(msg) */
+/** V2 统一请求（信封拦截）：成功只返回 data，失败抛 ApiError(msg)；FormData 时不塞 json 头（让浏览器带 boundary） */
 export async function apiV2<T = any>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...init });
+  const isForm = typeof FormData !== 'undefined' && init?.body instanceof FormData;
+  const res = await fetch(path, {
+    headers: isForm ? {} : { 'Content-Type': 'application/json' },
+    ...init,
+  });
   const body = await res.json().catch(() => null);
   if (!body || typeof body.code !== 'number' || body.code !== 0) {
     throw new ApiError(body?.code ?? res.status, body?.msg ?? `请求失败(${res.status})`);
@@ -135,21 +127,17 @@ export async function updateAvatar(avatarPath: string): Promise<void> {
   });
 }
 
-/** 所有老师的全部课程聚合（主页侧边栏「在学课程」等一次性拉取） */
+/** 所有课程+书架聚合（主页侧边栏「在学课程」等一次性拉取） */
 export async function fetchAllCourses(): Promise<Course[]> {
-  const teachers = await fetchTeacherNames();
-  return fetchCourses(teachers, '全部');
+  return fetchCourses();
 }
 
-/** 移动课程所在书架：'courses'=课程（主页侧边栏「课程」），'books'=书架 */
-export async function setShelf(courseId: string, shelf: 'books' | 'courses'): Promise<void> {
-  const res = await fetch(`/api/courses/${encodeURIComponent(courseId)}/shelf`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ shelf }),
+/** 挪书架/挪分类（V2：PATCH bucket，替代旧 PUT /shelf） */
+export async function setShelf(courseId: string, bucket: Bucket): Promise<void> {
+  await apiV2(`/api/assets/${encodeURIComponent(courseId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ bucket }),
   });
-  const data = await res.json();
-  if (data.status !== 'success') throw new Error(data.detail || '操作失败');
 }
 
 // ═══ 用户设置（V2：/api/settings · 字段改名 · D20 主题四值） ═══
