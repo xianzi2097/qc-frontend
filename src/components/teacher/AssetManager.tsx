@@ -383,9 +383,8 @@ export default function AssetManager() {
         <div className="bg-white border border-slate-300 rounded-2xl p-4 grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <input autoFocus value={newName} onChange={e => setNewName(e.target.value)}
-              placeholder={isCourseFamily(bucket) && newFormat === 'ebook' ? '电子书名称由上传文件名决定' : '资产名称'}
-              disabled={isCourseFamily(bucket) && newFormat === 'ebook'}
-              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-brand-orange disabled:bg-slate-100" />
+              placeholder="资产名称"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-brand-orange" />
             <div className="flex flex-wrap gap-1">
               {newTags.map(t => (
                 <span key={t} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -409,7 +408,7 @@ export default function AssetManager() {
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {FORMAT_OPTIONS.map(f => (
-                    <button key={f.value} onClick={() => { setNewFormat(f.value); if (f.value === 'ebook') setNewName(''); }}
+                    <button key={f.value} onClick={() => setNewFormat(f.value)}
                       className={`text-xs px-2.5 py-1 rounded-lg ${newFormat === f.value ? 'bg-brand-orange text-black font-bold' : 'bg-white border border-slate-300 text-slate-600'}`}>
                       {f.label}
                     </button>
