@@ -65,6 +65,7 @@ export default function AssetManager() {
   const [editTagInput, setEditTagInput] = useState('');
   const [editType, setEditType] = useState('scratch');
   const [editFormat, setEditFormat] = useState('scratch');
+  const [editShareable, setEditShareable] = useState(false);   // D34：课程下载开关
 
   // 文件树（逐层钻取）
   const [path, setPath] = useState('');
@@ -146,6 +147,7 @@ export default function AssetManager() {
     setEditing(a);
     setEditName(a.name); setEditDesc(a.description); setEditTags(a.tags || []);
     setEditType(a.type || 'scratch'); setEditFormat(a.format || 'scratch');
+    setEditShareable(!!a.shareable);
     setMsg('');
   };
 
@@ -154,7 +156,7 @@ export default function AssetManager() {
     setMsg('');
     try {
       const body: Record<string, unknown> = { name: editName.trim(), description: editDesc.trim(), tags: editTags };
-      if (isCourseFamily(editing.bucket)) { body.type = editType; body.format = editFormat; }
+      if (isCourseFamily(editing.bucket)) { body.type = editType; body.format = editFormat; body.shareable = editShareable; }
       await apiV2(`/api/assets/${encodeURIComponent(editing.id)}`, {
         method: 'PATCH', body: JSON.stringify(body),
       });
@@ -656,6 +658,15 @@ export default function AssetManager() {
                     </button>
                   ))}
                 </div>
+              )}
+              {isCourseFamily(editing.bucket) && (
+                <button onClick={() => setEditShareable(v => !v)}
+                  className="w-full flex items-center justify-between text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                  <span>允许别人下载这门课（源文件 zip）</span>
+                  <span className={`w-9 h-5 rounded-full relative transition-colors ${editShareable ? 'bg-brand-orange' : 'bg-slate-300'}`}>
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${editShareable ? 'left-4.5' : 'left-0.5'}`} />
+                  </span>
+                </button>
               )}
               <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={5} placeholder="描述"
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-orange resize-none" />

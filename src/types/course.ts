@@ -16,6 +16,7 @@ export interface Course {
   bucket: Bucket;
   teacher?: string;        // = V2 owner_name（前端沿用 teacher 叫法，零组件改动）
   publish?: { state?: string; message?: string; error?: string; published_at?: string };
+  shareable?: boolean;     // D34：课程下载开关（后台编辑里切，公开可见）
 }
 
 /** 课程所在书架（bucket 直给，二值语义：books=收纳 / courses=正在教） */

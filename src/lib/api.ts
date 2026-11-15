@@ -22,6 +22,7 @@ export interface AssetRow {
   tags: string[];
   type: string;
   format: string;
+  shareable?: boolean;
   created_at: string;
   publish?: { state?: string; message?: string; finished_at?: string };
 }
@@ -30,7 +31,7 @@ export interface AssetRow {
 export const toCourse = (a: AssetRow): Course => ({
   id: a.id, name: a.name, type: a.type, format: a.format,
   description: a.description, tags: a.tags, bucket: a.bucket,
-  teacher: a.owner_name, publish: a.publish,
+  teacher: a.owner_name, publish: a.publish, shareable: a.shareable,
 });
 
 /** 课程+书架全量（一次取数，取代旧「老师名单→逐师拉课」N+1 链） */
@@ -66,7 +67,7 @@ const encPath = (p: string) => p.split('/').map(encodeURIComponent).join('/');
 export const fileHref = (assetId: string, path: string) =>
   `/api/assets/${encodeURIComponent(assetId)}/files/download?path=${encPath(path)}`;
 
-/** 目录/整包 zip 下载（仅资料族） */
+/** 目录/整包 zip 下载（全族开放，D33/D34：课程族须 shareable=true） */
 export const zipHref = (assetId: string, path: string = '') =>
   `/api/assets/${encodeURIComponent(assetId)}/download${path ? `?path=${encPath(path)}` : ''}`;
 

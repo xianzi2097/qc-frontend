@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowUpRight, BookOpen, ChevronDown, ChevronRight,
-  FileText, Folder, FolderOpen,
+  Download, FileText, Folder, FolderOpen,
 } from 'lucide-react';
-import { fetchMaterials, fetchFileEntries, fileHref, scratchFolderHref } from '../../lib/api';
+import { fetchMaterials, fetchFileEntries, fileHref, scratchFolderHref, zipHref } from '../../lib/api';
 import { injectSeamless } from './seamless';
 import { formatSize } from '../../types/course';
 import type { Course, Material, TreeNode } from '../../types/course';
@@ -43,6 +43,16 @@ export default function CourseDetail({ course }: Props) {
       <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
         style={{ background: 'var(--bookshelf-header-bg)' }}>
         <span className="text-ed-title font-semibold text-ed-ink truncate">{course.name}</span>
+        {course.shareable && (
+          <a
+            href={zipHref(course.id)}
+            className="ml-auto flex items-center gap-1.5 text-sm text-ed-body hover:text-brand transition-colors no-underline"
+            title="下载这门课的源文件（zip）"
+          >
+            <Download className="w-4 h-4" />
+            下载
+          </a>
+        )}
       </header>
 
       <div className="flex-1 min-h-0 relative bg-card overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
