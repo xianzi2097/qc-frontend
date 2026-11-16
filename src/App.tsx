@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './lib/useAuth';
 import { LoadingProvider, useLoading } from './lib/useLoading';
 import LoadingOverlay from './components/ui/LoadingOverlay';
@@ -55,6 +55,12 @@ function HomePageSwitch() {
   return <HomePage onLogin={login} />;
 }
 
+/** 彩蛋：/star 或 /太阳系 → 纯星空页（临时访问，点切换或回 / 即回卡片主页） */
+function StarRoute() {
+  const navigate = useNavigate();
+  return <StarHomePage onSwitchHome={() => navigate('/')} />;
+}
+
 export default function App() {
   return (
     <LoadingProvider>
@@ -62,6 +68,8 @@ export default function App() {
         <LoadingOverlay />
         <Routes>
           <Route path="/" element={<HomePageSwitch />} />
+          <Route path="/star" element={<StarRoute />} />
+          <Route path="/太阳系" element={<StarRoute />} />
           <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </BrowserRouter>
