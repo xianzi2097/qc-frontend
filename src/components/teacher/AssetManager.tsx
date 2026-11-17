@@ -56,6 +56,7 @@ export default function AssetManager() {
   const [newTagInput, setNewTagInput] = useState('');
   const [newType, setNewType] = useState('scratch');
   const [newFormat, setNewFormat] = useState('scratch');
+  const [newShelf, setNewShelf] = useState<Bucket>('courses');   // 课程族：课程↔书架开关（打开面板时跟随当前 tab）
 
   // 编辑
   const [editing, setEditing] = useState<AssetRow | null>(null);
@@ -66,6 +67,7 @@ export default function AssetManager() {
   const [editType, setEditType] = useState('scratch');
   const [editFormat, setEditFormat] = useState('scratch');
   const [editShareable, setEditShareable] = useState(false);   // D34：课程下载开关
+  const [editShelf, setEditShelf] = useState<Bucket>('courses');   // 课程族：课程↔书架开关
 
   // 文件树（逐层钻取）
   const [path, setPath] = useState('');
@@ -130,8 +132,10 @@ export default function AssetManager() {
     if (!name) return;
     setMsg('');
     try {
-      const body: Record<string, unknown> = { bucket, name, description: newDesc.trim(), tags: newTags };
-      if (isCourseFamily(bucket)) { body.type = newType; body.format = newFormat; }
+      // 课程族：bucket 由开关决定（课程↔书架）；其余分类跟随当前 tab
+      const effBucket = isCourseFamily(bucket) ? newShelf : bucket;
+      const body: Record<string, unknown> = { bucket: effBucket, name, description: newDesc.trim(), tags: newTags };
+      if (isCourseFamily(effBucket)) { body.type = newType; body.format = newFormat; }
       await apiV2('/api/assets', { method: 'POST', body: JSON.stringify(body) });
       setShowCreate(false);
       setNewName(''); setNewDesc(''); setNewTags([]); setNewTagInput('');
@@ -148,6 +152,7 @@ export default function AssetManager() {
     setEditName(a.name); setEditDesc(a.description); setEditTags(a.tags || []);
     setEditType(a.type || 'scratch'); setEditFormat(a.format || 'scratch');
     setEditShareable(!!a.shareable);
+    setEditShelf(a.bucket);
     setMsg('');
   };
 
@@ -156,7 +161,10 @@ export default function AssetManager() {
     setMsg('');
     try {
       const body: Record<string, unknown> = { name: editName.trim(), description: editDesc.trim(), tags: editTags };
-      if (isCourseFamily(editing.bucket)) { body.type = editType; body.format = editFormat; body.shareable = editShareable; }
+      if (isCourseFamily(editing.bucket)) {
+        body.type = editType; body.format = editFormat; body.shareable = editShareable;
+        body.bucket = editShelf;   // 课程↔书架开关（后端 PATCH 支持跨族挪动）
+      }
       await apiV2(`/api/assets/${encodeURIComponent(editing.id)}`, {
         method: 'PATCH', body: JSON.stringify(body),
       });
@@ -374,7 +382,7 @@ export default function AssetManager() {
           className="text-slate-500 hover:text-brand-orange p-1.5 rounded hover:bg-slate-100"><RefreshCw className="w-4 h-4" /></button>
         <button onClick={() => { setShowTrash(true); loadTrash(); }}
           className="text-xs bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg hover:border-brand-orange">回收站</button>
-        <button onClick={() => { setShowCreate(v => !v); setMsg(''); }}
+        <button onClick={() => { setShowCreate(v => !v); if (!showCreate) setNewShelf(isCourseFamily(bucket) ? bucket : 'courses'); setMsg(''); }}
           className="text-xs bg-brand-orange text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
           <Plus className="w-3.5 h-3.5" /> 新建资产
         </button>
@@ -400,6 +408,16 @@ export default function AssetManager() {
             </div>
             {isCourseFamily(bucket) && (
               <>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-slate-500 shrink-0">放哪：</span>
+                  <div className="flex rounded-lg overflow-hidden border border-slate-300">
+                    <button onClick={() => setNewShelf('courses')}
+                      className={`px-2.5 py-1 ${newShelf === 'courses' ? 'bg-brand-orange text-black font-bold' : 'bg-white text-slate-600'}`}>课程</button>
+                    <button onClick={() => setNewShelf('books')}
+                      className={`px-2.5 py-1 ${newShelf === 'books' ? 'bg-brand-orange text-black font-bold' : 'bg-white text-slate-600'}`}>书架</button>
+                  </div>
+                  <span className="text-slate-400">{newShelf === 'courses' ? '主页课程区展示' : '主页书架区展示'}</span>
+                </div>
                 <div className="flex flex-wrap gap-1">
                   {TYPE_OPTIONS.map(t => (
                     <button key={t.value} onClick={() => setNewType(t.value)}
@@ -643,6 +661,18 @@ export default function AssetManager() {
                   placeholder="标签，回车添加"
                   className="text-xs bg-white border border-slate-300 rounded-full px-2 py-0.5 w-28 outline-none focus:border-brand-orange" />
               </div>
+              {isCourseFamily(editing.bucket) && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-slate-500 shrink-0">放哪：</span>
+                  <div className="flex rounded-lg overflow-hidden border border-slate-300">
+                    <button onClick={() => setEditShelf('courses')}
+                      className={`px-2.5 py-1 ${editShelf === 'courses' ? 'bg-brand-orange text-black font-bold' : 'bg-white text-slate-600'}`}>课程</button>
+                    <button onClick={() => setEditShelf('books')}
+                      className={`px-2.5 py-1 ${editShelf === 'books' ? 'bg-brand-orange text-black font-bold' : 'bg-white text-slate-600'}`}>书架</button>
+                  </div>
+                  <span className="text-slate-400">{editShelf === 'courses' ? '主页课程区展示' : '主页书架区展示'}</span>
+                </div>
+              )}
               {isCourseFamily(editing.bucket) && (
                 <div className="flex flex-wrap gap-1">
                   {TYPE_OPTIONS.map(t => (
