@@ -73,10 +73,10 @@ async function loginAs(page: Page, username: string, password: string) {
   await page.waitForURL('**/dashboard');
 }
 
-/** 进教师端「资产管理」页 */
+/** 进教师端「资源管理」页 */
 async function openAssets(page: Page) {
-  await page.getByRole('button', { name: '资产管理' }).click();
-  await expect(page.getByRole('button', { name: '新建资产' }), '资产管理页没打开').toBeVisible();
+  await page.getByRole('button', { name: '资源管理' }).click();
+  await expect(page.getByRole('button', { name: '新建资源' }), '资源管理页没打开').toBeVisible();
 }
 
 const ts = () => Date.now().toString(36);
@@ -91,10 +91,10 @@ test.describe('M5b-6 资产族 · 管理面', () => {
 
     // 新建（课程族：名称 + 类型 scratch）
     const name = `e2e资产-${ts()}`;
-    await page.getByRole('button', { name: '新建资产' }).click();
-    await page.getByPlaceholder('资产名称').fill(name);
+    await page.getByRole('button', { name: '新建资源' }).click();
+    await page.getByPlaceholder('资源名称').fill(name);
     await page.getByRole('button', { name: '创建', exact: true }).click();
-    await expect(page.getByText(name, { exact: true }).first(), '新建资产没出现在列表').toBeVisible();
+    await expect(page.getByText(name, { exact: true }).first(), '新建资源没出现在列表').toBeVisible();
 
     // 挪书架（★）→ 切 bucket tab 看到
     await page.getByText(name, { exact: true }).first().hover();

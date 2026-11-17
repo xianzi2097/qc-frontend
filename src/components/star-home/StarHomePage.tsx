@@ -142,13 +142,13 @@ export default function StarHomePage({ onSwitchHome }: { onSwitchHome?: () => vo
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#050510]">
-      {/* 切换回卡片主页 */}
+      {/* 返回主页（星空页已不是主页，按钮语义 = 返回） */}
       <button
         onClick={onSwitchHome}
         className="fixed top-4 right-4 z-20 flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1.5 rounded-xl transition-all"
-        title="切换到卡片主页"
+        title="返回主页"
       >
-        <LayoutGrid size={14} /> 卡片
+        <LayoutGrid size={14} /> 返回
       </button>
       <StarHomeLogo />
       <PlanetScene entries={planetEntries} onPlanetClick={setSelectedEntry} orbitalSatellites={orbitalSatellites} />

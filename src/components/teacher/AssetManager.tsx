@@ -139,7 +139,7 @@ export default function AssetManager() {
       await apiV2('/api/assets', { method: 'POST', body: JSON.stringify(body) });
       setShowCreate(false);
       setNewName(''); setNewDesc(''); setNewTags([]); setNewTagInput('');
-      setMsg(`资产「${name}」已创建`);
+      setMsg(`资源「${name}」已创建`);
       loadAssets(bucket);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : '创建失败');   // 重名 5001/6001
@@ -192,13 +192,13 @@ export default function AssetManager() {
 
   // ── 删除（软删进回收站） ──
   const handleDelete = async (a: AssetRow) => {
-    const ok = await confirmDelete({ what: `资产「${a.name}」`, recoverable: true });
+    const ok = await confirmDelete({ what: `资源「${a.name}」`, recoverable: true });
     if (!ok) return;
     setMsg('');
     try {
       await apiV2(`/api/assets/${encodeURIComponent(a.id)}`, { method: 'DELETE' });
       if (selected?.id === a.id) setSelected(null);
-      setMsg(`资产「${a.name}」已移入回收站`);
+      setMsg(`资源「${a.name}」已移入回收站`);
       loadAssets(bucket);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : '删除失败');
@@ -344,7 +344,7 @@ export default function AssetManager() {
   };
 
   const handlePurge = async (t: TrashItem) => {
-    const ok = await confirmDelete({ what: `资产「${t.name}」`, recoverable: false });
+    const ok = await confirmDelete({ what: `资源「${t.name}」`, recoverable: false });
     if (!ok) return;
     setMsg('');
     try {
@@ -384,7 +384,7 @@ export default function AssetManager() {
           className="text-xs bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg hover:border-brand-orange">回收站</button>
         <button onClick={() => { setShowCreate(v => !v); if (!showCreate) setNewShelf(isCourseFamily(bucket) ? bucket : 'courses'); setMsg(''); }}
           className="text-xs bg-brand-orange text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
-          <Plus className="w-3.5 h-3.5" /> 新建资产
+          <Plus className="w-3.5 h-3.5" /> 新建资源
         </button>
       </div>
 
@@ -393,7 +393,7 @@ export default function AssetManager() {
         <div className="bg-white border border-slate-300 rounded-2xl p-4 grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <input autoFocus value={newName} onChange={e => setNewName(e.target.value)}
-              placeholder="资产名称"
+              placeholder="资源名称"
               className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-brand-orange" />
             <div className="flex flex-wrap gap-1">
               {newTags.map(t => (
@@ -576,7 +576,7 @@ export default function AssetManager() {
         <div className="flex-1 min-h-0 overflow-y-auto">
           {assets.length === 0 ? (
             <div className="p-10 text-center text-sm text-slate-500">
-              此分类暂无资产<br />
+              此分类暂无资源<br />
               <button onClick={() => setShowCreate(true)} className="text-brand-orange hover:underline mt-1">创建第一个</button>
             </div>
           ) : (
@@ -716,7 +716,7 @@ export default function AssetManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
           onClick={() => setShowTrash(false)}>
           <div className="bg-white rounded-2xl p-6 w-[30rem] shadow-xl max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-slate-900 mb-3">资产回收站</h3>
+            <h3 className="text-sm font-bold text-slate-900 mb-3">资源回收站</h3>
             <div className="flex-1 overflow-y-auto space-y-1">
               {trashItems.length === 0 ? (
                 <div className="text-sm text-slate-500 text-center py-6">回收站为空</div>

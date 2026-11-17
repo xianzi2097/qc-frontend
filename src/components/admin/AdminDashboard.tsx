@@ -150,7 +150,7 @@ function UserList() {
   );
 }
 
-const TRASH_TYPE_LABEL: Record<string, string> = { account: '账号', class: '班级', asset: '资产' };
+const TRASH_TYPE_LABEL: Record<string, string> = { account: '账号', class: '班级', asset: '资源' };
 
 interface TrashItem {
   id: string;

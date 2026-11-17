@@ -84,7 +84,7 @@ export function startHomePageTour(onSection: (s: HomeSection) => void) {
       {
         element: '[data-tour="docs"]',
         popover: {
-          title: iconTitle('graduationCap', '学习文档'),
+          title: iconTitle('graduationCap', '产品维基'),
           description: 'C++、Python、Scratch 等编程教程，学生可以直接在线学习。',
           side: 'right',
           align: 'start',

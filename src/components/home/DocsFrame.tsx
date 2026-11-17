@@ -8,7 +8,7 @@ const DOC_TABS = [
   { value: '/docs/cpp_course/', label: 'C++' },
 ];
 
-/** 学习文档 — VitePress 无痕内嵌：上方章节 Tab + 同源 iframe 填满内容区 */
+/** 产品维基 — VitePress 无痕内嵌：上方章节 Tab + 同源 iframe 填满内容区 */
 export default function DocsFrame() {
   // src 只在点 Tab 时变化（触发 iframe 重新加载）；active 跟随 iframe 实际路径高亮
   const [src, setSrc] = useState(() => localStorage.getItem('docsSection') || '/docs/');
@@ -48,7 +48,7 @@ export default function DocsFrame() {
     <div className="flex-1 flex flex-col min-h-0">
       <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
         style={{ background: 'var(--bookshelf-header-bg)' }}>
-        <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">学习文档</span>
+        <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">产品维基</span>
         <div className="flex items-center gap-2">
           {DOC_TABS.map(t => (
             <button
@@ -77,7 +77,7 @@ export default function DocsFrame() {
           ref={frameRef}
           key={src}
           src={src}
-          title="学习文档"
+          title="产品维基"
           onLoad={handleLoad}
           className="w-full h-full border-0"
         />

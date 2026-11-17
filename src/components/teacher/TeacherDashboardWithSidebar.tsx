@@ -93,7 +93,7 @@ export default function TeacherDashboardWithSidebar({ username, role, logout }: 
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <BookOpen size={18} /> 资产管理
+              <BookOpen size={18} /> 资源管理
             </button>
             <div className="border-t border-slate-300 pt-3 mt-3">
               <a

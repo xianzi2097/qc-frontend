@@ -43,7 +43,7 @@ export default function TeacherDashboard({ activeTab }: TeacherDashboardProps) {
   if (activeTab === 'assets') {
     return (
       <div className="h-full flex flex-col space-y-3 animate-fadeIn">
-        <ErrorBoundary label="资产管理">
+        <ErrorBoundary label="资源管理">
           <AssetManager />
         </ErrorBoundary>
       </div>
