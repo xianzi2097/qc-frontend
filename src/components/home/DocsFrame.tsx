@@ -3,9 +3,6 @@ import { injectSeamless } from './seamless';
 
 const DOC_TABS = [
   { value: '/wiki/', label: '手册首页' },
-  { value: '/wiki/scratch_course/', label: 'Scratch' },
-  { value: '/wiki/python_course/', label: 'Python' },
-  { value: '/wiki/cpp_course/', label: 'C++' },
 ];
 
 /** 站点维基 — VitePress 无痕内嵌：上方章节 Tab + 同源 iframe 填满内容区 */
