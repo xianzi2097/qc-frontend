@@ -2,16 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { injectSeamless } from './seamless';
 
 const DOC_TABS = [
-  { value: '/docs/', label: '手册首页' },
-  { value: '/docs/scratch_course/', label: 'Scratch' },
-  { value: '/docs/python_course/', label: 'Python' },
-  { value: '/docs/cpp_course/', label: 'C++' },
+  { value: '/wiki/', label: '手册首页' },
+  { value: '/wiki/scratch_course/', label: 'Scratch' },
+  { value: '/wiki/python_course/', label: 'Python' },
+  { value: '/wiki/cpp_course/', label: 'C++' },
 ];
 
-/** 产品维基 — VitePress 无痕内嵌：上方章节 Tab + 同源 iframe 填满内容区 */
+/** 站点维基 — VitePress 无痕内嵌：上方章节 Tab + 同源 iframe 填满内容区 */
 export default function DocsFrame() {
   // src 只在点 Tab 时变化（触发 iframe 重新加载）；active 跟随 iframe 实际路径高亮
-  const [src, setSrc] = useState(() => localStorage.getItem('docsSection') || '/docs/');
+  // 旧 /docs 路径自动迁移到 /wiki（2026-11-18 改路由）
+  const [src, setSrc] = useState(() =>
+    (localStorage.getItem('docsSection') || '/wiki/').replace(/^\/docs\//, '/wiki/'));
   const [active, setActive] = useState(src);
   const [loaded, setLoaded] = useState(false);
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -38,8 +40,8 @@ export default function DocsFrame() {
       const path = frameRef.current?.contentWindow?.location.pathname;
       if (!path || path === pathRef.current) return;
       pathRef.current = path;
-      const match = DOC_TABS.find(t => t.value !== '/docs/' && path.startsWith(t.value));
-      setActive(match ? match.value : '/docs/');
+      const match = DOC_TABS.find(t => t.value !== '/wiki/' && path.startsWith(t.value));
+      setActive(match ? match.value : '/wiki/');
     }, 500);
     return () => clearInterval(timer);
   }, []);
@@ -48,7 +50,7 @@ export default function DocsFrame() {
     <div className="flex-1 flex flex-col min-h-0">
       <header className="flex-shrink-0 flex items-center gap-4 px-6 h-14 border-b border-ed-line"
         style={{ background: 'var(--bookshelf-header-bg)' }}>
-        <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">产品维基</span>
+        <span className="text-ed-title font-semibold text-ed-ink flex-shrink-0">站点维基</span>
         <div className="flex items-center gap-2">
           {DOC_TABS.map(t => (
             <button
@@ -77,7 +79,7 @@ export default function DocsFrame() {
           ref={frameRef}
           key={src}
           src={src}
-          title="产品维基"
+          title="站点维基"
           onLoad={handleLoad}
           className="w-full h-full border-0"
         />

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Code2, Download, ExternalLink, FileText, GraduationCap, HelpCircle, Home, LayoutDashboard,
+  BookMarked, Code2, Download, ExternalLink, FileText, HelpCircle, Home, LayoutDashboard,
   Library, LogIn, LogOut, Minus, PanelLeftClose, Puzzle, Plus, SquareLibrary, Terminal,
 } from 'lucide-react';
 import LogoMark from './LogoMark';
@@ -40,7 +40,7 @@ export const NAV: { id: HomeSection; label: string; icon: typeof Home; color: st
   { id: 'books', label: '书架', icon: SquareLibrary, color: 'text-blue-600' },
   { id: 'courses', label: '课程', icon: Library, color: 'text-blue-600' },
   { id: 'resources', label: '资料', icon: FileText, color: 'text-emerald-600' },
-  { id: 'docs', label: '产品维基', icon: GraduationCap, color: 'text-emerald-600' },
+  { id: 'docs', label: '站点维基', icon: BookMarked, color: 'text-emerald-600' },
   { id: 'scratch', label: 'Scratch 4.0-QC', icon: Puzzle, color: 'text-violet-600' },
   { id: 'compiler', label: '在线编程', icon: Terminal, color: 'text-violet-600' },
   { id: 'downloads', label: '软件下载', icon: Download, color: 'text-violet-600' },
@@ -170,7 +170,7 @@ export default function SideBar({
 
       {/* 导航 —— 外链与页内项统一由 NAV 数据驱动渲染 */}
       <nav className={`flex-1 min-h-0 overflow-y-auto scrollbar-none space-y-0.5 ${rail ? 'px-2' : 'px-3'}`}>
-        {NAV.map(({ id, label, icon: Icon, color }) => {
+        {NAV.filter(({ id }) => id !== 'docs').map(({ id, label, icon: Icon, color }) => {
           const active = section === id;
           return (
             <div key={id}>
@@ -243,6 +243,24 @@ export default function SideBar({
             </button>
           )}
         </div>
+
+        {/* ── 产品维基（使用帮助之下） ── */}
+        {(() => {
+          const item = NAV.find(n => n.id === 'docs')!;
+          const Icon = item.icon;
+          const active = section === 'docs';
+          return (
+            <button
+              onClick={() => { onClearCourse(); onSection('docs'); }}
+              data-tip={rail ? item.label : undefined}
+              data-tour="docs"
+              className={rowCls(active)}
+            >
+              <Icon className={`w-5 h-5 shrink-0 ${item.color}`} strokeWidth={active ? 2.6 : 1.8} />
+              {!rail && item.label}
+            </button>
+          );
+        })()}
       </nav>
 
       {/* 底部：账号区（整体推到底） */}

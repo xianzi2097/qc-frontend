@@ -38,7 +38,7 @@ const LEGACY_SECTION_CUTOFF = 1790560318327;
 
 /**
  * 主页 — 控制台式布局（类 ChatGPT）：
- * 左侧固定导航栏（概览 / 书架 / 课程 / 资源 / 产品维基 / 在线编程 + 底部账号区），
+ * 左侧固定导航栏（概览 / 书架 / 课程 / 资源 / 站点维基 / 在线编程 + 底部账号区），
  * 右侧全部为内容区，按 section 切换。
  */
 export default function HomePage({ onLogin }: Props) {
