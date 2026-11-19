@@ -196,7 +196,7 @@ export default function SideBar({
               >
                 <Icon className={`w-5 h-5 shrink-0 ${color}`} strokeWidth={active ? 2.6 : 1.8} />
                 {!rail && label}
-                {!rail && id === 'scratch' && <ExternalLink className="w-3 h-3 ml-auto opacity-40" />}
+                {!rail && (id === 'scratch' || id === 'docs') && <ExternalLink className="w-3 h-3 ml-auto opacity-40" />}
                 {!rail && id === 'courses' && courses.length > 0 && (
                   <span
                     onClick={(e) => { e.stopPropagation(); setFolded(v => !v); }}

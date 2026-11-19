@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import SideBar, { NAV } from './SideBar';
 import type { HomeSection } from './SideBar';
 import Overview from './Overview';
-import DocsFrame from './DocsFrame';
 import CourseCatalog from './CourseCatalog';
 import CourseDetail from './CourseDetail';
 import Downloads from './Downloads';
@@ -79,6 +78,12 @@ export default function HomePage({ onLogin }: Props) {
       recordOpen({ kind: 'section', id: 'scratch', label: 'Scratch 4.0-QC' });
       return;
     }
+    if (s === 'docs') {
+      // 站点维基是外链（2026-11-18 拍板）：新开窗口，不用内嵌/注入
+      window.open('/wiki/', '_blank');
+      recordOpen({ kind: 'section', id: 'docs', label: '站点维基' });
+      return;
+    }
     setOpenCourse(null);
     setSection(s);
     if (s !== 'overview') {
@@ -86,9 +91,9 @@ export default function HomePage({ onLogin }: Props) {
     }
   };
 
-  /** 引导 Tour 专用：只切页不记录（7 步导航不能刷成「最近打开」） */
+  /** 引导 Tour 专用：只切页不记录（7 步导航不能刷成「最近打开」）；外链条目（scratch/docs）不切页 */
   const navOnly = (s: HomeSection) => {
-    if (s === 'scratch') return;
+    if (s === 'scratch' || s === 'docs') return;
     setOpenCourse(null);
     setSection(s);
   };
@@ -192,7 +197,6 @@ export default function HomePage({ onLogin }: Props) {
             {section === 'books' && <CourseCatalog mode="books" onOpenCourse={handleCatalogOpen} />}
             {section === 'courses' && <CourseCatalog mode="courses" onOpenCourse={handleCatalogOpen} />}
             {section === 'resources' && <Resources />}
-            {section === 'docs' && <DocsFrame />}
             {section === 'downloads' && <Downloads />}
             {section === 'html-sandbox' && <HtmlSandbox />}
             {section === 'compiler' && <CodePlayground />}
